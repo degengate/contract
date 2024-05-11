@@ -1,38 +1,39 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./interfaces/IBegen.sol";
 
-contract Begen is IBegen, ERC20, Ownable {
+contract Begen is IBegen, ERC20 {
   address public immutable degenGate;
   address public immutable vault;
-  bool public override specialTransferFromIsClosed;
 
-  event SpecialTransferFrom(address from, address to, uint256 amount, address sender);
-  event CloseSpecialTransferFrom();
+  event Mint(address account, uint256 amount);
+  event BurnSender(address account, uint256 amount);
+  event BurnOrigin(address account, uint256 amount);
 
-  constructor(address _degenGate, address _vault) Ownable() ERC20("begen", "Begen") {
+  constructor(address _degenGate, address _vault) ERC20("begen", "Begen") {
     degenGate = _degenGate;
     vault = _vault;
-    _mint(vault, 10 ** 28 * 2);
   }
 
-  function specialTransferFrom(address from, address to, uint256 amount) external override returns (bool) {
-    require(!specialTransferFromIsClosed, "CE");
-    require(msg.sender == degenGate || msg.sender == vault, "SE");
-    require(from != vault, "FE");
+  function mint(address account, uint256 amount) external override {
+    require(msg.sender == degenGate, "SE");
 
-    _transfer(from, to, amount);
+    _mint(account, amount);
 
-    emit SpecialTransferFrom(from, to, amount, msg.sender);
-    return true;
+    emit Mint(account, amount);
   }
 
-  function closeSpecialTransferFrom() external onlyOwner {
-    specialTransferFromIsClosed = true;
+  function burnSender(uint256 amount) external override {
+    _burn(msg.sender, amount);
 
-    emit CloseSpecialTransferFrom();
+    emit BurnSender(msg.sender, amount);
+  }
+
+  function burnOrigin(uint256 amount) external override {
+    _burn(tx.origin, amount);
+
+    emit BurnOrigin(tx.origin, amount);
   }
 }

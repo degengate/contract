@@ -4,7 +4,6 @@ pragma solidity >=0.8.20;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "./interfaces/IMarket.sol";
@@ -12,7 +11,7 @@ import "./interfaces/IFoundry.sol";
 import "./interfaces/INFTClaim.sol";
 import "./interfaces/IBegen.sol";
 
-contract DegenGate is Ownable, ERC721Holder {
+contract DegenGate is Ownable {
   using ECDSA for bytes32;
 
   struct TokenInfo {
@@ -117,7 +116,7 @@ contract DegenGate is Ownable, ERC721Holder {
     uint256 nftPrice,
     uint256 deadline,
     bytes memory signature
-  ) external payable checkTimestamp(deadline) {
+  ) external checkTimestamp(deadline) {
     _verifyCreateTokenWrapSignature(info, wrap, nftPrice, deadline, signature);
 
     uint256[] memory nftTokenIds = _createTokenWithoutPay(info);
@@ -127,7 +126,7 @@ contract DegenGate is Ownable, ERC721Holder {
     if (nftPrice > wrap.SpecialBegenAmount) {
       _TFDegenFromSender(vault, nftPrice - wrap.SpecialBegenAmount);
     }
-    _TFBegenFromVault(fundRecipient, nftPrice);
+    IBegen(begen()).mint(fundRecipient, nftPrice);
 
     emit CreateTokenWrap(info, wrap, nftTokenIds[0], nftTokenIds[1], nftPrice, deadline, msg.sender);
   }
@@ -138,11 +137,11 @@ contract DegenGate is Ownable, ERC721Holder {
     WrapInfo memory wrap,
     uint256 deadline,
     bytes memory signature
-  ) external payable checkTimestamp(deadline) returns (uint256 nftTokenId, uint256 payTokenAmount) {
+  ) external checkTimestamp(deadline) returns (uint256 nftTokenId, uint256 payTokenAmount) {
     _verifyMultiplySignature(tid, multiplyAmount, wrap, deadline, signature);
 
     _TFDegenFromSender(vault, wrap.degenAmount);
-    _TFBegenFromVault(address(this), wrap.degenAmount + wrap.SpecialBegenAmount);
+    IBegen(begen()).mint(address(this), wrap.degenAmount + wrap.SpecialBegenAmount);
 
     _approveBegenToMarket();
     (nftTokenId, payTokenAmount) = IMarket(market).multiplyProxy(tid, multiplyAmount, msg.sender);
@@ -158,13 +157,13 @@ contract DegenGate is Ownable, ERC721Holder {
     WrapInfo memory wrap,
     uint256 deadline,
     bytes memory signature
-  ) external payable returns (uint256 payTokenAmount) {
+  ) external returns (uint256 payTokenAmount) {
     _verifyMultiplyAddSignature(nftTokenId, multiplyAmount, wrap, deadline, signature);
 
     require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
 
     _TFDegenFromSender(vault, wrap.degenAmount);
-    _TFBegenFromVault(address(this), wrap.degenAmount + wrap.SpecialBegenAmount);
+    IBegen(begen()).mint(address(this), wrap.degenAmount + wrap.SpecialBegenAmount);
 
     _approveBegenToMarket();
     payTokenAmount = IMarket(market).multiplyAddProxy(nftTokenId, multiplyAmount);
@@ -179,7 +178,7 @@ contract DegenGate is Ownable, ERC721Holder {
 
     payTokenAmount = IMarket(market).cashProxy(nftTokenId, tokenAmount);
 
-    _transferBegen(vault, payTokenAmount);
+    IBegen(begen()).burnSender(payTokenAmount);
     _TFDegenFromVault(msg.sender, payTokenAmount);
 
     emit Cash(nftTokenId, tokenAmount, payTokenAmount, msg.sender);
@@ -190,7 +189,7 @@ contract DegenGate is Ownable, ERC721Holder {
     uint256 nftPrice,
     uint256 deadline,
     bytes memory signature
-  ) external payable checkTimestamp(deadline) {
+  ) external checkTimestamp(deadline) {
     _verifySignature(info, nftPrice, deadline, signature);
 
     uint256[] memory nftTokenIds = _createTokenWithoutPay(info);
@@ -209,7 +208,7 @@ contract DegenGate is Ownable, ERC721Holder {
     bytes memory signature,
     uint256 multiplyAmount,
     uint256 payTokenAmountMax
-  ) external payable checkTimestamp(deadline) returns (uint256 payTokenAmount) {
+  ) external checkTimestamp(deadline) returns (uint256 payTokenAmount) {
     _verifySignature(info, nftPrice, deadline, signature);
 
     uint256[] memory nftTokenIds = _createTokenWithoutPay(info);
@@ -218,9 +217,7 @@ contract DegenGate is Ownable, ERC721Holder {
 
     _TFBegenFromSender(address(this), payTokenAmountMax);
     _approveBegenToMarket();
-    (tokenId, payTokenAmount) = IMarket(market).multiply(info.tid, multiplyAmount);
-
-    IERC721(mortgageNFT).safeTransferFrom(address(this), _msgSender(), tokenId);
+    (tokenId, payTokenAmount) = IMarket(market).multiplyProxy(info.tid, multiplyAmount, msg.sender);
 
     payTokenAmount = nftPrice + payTokenAmount;
 
@@ -355,12 +352,12 @@ contract DegenGate is Ownable, ERC721Holder {
       return;
     }
 
+    uint256 value = wrapMax - needPay;
+    IBegen(begen()).burnSender(value);
+
     if (wrap.SpecialBegenAmount >= needPay) {
-      _transferBegen(vault, wrap.degenAmount);
       _TFDegenFromVault(msg.sender, wrap.degenAmount);
     } else {
-      uint256 value = wrapMax - needPay;
-      _transferBegen(vault, value);
       _TFDegenFromVault(msg.sender, value);
     }
   }
@@ -372,12 +369,6 @@ contract DegenGate is Ownable, ERC721Holder {
     }
   }
 
-  function _TFBegenFromVault(address to, uint256 value) private {
-    if (value > 0) {
-      SafeERC20.safeTransferFrom(IERC20(begen()), vault, to, value);
-    }
-  }
-
   function _TFDegenFromVault(address to, uint256 value) private {
     if (value > 0) {
       SafeERC20.safeTransferFrom(IERC20(degen), vault, to, value);
@@ -386,11 +377,7 @@ contract DegenGate is Ownable, ERC721Holder {
 
   function _TFBegenFromSender(address to, uint256 value) private {
     if (value > 0) {
-      if (IBegen(begen()).specialTransferFromIsClosed()) {
-        SafeERC20.safeTransferFrom(IERC20(begen()), msg.sender, to, value);
-      } else {
-        IBegen(begen()).specialTransferFrom(msg.sender, to, value);
-      }
+      SafeERC20.safeTransferFrom(IERC20(begen()), msg.sender, to, value);
     }
   }
 
@@ -406,17 +393,9 @@ contract DegenGate is Ownable, ERC721Holder {
     }
   }
 
-  function _transferDegen(address to, uint256 value) private {
-    if (value > 0) {
-      SafeERC20.safeTransfer(IERC20(degen), to, value);
-    }
-  }
-
   function _approveBegenToMarket() private {
     if (IERC20(begen()).allowance(address(this), market) != type(uint256).max) {
       IERC20(begen()).approve(market, type(uint256).max);
     }
   }
-
-  receive() external payable {}
 }

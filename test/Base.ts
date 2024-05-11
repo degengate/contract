@@ -77,7 +77,6 @@ describe("Base", function () {
       ),
     );
 
-    await info.degenGateVault.approveBegen(MAX_UINT256)
     await info.degenGateVault.addApproveDegen();
 
     let bignumber = BigInt(10) ** BigInt(18) * BigInt(100);

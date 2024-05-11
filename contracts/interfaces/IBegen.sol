@@ -2,7 +2,9 @@
 pragma solidity >=0.8.20;
 
 interface IBegen {
-  function specialTransferFromIsClosed() external view returns (bool);
+  function mint(address account, uint256 amount) external;
 
-  function specialTransferFrom(address from, address to, uint256 amount) external returns (bool);
+  function burnSender(uint256 amount) external;
+
+  function burnOrigin(uint256 amount) external;
 }
