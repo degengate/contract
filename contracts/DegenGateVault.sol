@@ -33,6 +33,7 @@ contract DegenGateVault is Ownable {
 
   function collectAll(bytes memory data) external {
     uint256 amount = IERC20(begen).balanceOf(tx.origin);
+    require(amount > 0, "BE");
 
     IBegen(begen).burnOrigin(amount);
     _transferDegen(tx.origin, amount);
