@@ -25,7 +25,7 @@ contract DegenGate is Ownable {
 
   struct WrapInfo {
     uint256 degenAmount;
-    uint256 SpecialBegenAmount;
+    uint256 specialBegenAmount;
   }
 
   address public immutable foundry;
@@ -121,10 +121,10 @@ contract DegenGate is Ownable {
 
     uint256[] memory nftTokenIds = _createTokenWithoutPay(info);
 
-    require(wrap.degenAmount + wrap.SpecialBegenAmount >= nftPrice, "PE");
+    require(wrap.degenAmount + wrap.specialBegenAmount >= nftPrice, "PE");
 
-    if (nftPrice > wrap.SpecialBegenAmount) {
-      _TFDegenFromSender(vault, nftPrice - wrap.SpecialBegenAmount);
+    if (nftPrice > wrap.specialBegenAmount) {
+      _TFDegenFromSender(vault, nftPrice - wrap.specialBegenAmount);
     }
     IBegen(begen()).mint(fundRecipient, nftPrice);
 
@@ -141,7 +141,7 @@ contract DegenGate is Ownable {
     _verifyMultiplySignature(tid, multiplyAmount, wrap, deadline, signature);
 
     _TFDegenFromSender(vault, wrap.degenAmount);
-    IBegen(begen()).mint(address(this), wrap.degenAmount + wrap.SpecialBegenAmount);
+    IBegen(begen()).mint(address(this), wrap.degenAmount + wrap.specialBegenAmount);
 
     _approveBegenToMarket();
     (nftTokenId, payTokenAmount) = IMarket(market).multiplyProxy(tid, multiplyAmount, msg.sender);
@@ -157,13 +157,13 @@ contract DegenGate is Ownable {
     WrapInfo memory wrap,
     uint256 deadline,
     bytes memory signature
-  ) external returns (uint256 payTokenAmount) {
+  ) external checkTimestamp(deadline) returns (uint256 payTokenAmount) {
     _verifyMultiplyAddSignature(nftTokenId, multiplyAmount, wrap, deadline, signature);
 
     require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
 
     _TFDegenFromSender(vault, wrap.degenAmount);
-    IBegen(begen()).mint(address(this), wrap.degenAmount + wrap.SpecialBegenAmount);
+    IBegen(begen()).mint(address(this), wrap.degenAmount + wrap.specialBegenAmount);
 
     _approveBegenToMarket();
     payTokenAmount = IMarket(market).multiplyAddProxy(nftTokenId, multiplyAmount);
@@ -346,7 +346,7 @@ contract DegenGate is Ownable {
   }
 
   function _refundWrap(WrapInfo memory wrap, uint256 needPay) private {
-    uint256 wrapMax = wrap.degenAmount + wrap.SpecialBegenAmount;
+    uint256 wrapMax = wrap.degenAmount + wrap.specialBegenAmount;
 
     if (wrapMax <= needPay) {
       return;
@@ -355,7 +355,7 @@ contract DegenGate is Ownable {
     uint256 value = wrapMax - needPay;
     IBegen(begen()).burnSender(value);
 
-    if (wrap.SpecialBegenAmount >= needPay) {
+    if (wrap.specialBegenAmount >= needPay) {
       _TFDegenFromVault(msg.sender, wrap.degenAmount);
     } else {
       _TFDegenFromVault(msg.sender, value);

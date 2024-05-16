@@ -71,7 +71,7 @@ describe("Begen", function () {
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(10000),
             wrap: {
                 degenAmount: BigInt(10) ** BigInt(18) * BigInt(10000),
-                SpecialBegenAmount: 0
+                specialBegenAmount: 0
             },
             deadline: deadline,
         }
@@ -83,7 +83,7 @@ describe("Begen", function () {
                         [
                             "string",
                             "uint256",
-                            "tuple(uint256 degenAmount, uint256 SpecialBegenAmount)",
+                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],

@@ -55,7 +55,7 @@ describe("Base", function () {
       },
       wrap: {
         degenAmount: 100,
-        SpecialBegenAmount: 24
+        specialBegenAmount: 24
       },
       deadline: deadline,
       nftPrice: 123,
@@ -66,7 +66,7 @@ describe("Base", function () {
           ethers.AbiCoder.defaultAbiCoder().encode(
             [
               "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 SpecialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
               "uint256",
               "uint256",
               "address",
@@ -94,7 +94,7 @@ describe("Base", function () {
       multiplyAmount: 100,
       wrap: {
         degenAmount: 100,
-        SpecialBegenAmount: 100
+        specialBegenAmount: 100
       },
       deadline: deadline,
     }
@@ -106,7 +106,7 @@ describe("Base", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 SpecialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
               "uint256",
               "address",
             ],
@@ -138,7 +138,7 @@ describe("Base", function () {
       multiplyAmount: 200,
       wrap: {
         degenAmount: 200,
-        SpecialBegenAmount: 1
+        specialBegenAmount: 1
       },
       deadline: deadline,
     }
@@ -151,7 +151,7 @@ describe("Base", function () {
             [
               "uint256",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 SpecialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
               "uint256",
               "address",
             ],
@@ -176,7 +176,7 @@ describe("Base", function () {
       multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000000),
       wrap: {
         degenAmount: BigInt(10) ** BigInt(18) * BigInt(1000000),
-        SpecialBegenAmount: 0
+        specialBegenAmount: 0
       },
       deadline: deadline,
     }
@@ -188,7 +188,7 @@ describe("Base", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 SpecialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
               "uint256",
               "address",
             ],
