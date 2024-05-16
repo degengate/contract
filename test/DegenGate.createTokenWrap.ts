@@ -197,7 +197,7 @@ describe("DegenGate.createTokenWrap", function () {
         ).revertedWith("CTE");
     });
 
-    it("free | no input", async function () {
+    it("free | no input | tid == cid", async function () {
         const info = await loadFixture(deployAllContract);
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -255,6 +255,105 @@ describe("DegenGate.createTokenWrap", function () {
 
         expect(await info.begen.totalSupply()).eq(0);
         expect(await info.publicNFT.totalSupply()).eq(2)
+
+        expect(await info.publicNFT.ownerOf(1)).eq(info.deployWallet.address)
+        expect(await info.publicNFT.ownerOf(2)).eq(info.deployWallet.address)
+
+        let deployWallet_begen_2 = await info.begen.balanceOf(info.deployWallet.address);
+        let degenGate_begen_2 = await info.begen.balanceOf(await info.degenGate.getAddress());
+        let degenGateFundRecipientWallet_begen_2 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
+        let degenGateVault_begen_2 = await info.begen.balanceOf(await info.degenGateVault.getAddress())
+
+        let deployWallet_degen_2 = await info.mockDegen.balanceOf(info.deployWallet.address);
+        let degenGate_degen_2 = await info.mockDegen.balanceOf(await info.degenGate.getAddress());
+        let degenGateFundRecipientWallet_degen_2 = await info.mockDegen.balanceOf(info.degenGateFundRecipientWallet.address);
+        let degenGateVault_degen_2 = await info.mockDegen.balanceOf(await info.degenGateVault.getAddress())
+
+        expect(deployWallet_begen_2).eq(deployWallet_begen_1).eq(0)
+        expect(degenGate_begen_2).eq(degenGate_begen_1).eq(0)
+        expect(degenGateFundRecipientWallet_begen_2).eq(degenGateFundRecipientWallet_begen_1).eq(0)
+        expect(degenGateVault_begen_2).eq(degenGateVault_begen_1).eq(0)
+
+        expect(deployWallet_degen_2).eq(deployWallet_degen_1)
+        expect(degenGate_degen_2).eq(degenGate_degen_1).eq(0)
+        expect(degenGateFundRecipientWallet_degen_2).eq(degenGateFundRecipientWallet_degen_1).eq(0)
+        expect(degenGateVault_degen_2).eq(degenGateVault_degen_1).eq(0)
+
+        await expect(
+            info.degenGate.connect(info.deployWallet).createTokenWrap(params.info, params.wrap, params.nftPrice, params.deadline, signature)
+        ).revertedWith("TE");
+
+    });
+
+    it("free | no input | tid != cid", async function () {
+        const info = await loadFixture(deployAllContract);
+
+        const currentTimestamp = Math.floor(new Date().getTime() / 1000);
+        const deadline = currentTimestamp + 60 * 60
+
+        // create token
+        let params = {
+            info: {
+                tid: "a",
+                tName: "a",
+                cid: "ac",
+                cName: "ac",
+                followers: 123,
+                omf: 2212,
+            },
+            wrap: {
+                degenAmount: 0,
+                specialBegenAmount: 0
+            },
+            deadline: deadline,
+            nftPrice: 0,
+        };
+        let signature = await info.signatureWallet.signMessage(
+            ethers.toBeArray(
+                ethers.keccak256(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [
+                            "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
+                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+                            "uint256",
+                            "uint256",
+                            "address",
+                        ],
+                        [params.info, params.wrap, params.nftPrice, params.deadline, info.deployWallet.address],
+                    ),
+                ),
+            ),
+        );
+
+        let deployWallet_begen_1 = await info.begen.balanceOf(info.deployWallet.address);
+        let degenGate_begen_1 = await info.begen.balanceOf(await info.degenGate.getAddress());
+        let degenGateFundRecipientWallet_begen_1 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
+        let degenGateVault_begen_1 = await info.begen.balanceOf(await info.degenGateVault.getAddress())
+
+        let deployWallet_degen_1 = await info.mockDegen.balanceOf(info.deployWallet.address);
+        let degenGate_degen_1 = await info.mockDegen.balanceOf(await info.degenGate.getAddress());
+        let degenGateFundRecipientWallet_degen_1 = await info.mockDegen.balanceOf(info.degenGateFundRecipientWallet.address);
+        let degenGateVault_degen_1 = await info.mockDegen.balanceOf(await info.degenGateVault.getAddress())
+
+        expect(await info.begen.totalSupply()).eq(0);
+        expect(await info.publicNFT.totalSupply()).eq(0)
+
+        // createTokenWrap
+        await info.degenGate.connect(info.deployWallet).createTokenWrap(params.info, params.wrap, params.nftPrice, params.deadline, signature);
+
+        expect(await info.begen.totalSupply()).eq(0);
+        expect(await info.publicNFT.totalSupply()).eq(2)
+
+        expect(await info.publicNFT.ownerOf(1)).eq(info.deployWallet.address)
+        expect(await info.publicNFT.ownerOf(2)).eq(await info.degenGateNFTClaim.getAddress())
+
+        let info1 = await info.publicNFT.tokenIdToInfo(1)
+        expect(info1.tid).eq(params.info.tid)
+        expect(info1.percent).eq(5000)
+
+        let info2 = await info.publicNFT.tokenIdToInfo(2)
+        expect(info2.tid).eq(params.info.tid)
+        expect(info2.percent).eq(95000)
 
         let deployWallet_begen_2 = await info.begen.balanceOf(info.deployWallet.address);
         let degenGate_begen_2 = await info.begen.balanceOf(await info.degenGate.getAddress());

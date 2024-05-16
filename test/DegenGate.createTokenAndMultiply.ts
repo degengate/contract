@@ -425,10 +425,28 @@ describe("DegenGate.createTokenAndMultiply", function () {
       .createTokenAndMultiply.staticCall(params.info, params.nftPrice, params.deadline, signature, params.multiplyAmount, payTokenAmountMax);
 
     expect(result).eq(payTokenAmountMax)
+    await expect(info.publicNFT.ownerOf(3)).revertedWith("ERC721: invalid token ID");
+    await expect(info.publicNFT.ownerOf(4)).revertedWith("ERC721: invalid token ID");
+
+    await expect(info.mortgageNFT.ownerOf(2)).revertedWith("ERC721: invalid token ID");
 
     await info.degenGate
       .connect(info.deployWallet)
       .createTokenAndMultiply(params.info, params.nftPrice, params.deadline, signature, params.multiplyAmount, payTokenAmountMax);
+
+    expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
+    expect(await info.publicNFT.ownerOf(4)).eq(await info.degenGateNFTClaim.getAddress());
+
+    let info1 = await info.publicNFT.tokenIdToInfo(3)
+    expect(info1.tid).eq(params.info.tid)
+    expect(info1.percent).eq(5000)
+
+    let info2 = await info.publicNFT.tokenIdToInfo(4)
+    expect(info2.tid).eq(params.info.tid)
+    expect(info2.percent).eq(95000)
+
+    expect(await info.mortgageNFT.ownerOf(2)).eq(info.deployWallet.address);
+    expect((await info.mortgageNFT.info(2)).amount).eq(params.multiplyAmount)
 
     let curve = await info.market.getPayTokenAmount(0, params.multiplyAmount);
 
@@ -603,10 +621,29 @@ describe("DegenGate.createTokenAndMultiply", function () {
       .createTokenAndMultiply.staticCall(params.info, params.nftPrice, params.deadline, signature, params.multiplyAmount, payTokenAmountMax);
 
     expect(result).eq(payTokenAmountMax)
+    await expect(info.publicNFT.ownerOf(3)).revertedWith("ERC721: invalid token ID");
+    await expect(info.publicNFT.ownerOf(4)).revertedWith("ERC721: invalid token ID");
+
+    await expect(info.mortgageNFT.ownerOf(2)).revertedWith("ERC721: invalid token ID");
 
     await info.degenGate
       .connect(info.deployWallet)
       .createTokenAndMultiply(params.info, params.nftPrice, params.deadline, signature, params.multiplyAmount, payTokenAmountMax);
+
+    expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
+    expect(await info.publicNFT.ownerOf(4)).eq(info.deployWallet.address);
+
+    let info1 = await info.publicNFT.tokenIdToInfo(3)
+    expect(info1.tid).eq(params.info.tid)
+    expect(info1.percent).eq(5000)
+
+    let info2 = await info.publicNFT.tokenIdToInfo(4)
+    expect(info2.tid).eq(params.info.tid)
+    expect(info2.percent).eq(95000)
+
+    expect(await info.mortgageNFT.ownerOf(2)).eq(info.deployWallet.address);
+    expect((await info.mortgageNFT.info(2)).amount).eq(params.multiplyAmount)
+
 
     let curve = await info.market.getPayTokenAmount(0, params.multiplyAmount);
 

@@ -321,6 +321,9 @@ describe("DegenGate.multiply", function () {
         expect(multiplyResult.payTokenAmount).eq(multiply_1000_BegenAmount)
         expect(multiplyResult.nftTokenId).eq(1)
 
+        expect((await info.mortgageNFT.info(1)).amount).eq(paramsMultiply.multiplyAmount)
+        expect(await info.mortgageNFT.ownerOf(1)).eq(info.userWallet.address);
+
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
         let userWallet_begen_2 = await info.begen.balanceOf(info.userWallet.address);

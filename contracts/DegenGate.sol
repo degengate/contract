@@ -293,13 +293,13 @@ contract DegenGate is Ownable {
   }
 
   function _encodeTdata(
-    string memory tTwitterName,
+    string memory tName,
     string memory cid,
-    string memory cTwitterName,
+    string memory cName,
     uint256 followers,
     uint256 omf
   ) private view returns (bytes memory) {
-    return abi.encode(tTwitterName, cid, cTwitterName, followers, omf, block.timestamp);
+    return abi.encode(tName, cid, cName, followers, omf, block.timestamp);
   }
 
   function _verifySignature(

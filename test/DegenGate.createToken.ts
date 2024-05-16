@@ -386,7 +386,7 @@ describe("DegenGate.createToken", function () {
     ).revertedWith("ERC20: transfer amount exceeds balance");
   });
 
-  it("begen eq nft price", async function () {
+  it("begen eq nft price | cid != tid", async function () {
     const info = await loadFixture(deployAllContract);
     await createTokenAndMultiply_100000(info)
 
@@ -438,6 +438,86 @@ describe("DegenGate.createToken", function () {
 
     expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
     expect(await info.publicNFT.ownerOf(4)).eq(await info.degenGateNFTClaim.getAddress());
+
+    let info1 = await info.publicNFT.tokenIdToInfo(3)
+    expect(info1.tid).eq(params.info.tid)
+    expect(info1.percent).eq(5000)
+
+    let info2 = await info.publicNFT.tokenIdToInfo(4)
+    expect(info2.tid).eq(params.info.tid)
+    expect(info2.percent).eq(95000)
+
+    expect(deployWallet_Begen2).eq(deployWallet_Begen1 - params.nftPrice);
+    expect(degenGate_Begen2).eq(degenGate_Begen1).eq(0);
+    expect(degenGateFundRecipientWallet_Begen2).eq(degenGateFundRecipientWallet_Begen1 + params.nftPrice);
+
+    await expect(
+      info.degenGate
+        .connect(info.deployWallet)
+        .createToken(params.info, params.nftPrice, params.deadline, signature),
+    ).revertedWith("TE");
+  });
+
+  it("begen eq nft price | cid == tid", async function () {
+    const info = await loadFixture(deployAllContract);
+    await createTokenAndMultiply_100000(info)
+
+    const currentTimestamp = Math.floor(new Date().getTime() / 1000);
+    const deadline = currentTimestamp + 60 * 60;
+
+    let params = {
+      info: {
+        tid: "b",
+        tName: "b",
+        cid: "b",
+        cName: "b",
+        followers: 123,
+        omf: 2212,
+      },
+      deadline: deadline,
+      nftPrice: BigInt(10) ** BigInt(18) * BigInt(10),
+    };
+    let signature = await info.signatureWallet.signMessage(
+      ethers.toBeArray(
+        ethers.keccak256(
+          ethers.AbiCoder.defaultAbiCoder().encode(
+            [
+              "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
+              "uint256",
+              "uint256",
+              "address",
+            ],
+            [params.info, params.nftPrice, params.deadline, info.deployWallet.address],
+          ),
+        ),
+      ),
+    );
+
+    let deployWallet_Begen1 = await info.begen.balanceOf(info.deployWallet.address);
+    let degenGate_Begen1 = await info.begen.balanceOf(await info.degenGate.getAddress());
+    let degenGateFundRecipientWallet_Begen1 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
+
+    await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), params.nftPrice);
+
+    await info.degenGate
+      .connect(info.deployWallet)
+      .createToken(params.info, params.nftPrice, params.deadline, signature);
+
+
+    let deployWallet_Begen2 = await info.begen.balanceOf(info.deployWallet.address);
+    let degenGate_Begen2 = await info.begen.balanceOf(await info.degenGate.getAddress());
+    let degenGateFundRecipientWallet_Begen2 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
+
+    expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
+    expect(await info.publicNFT.ownerOf(4)).eq(await info.deployWallet.getAddress());
+
+    let info1 = await info.publicNFT.tokenIdToInfo(3)
+    expect(info1.tid).eq(params.info.tid)
+    expect(info1.percent).eq(5000)
+
+    let info2 = await info.publicNFT.tokenIdToInfo(4)
+    expect(info2.tid).eq(params.info.tid)
+    expect(info2.percent).eq(95000)
 
     expect(deployWallet_Begen2).eq(deployWallet_Begen1 - params.nftPrice);
     expect(degenGate_Begen2).eq(degenGate_Begen1).eq(0);

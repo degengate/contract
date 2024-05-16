@@ -387,6 +387,9 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
+        let oldAmount = (await info.mortgageNFT.info(paramsMultiplyAdd.nftTokenId)).amount;
+        expect(oldAmount).gt(0)
+
         await info.degenGate.connect(info.userWallet).multiplyAdd(
             paramsMultiplyAdd.nftTokenId,
             paramsMultiplyAdd.multiplyAmount,
@@ -396,6 +399,12 @@ describe("DegenGate.multiplyAdd", function () {
         )
 
         expect(multiplyAddResult).eq(b1000_multiplyAdd_1000_BegenAmount)
+
+        expect((await info.mortgageNFT.info(paramsMultiplyAdd.nftTokenId)).amount).eq(
+            oldAmount + paramsMultiplyAdd.multiplyAmount
+        )
+
+        expect(await info.mortgageNFT.ownerOf(paramsMultiplyAdd.nftTokenId)).eq(info.userWallet.address);
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount + b1000_multiplyAdd_1000_BegenAmount);
 
