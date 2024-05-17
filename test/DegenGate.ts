@@ -1,12 +1,12 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { deployAllContract, MAX_UINT256 } from "./shared/deploy";
+import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
 
 describe("DegenGate", function () {
 
     it("view", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         expect(await info.degenGate.foundry()).eq(await info.foundry.getAddress());
         expect(await info.degenGate.appId()).eq(await info.appId);
@@ -25,7 +25,7 @@ describe("DegenGate", function () {
     });
 
     it("setFundRecipient", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         expect(await info.degenGate.fundRecipient()).eq(info.degenGateFundRecipientWallet.address);
 
@@ -38,7 +38,7 @@ describe("DegenGate", function () {
     })
 
     it("setSignatureAddress", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         expect(await info.degenGate.signatureAddress()).eq(info.signatureWallet.address);
 

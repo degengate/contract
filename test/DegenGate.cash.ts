@@ -1,12 +1,12 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { deployAllContract, MAX_UINT256 } from "./shared/deploy";
+import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
 
 describe("DegenGate.cash", function () {
 
     it("test", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
         await info.mockDegen.connect(info.userWallet).approve(await info.degenGate.getAddress(), MAX_UINT256);
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)

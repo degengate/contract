@@ -1,11 +1,11 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { deployAllContract } from "./shared/deploy";
+import { deployAllContracts } from "./shared/deploy";
 
 describe("DegenGateNFTClaim", function () {
   it("view", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
     expect(await info.degenGateNFTClaim.degenGate()).eq(await info.degenGate.getAddress());
     expect(await info.degenGateNFTClaim.publicNFT()).eq(await info.publicNFT.getAddress());
@@ -16,7 +16,7 @@ describe("DegenGateNFTClaim", function () {
   });
 
   it("setSignatureAddress", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
     let newOwner = info.wallets[info.nextWalletIndex];
     let newSign = info.wallets[info.nextWalletIndex + 1];
@@ -33,7 +33,7 @@ describe("DegenGateNFTClaim", function () {
   });
 
   it("isClaim claimNFT tokenIdToBegen", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await info.degenGateVault.addApproveDegen();
 
     let nftOwner1 = info.wallets[info.nextWalletIndex + 1];
@@ -271,7 +271,7 @@ describe("DegenGateNFTClaim", function () {
   });
 
   it("setClaim", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await info.degenGateVault.addApproveDegen();
 
     expect(await info.degenGateNFTClaim.tokenIdToBegen(1)).eq(0);
@@ -360,7 +360,7 @@ describe("DegenGateNFTClaim", function () {
   });
 
   it("withdraw", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await info.degenGateVault.addApproveDegen();
 
     let newOwner = info.wallets[info.nextWalletIndex + 3];

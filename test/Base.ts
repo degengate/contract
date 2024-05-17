@@ -1,11 +1,11 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { MAX_UINT256, deployAllContract } from "./shared/deploy";
+import { MAX_UINT256, deployAllContracts } from "./shared/deploy";
 
 describe("Base", function () {
   it("test", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
     let nftOwner = info.wallets[info.nextWalletIndex];
 

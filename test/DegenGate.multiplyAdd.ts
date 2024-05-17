@@ -1,12 +1,13 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { AllContractInfo, deployAllContract, MAX_UINT256 } from "./shared/deploy";
+import { DegenGateAllContractInfo } from "./shared/deploy_degen_gate";
+import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
 
 const multiply_1000_BegenAmount = BigInt("11001100110011001100");
 const b1000_multiplyAdd_1000_BegenAmount = BigInt("11003300770165034105")
 
-async function createTokenAndMultiply_1000(info: AllContractInfo): Promise<string> {
+async function createTokenAndMultiply_1000(info: DegenGateAllContractInfo): Promise<string> {
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
 
@@ -88,7 +89,7 @@ async function createTokenAndMultiply_1000(info: AllContractInfo): Promise<strin
 
 describe("DegenGate.multiplyAdd", function () {
     it("signature sender error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         await createTokenAndMultiply_1000(info)
 
@@ -134,7 +135,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("signature info error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         await createTokenAndMultiply_1000(info)
 
@@ -180,7 +181,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("signatureAddress error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         await createTokenAndMultiply_1000(info)
 
@@ -234,7 +235,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("deadline error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         await createTokenAndMultiply_1000(info)
 
@@ -280,7 +281,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("sender error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         await createTokenAndMultiply_1000(info)
 
@@ -326,7 +327,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("only spec begen | > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
@@ -442,7 +443,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("only spec begen | eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
@@ -549,7 +550,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("only spec begen | < need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
@@ -599,7 +600,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("only degen | > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         await createTokenAndMultiply_1000(info)
@@ -710,7 +711,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("only degen | eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         await createTokenAndMultiply_1000(info)
@@ -821,7 +822,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("only degen | < need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         await createTokenAndMultiply_1000(info)
@@ -875,7 +876,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("have spec begen and degen | spec begen > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         await createTokenAndMultiply_1000(info)
@@ -986,7 +987,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("have spec begen and degen | spec begen eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         await createTokenAndMultiply_1000(info)
@@ -1097,7 +1098,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("have spec begen and degen | spec begen < need | + degen > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         await createTokenAndMultiply_1000(info)
@@ -1208,7 +1209,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("have spec begen and degen | spec begen < need | + degen eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         await createTokenAndMultiply_1000(info)
@@ -1319,7 +1320,7 @@ describe("DegenGate.multiplyAdd", function () {
     });
 
     it("have spec begen and degen | spec begen < need | + degen < need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         await createTokenAndMultiply_1000(info)

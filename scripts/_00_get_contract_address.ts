@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { getAllContractAddress } from "../test/shared/deploy";
+import { getAllContractAddress } from "../test/shared/deploy_degen_gate";
 
 async function main() {
   const wallets = await ethers.getSigners();

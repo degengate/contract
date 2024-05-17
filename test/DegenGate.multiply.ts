@@ -1,10 +1,10 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { AllContractInfo, deployAllContract, MAX_UINT256 } from "./shared/deploy";
+import { DegenGateAllContractInfo } from "./shared/deploy_degen_gate";
+import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
 
-
-async function createToken(info: AllContractInfo): Promise<string> {
+async function createToken(info: DegenGateAllContractInfo): Promise<string> {
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
 
@@ -53,7 +53,7 @@ const multiply_1000_BegenAmount = BigInt("11001100110011001100");
 describe("DegenGate.multiply", function () {
 
     it("signature sender error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const tid = await createToken(info)
 
@@ -100,7 +100,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("signature info error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const tid = await createToken(info)
 
@@ -147,7 +147,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("signatureAddress error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const tid = await createToken(info)
 
@@ -202,7 +202,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("deadline error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const tid = await createToken(info)
 
@@ -249,7 +249,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("only spec begen | > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const tid = await createToken(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
@@ -360,7 +360,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("only spec begen | eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const tid = await createToken(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
@@ -468,7 +468,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("only spec begen | < need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const tid = await createToken(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
@@ -520,7 +520,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("only degen | > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const tid = await createToken(info)
@@ -632,7 +632,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("only degen | eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const tid = await createToken(info)
@@ -744,7 +744,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("only degen | < need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const tid = await createToken(info)
@@ -799,7 +799,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("have spec begen and degen | spec begen > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const tid = await createToken(info)
@@ -911,7 +911,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("have spec begen and degen | spec begen eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const tid = await createToken(info)
@@ -1023,7 +1023,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("have spec begen and degen | spec begen < need | + degen > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const tid = await createToken(info)
@@ -1135,7 +1135,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("have spec begen and degen | spec begen < need | + degen eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const tid = await createToken(info)
@@ -1247,7 +1247,7 @@ describe("DegenGate.multiply", function () {
     });
 
     it("have spec begen and degen | spec begen < need | + degen < need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const tid = await createToken(info)

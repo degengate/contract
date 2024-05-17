@@ -1,11 +1,11 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { deployAllContract, MAX_UINT256 } from "./shared/deploy";
+import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
 
 describe("DegenGate.createTokenWrap", function () {
     it("signature sender error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -52,7 +52,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("signature info error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -99,7 +99,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("signatureAddress error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -151,7 +151,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("deadline error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp - 60 * 60
@@ -198,7 +198,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("free | no input | tid == cid", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -286,7 +286,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("free | no input | tid != cid", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -382,7 +382,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("free | have input", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -463,7 +463,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("only degen | degen > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -545,7 +545,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("only degen | degen eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -627,7 +627,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("only degen | degen < need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -675,7 +675,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("only spec begen | spec begen > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -755,7 +755,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("only spec begen | spec begen eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -835,7 +835,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("only spec begen | spec begen < need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -886,7 +886,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("degen and spec begen | spec begen > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -966,7 +966,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("degen and spec begen | spec begen eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -1046,7 +1046,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("degen and spec begen | spec begen < need | + degen > need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -1126,7 +1126,7 @@ describe("DegenGate.createTokenWrap", function () {
         expect(degenGateVault_degen_2).eq(degenGateVault_degen_1 + (params.nftPrice - params.wrap.specialBegenAmount))
     });
     it("degen and spec begen | spec begen < need | + degen eq need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -1207,7 +1207,7 @@ describe("DegenGate.createTokenWrap", function () {
     });
 
     it("degen and spec begen | spec begen < need | + degen < need", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60

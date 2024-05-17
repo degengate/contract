@@ -1,18 +1,18 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { deployAllContract } from "./shared/deploy";
+import { deployAllContracts } from "./shared/deploy";
 
 describe("Begen", function () {
     it("view", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         expect(await info.begen.vault()).eq(await info.degenGateVault.getAddress())
         expect(await info.begen.degenGate()).eq(await info.degenGate.getAddress())
     });
 
     it("burn error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         expect(await info.begen.balanceOf(info.deployWallet.address)).eq(0)
         await expect(
@@ -24,7 +24,7 @@ describe("Begen", function () {
     });
 
     it("burn success", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         expect(await info.begen.balanceOf(info.deployWallet.address)).eq(0)
@@ -125,7 +125,7 @@ describe("Begen", function () {
     });
 
     it("mint error", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         await expect(
             info.begen.connect(info.deployWallet).mint(info.deployWallet.address, 1)

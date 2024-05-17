@@ -1,4 +1,4 @@
-import { deployAllContract } from "./shared/deploy";
+import { deployAllContracts } from "./shared/deploy";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import Decimal from "decimal.js";
@@ -56,7 +56,7 @@ const expectCurve = async function (
 
 describe("Curve", function () {
   it("curveMath max 1000W", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
     const max = BigInt(10) ** BigInt(18) * BigInt(10000000); // 1000 W
 
@@ -96,7 +96,7 @@ describe("Curve", function () {
 
 
   it("curve", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
     let data = [
       {

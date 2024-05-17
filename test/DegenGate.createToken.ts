@@ -1,10 +1,12 @@
-import { AllContractInfo, deployAllContract, MAX_UINT256 } from "./shared/deploy";
+import { DegenGateAllContractInfo } from "./shared/deploy_degen_gate";
+import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
+
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 import { ethers } from "hardhat";
 
-async function createTokenAndMultiply_100000(info: AllContractInfo) {
+async function createTokenAndMultiply_100000(info: DegenGateAllContractInfo) {
   const currentTimestamp = Math.floor(new Date().getTime() / 1000);
   const deadline = currentTimestamp + 60 * 60
 
@@ -84,7 +86,7 @@ async function createTokenAndMultiply_100000(info: AllContractInfo) {
 
 describe("DegenGate.createToken", function () {
   it("signature success", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -127,7 +129,7 @@ describe("DegenGate.createToken", function () {
   });
 
   it("signature sender error", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -170,7 +172,7 @@ describe("DegenGate.createToken", function () {
   });
 
   it("signature info error", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -213,7 +215,7 @@ describe("DegenGate.createToken", function () {
   });
 
   it("signatureAddress error", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -262,7 +264,7 @@ describe("DegenGate.createToken", function () {
   });
 
   it("deadline error", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -305,7 +307,7 @@ describe("DegenGate.createToken", function () {
   });
 
   it("begen < nft price approve", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -346,7 +348,7 @@ describe("DegenGate.createToken", function () {
   });
 
   it("begen < nft price balanceOf", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -387,7 +389,7 @@ describe("DegenGate.createToken", function () {
   });
 
   it("begen eq nft price | cid != tid", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -459,7 +461,7 @@ describe("DegenGate.createToken", function () {
   });
 
   it("begen eq nft price | cid == tid", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -531,7 +533,7 @@ describe("DegenGate.createToken", function () {
   });
 
   it("begen > nft price", async function () {
-    const info = await loadFixture(deployAllContract);
+    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);

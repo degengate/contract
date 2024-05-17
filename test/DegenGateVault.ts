@@ -1,11 +1,11 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { deployAllContract } from "./shared/deploy";
+import { deployAllContracts } from "./shared/deploy";
 
 describe("DegenGateVault", function () {
     it("view", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         expect(await info.degenGateVault.begen()).eq(await info.begen.getAddress())
         expect(await info.degenGateVault.degen()).eq(await info.mockDegen.getAddress())
@@ -13,7 +13,7 @@ describe("DegenGateVault", function () {
     });
 
     it("addApproveDegen", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         await expect(
             info.degenGateVault.connect(info.userWallet).addApproveDegen()
@@ -24,7 +24,7 @@ describe("DegenGateVault", function () {
     });
 
     it("collectAll", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         expect(await info.begen.balanceOf(info.deployWallet.address)).eq(0)
@@ -128,7 +128,7 @@ describe("DegenGateVault", function () {
     });
 
     it("collect", async function () {
-        const info = await loadFixture(deployAllContract);
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
         expect(await info.begen.balanceOf(info.deployWallet.address)).eq(0)
