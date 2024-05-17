@@ -32,15 +32,12 @@ describe("DegenGateNFTClaim", function () {
     expect(await info.degenGateNFTClaim.signatureAddress()).eq(newSign.address);
   });
 
-  it("isClaim claimNFT tokenIdToBegen", async function () {
+  it("isClaim claimNFT", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await info.degenGateVault.addApproveDegen();
 
     let nftOwner1 = info.wallets[info.nextWalletIndex + 1];
     let nftOwner2 = info.wallets[info.nextWalletIndex + 2];
-
-    expect(await info.degenGateNFTClaim.tokenIdToBegen(1)).eq(0);
-    expect(await info.degenGateNFTClaim.tokenIdToBegen(2)).eq(0);
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60;
@@ -137,15 +134,6 @@ describe("DegenGateNFTClaim", function () {
     );
     await expect(info.degenGateNFTClaim.claimNFT(params.info.tid, nftOwner1.address, signatureClaim)).revertedWith("VSE");
 
-    let degenGateNFTClaimBegen2_1 = await info.degenGateNFTClaim.tokenIdToBegen(2);
-    let degenGateNFTClaimBegen1 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
-
-    let nftOwner2Begen1 = await info.begen.balanceOf(nftOwner2.address);
-
-    expect(degenGateNFTClaimBegen2_1).eq(degenGateNFTClaimBegen1).eq(fee);
-
-
-
     expect(await info.publicNFT.ownerOf(1)).eq(info.userWallet.address);
     expect(await info.publicNFT.ownerOf(2)).eq(await info.degenGateNFTClaim.getAddress());
 
@@ -154,13 +142,7 @@ describe("DegenGateNFTClaim", function () {
     expect(await info.publicNFT.ownerOf(1)).eq(info.userWallet.address);
     expect(await info.publicNFT.ownerOf(2)).eq(nftOwner2.address);
 
-    let degenGateNFTClaimBegen2_2 = await info.degenGateNFTClaim.tokenIdToBegen(2);
-    let degenGateNFTClaimBegen2 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
-    let nftOwner2Begen2 = await info.begen.balanceOf(nftOwner2.address);
-
     expect(await info.degenGateNFTClaim.isClaim(params.info.tid)).eq(true);
-    expect(degenGateNFTClaimBegen2_2).eq(degenGateNFTClaimBegen2).eq(0);
-    expect(nftOwner2Begen2).eq(nftOwner2Begen1 + degenGateNFTClaimBegen2_1);
 
     // re claim error
     await expect(info.degenGateNFTClaim.claimNFT(params.info.tid, nftOwner2.address, signatureClaim)).revertedWith("CE");
@@ -274,9 +256,6 @@ describe("DegenGateNFTClaim", function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await info.degenGateVault.addApproveDegen();
 
-    expect(await info.degenGateNFTClaim.tokenIdToBegen(1)).eq(0);
-    expect(await info.degenGateNFTClaim.tokenIdToBegen(2)).eq(0);
-
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60;
 
@@ -357,131 +336,6 @@ describe("DegenGateNFTClaim", function () {
 
     expect(await info.degenGateNFTClaim.isClaim(params.info.tid)).eq(false);
     await expect(info.degenGateNFTClaim.setClaim(params.info.tid)).revertedWith("SE");
-  });
-
-  it("withdraw", async function () {
-    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
-    await info.degenGateVault.addApproveDegen();
-
-    let newOwner = info.wallets[info.nextWalletIndex + 3];
-
-    expect(await info.degenGateNFTClaim.owner()).eq(info.deployWallet.address);
-    await info.degenGateNFTClaim.connect(info.deployWallet).transferOwnership(newOwner.address);
-    expect(await info.degenGateNFTClaim.owner()).eq(newOwner.address);
-
-    const currentTimestamp = Math.floor(new Date().getTime() / 1000);
-    const deadline = currentTimestamp + 60 * 60;
-    let params = {
-      info: {
-        tid: "b",
-        tName: "b",
-        cid: "bc",
-        cName: "bc",
-        followers: 123,
-        omf: 2212,
-      },
-      wrap: {
-        degenAmount: 0,
-        specialBegenAmount: 0
-      },
-      deadline: deadline,
-      nftPrice: 0,
-    };
-    let signatureCreate = await info.signatureWallet.signMessage(
-      ethers.toBeArray(
-        ethers.keccak256(
-          ethers.AbiCoder.defaultAbiCoder().encode(
-            [
-              "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
-              "uint256",
-              "uint256",
-              "address",
-            ],
-            [params.info, params.wrap, params.nftPrice, params.deadline, info.userWallet.address],
-          ),
-        ),
-      ),
-    );
-
-    await info.degenGate.connect(info.userWallet).createTokenWrap(params.info, params.wrap, params.nftPrice, params.deadline, signatureCreate);
-
-    // multiply
-    let bignumber = BigInt(10) ** BigInt(18) * BigInt(10000);
-    await info.mockDegen.transfer(info.userWallet.address, bignumber);
-    await info.mockDegen.connect(info.userWallet).approve(await info.degenGate.getAddress(), bignumber)
-
-    let paramsMultiply = {
-      tid: params.info.tid,
-      multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(100),
-      wrap: {
-        degenAmount: 0,
-        specialBegenAmount: BigInt(10) ** BigInt(18) * BigInt(100)
-      },
-      deadline: deadline,
-    }
-
-    let paramsMultiplySignature = await info.signatureWallet.signMessage(
-      ethers.toBeArray(
-        ethers.keccak256(
-          ethers.AbiCoder.defaultAbiCoder().encode(
-            [
-              "string",
-              "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
-              "uint256",
-              "address",
-            ],
-            [paramsMultiply.tid, paramsMultiply.multiplyAmount, paramsMultiply.wrap, paramsMultiply.deadline, info.userWallet.address],
-          ),
-        ),
-      ),
-    );
-
-    await info.degenGate.connect(info.userWallet).multiply(
-      paramsMultiply.tid,
-      paramsMultiply.multiplyAmount,
-      paramsMultiply.wrap,
-      paramsMultiply.deadline,
-      paramsMultiplySignature
-    )
-
-    let degenGateNFTClaimBegenAmount2_1 = await info.degenGateNFTClaim.tokenIdToBegen(2);
-    let degenGateNFTClaimBegen1 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
-
-    expect(degenGateNFTClaimBegen1).eq(degenGateNFTClaimBegenAmount2_1);
-    expect(degenGateNFTClaimBegenAmount2_1).gt(0);
-
-    await expect(info.degenGateNFTClaim.withdraw(params.info.tid, degenGateNFTClaimBegenAmount2_1)).revertedWith(
-      "Ownable: caller is not the owner",
-    );
-
-    await expect(
-      info.degenGateNFTClaim.connect(newOwner).withdraw(params.info.tid, degenGateNFTClaimBegenAmount2_1 + BigInt(1)),
-    ).revertedWith("EAE");
-
-    let newOwnerBegen1 = await info.begen.balanceOf(newOwner.address);
-
-    await info.degenGateNFTClaim.connect(newOwner).withdraw(params.info.tid, degenGateNFTClaimBegenAmount2_1 - BigInt(1));
-
-    let degenGateNFTClaimBegenAmount2_2 = await info.degenGateNFTClaim.tokenIdToBegen(2);
-    let degenGateNFTClaimBegen2 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
-    let newOwnerBegen2 = await info.begen.balanceOf(newOwner.address);
-
-    expect(degenGateNFTClaimBegen2).eq(degenGateNFTClaimBegenAmount2_2).eq(1);
-    expect(newOwnerBegen2).eq(newOwnerBegen1 + degenGateNFTClaimBegenAmount2_1 - BigInt(1));
-
-    await info.degenGateNFTClaim.connect(newOwner).withdraw(params.info.tid, BigInt(1));
-
-    let degenGateNFTClaimBegenAmount2_3 = await info.degenGateNFTClaim.tokenIdToBegen(2);
-    let degenGateNFTClaimBegen3 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
-    let newOwnerBegen3 = await info.begen.balanceOf(newOwner.address);
-
-    expect(degenGateNFTClaimBegen3).eq(degenGateNFTClaimBegenAmount2_3).eq(0);
-    expect(newOwnerBegen3).eq(newOwnerBegen2 + BigInt(1));
-
-    await expect(info.degenGateNFTClaim.connect(newOwner).withdraw(params.info.tid, BigInt(1))).revertedWith("EAE");
-    await expect(info.degenGateNFTClaim.connect(newOwner).withdraw("t1234", BigInt(1))).revertedWith("TE1");
   });
 
 });

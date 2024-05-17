@@ -375,7 +375,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
     ).revertedWith("ERC20: transfer amount exceeds balance");
   });
 
-  it("begen == nft price + multiply", async function () {
+  it("begen == nft price + multiply | tid != cid", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
@@ -418,7 +418,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
     let degenGateFundRecipientWallet_begen_1 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
     let market_begen_1 = await info.begen.balanceOf(await info.market.getAddress());
     let mortgage_begen_1 = await info.begen.balanceOf(info.mortgageFeeWallet.address);
-    let onftOwner_begen_1 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
+    let degenGateNFTClaim_begen_1 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
 
     await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
 
@@ -457,22 +457,23 @@ describe("DegenGate.createTokenAndMultiply", function () {
     let degenGateFundRecipientWallet_begen_2 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
     let market_begen_2 = await info.begen.balanceOf(await info.market.getAddress());
     let mortgage_begen_2 = await info.begen.balanceOf(info.mortgageFeeWallet.address);
-    let onftOwner_begen_2 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
+    let degenGateNFTClaim_begen_2 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
 
-    // deployWallet_begen_1 - nftPrice - multiplyPayAmount + cnftFee = deployWallet_begen_2
-    let onft_fee_begen = onftOwner_begen_2 - onftOwner_begen_1;
-    let cnft_fee_begen = deployWallet_begen_2 - deployWallet_begen_1 + result;
+    // deployWallet_begen_1 - nftPrice - multiplyPayAmount + nftFee = deployWallet_begen_2
+    let nft_fee_begen = deployWallet_begen_2 - deployWallet_begen_1 + result;
     let mortgage_begen_add = mortgage_begen_2 - mortgage_begen_1;
 
     expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
     expect(await info.publicNFT.ownerOf(4)).eq(await info.degenGateNFTClaim.getAddress());
 
+    expect(degenGateNFTClaim_begen_2).eq(degenGateNFTClaim_begen_1).eq(0)
+
     expect(curve / mortgage_begen_add).eq(1000);
-    expect(curve / (onft_fee_begen + cnft_fee_begen)).eq(100);
+    expect(curve / (nft_fee_begen)).eq(100);
 
-    expect(result - params.nftPrice).eq(mortgage_begen_add + onft_fee_begen + cnft_fee_begen);
+    expect(result - params.nftPrice).eq(mortgage_begen_add + nft_fee_begen);
 
-    expect((curve + onft_fee_begen + cnft_fee_begen) / (result - params.nftPrice)).eq(91);
+    expect((curve + nft_fee_begen) / (result - params.nftPrice)).eq(91);
 
     expect(degenGate_begen_2).eq(degenGate_begen_1).eq(0);
     expect(degenGateFundRecipientWallet_begen_2).eq(degenGateFundRecipientWallet_begen_1 + params.nftPrice);
@@ -522,7 +523,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
     let degenGateFundRecipientWallet_begen_1 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
     let market_begen_1 = await info.begen.balanceOf(await info.market.getAddress());
     let mortgage_begen_1 = await info.begen.balanceOf(info.mortgageFeeWallet.address);
-    let onftOwner_begen_1 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
+    let degenGateNFTClaim_begen_1 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
 
     await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
 
@@ -543,22 +544,22 @@ describe("DegenGate.createTokenAndMultiply", function () {
     let degenGateFundRecipientWallet_begen_2 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
     let market_begen_2 = await info.begen.balanceOf(await info.market.getAddress());
     let mortgage_begen_2 = await info.begen.balanceOf(info.mortgageFeeWallet.address);
-    let onftOwner_begen_2 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
+    let degenGateNFTClaim_begen_2 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
 
-    // deployWallet_begen_1 - nftPrice - multiplyPayAmount + cnftFee = deployWallet_begen_2
-    let onft_fee_begen = onftOwner_begen_2 - onftOwner_begen_1;
-    let cnft_fee_begen = deployWallet_begen_2 - deployWallet_begen_1 + result;
+    // deployWallet_begen_1 - nftPrice - multiplyPayAmount + nftFee = deployWallet_begen_2
+    let nft_fee_begen = deployWallet_begen_2 - deployWallet_begen_1 + result;
     let mortgage_begen_add = mortgage_begen_2 - mortgage_begen_1;
 
     expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
     expect(await info.publicNFT.ownerOf(4)).eq(await info.degenGateNFTClaim.getAddress());
 
+    expect(degenGateNFTClaim_begen_2).eq(degenGateNFTClaim_begen_1).eq(0);
     expect(curve / mortgage_begen_add).eq(1000);
-    expect(curve / (onft_fee_begen + cnft_fee_begen)).eq(100);
+    expect(curve / nft_fee_begen).eq(100);
 
-    expect(result - params.nftPrice).eq(mortgage_begen_add + onft_fee_begen + cnft_fee_begen);
+    expect(result - params.nftPrice).eq(mortgage_begen_add + nft_fee_begen);
 
-    expect((curve + onft_fee_begen + cnft_fee_begen) / (result - params.nftPrice)).eq(91);
+    expect((curve + nft_fee_begen) / (result - params.nftPrice)).eq(91);
 
     expect(degenGate_begen_2).eq(degenGate_begen_1).eq(0);
     expect(degenGateFundRecipientWallet_begen_2).eq(degenGateFundRecipientWallet_begen_1 + params.nftPrice);
@@ -663,7 +664,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
     expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
     expect(await info.publicNFT.ownerOf(4)).eq(info.deployWallet.address);
 
-    expect(degenGateNFTClaim_begen_2).eq(degenGateNFTClaim_begen_1);
+    expect(degenGateNFTClaim_begen_2).eq(degenGateNFTClaim_begen_1).eq(0);
 
     expect(curve / mortgage_begen_add).eq(1000);
     expect(curve / nftFee).eq(100);

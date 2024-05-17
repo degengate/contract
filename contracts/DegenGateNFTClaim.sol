@@ -22,12 +22,9 @@ contract DegenGateNFTClaim is INFTClaim, IPublicNFTVault, ERC165, Ownable, ERC72
   address public signatureAddress;
   // tid => claim
   mapping(string => bool) public override isClaim;
-  // tokenid => amount
-  mapping(uint256 => uint256) public tokenIdToBegen;
 
   event SetSignatureAddress(address _signatureAddress, address sender);
-  event ClaimNFT(string tid, uint256 tokenId, address nftOwner, uint256 begenAmount, address sender);
-  event Withdraw(string tid, uint256 tokenId, uint256 amount, address sender);
+  event ClaimNFT(string tid, uint256 tokenId, address nftOwner, address sender);
   event ReceiveBuySellFee(uint256 tokenId, uint256 amount);
 
   constructor(address _degenGate, address _publicNFT, address _market, address _signatureAddress) Ownable() {
@@ -60,29 +57,19 @@ contract DegenGateNFTClaim is INFTClaim, IPublicNFTVault, ERC165, Ownable, ERC72
 
     IERC721(publicNFT).safeTransferFrom(address(this), nftOwner, tokenId);
 
-    uint256 begenAmount = tokenIdToBegen[tokenId];
-    tokenIdToBegen[tokenId] = 0;
-
-    _transferBegen(nftOwner, begenAmount);
-
-    emit ClaimNFT(tid, tokenId, nftOwner, begenAmount, msg.sender);
-  }
-
-  function withdraw(string memory tid, uint256 amount) external onlyOwner {
-    uint256 tokenId = _findTokenIdByTid(tid);
-    require(tokenIdToBegen[tokenId] >= amount, "EAE");
-
-    tokenIdToBegen[tokenId] -= amount;
-
-    _transferBegen(owner(), amount);
-
-    emit Withdraw(tid, tokenId, amount, msg.sender);
+    emit ClaimNFT(tid, tokenId, nftOwner, msg.sender);
   }
 
   function recordReceiveBuySellFee(uint256 tokenId, uint256 amount) external override returns (bool) {
     require(msg.sender == market, "SE");
 
-    tokenIdToBegen[tokenId] += amount;
+    (string memory tid1, uint256 percent1, , ) = IPublicNFT(publicNFT).tokenIdToInfo(tokenId);
+    (string memory tid2, uint256 percent2, , ) = IPublicNFT(publicNFT).tokenIdToInfo(tokenId - 1);
+    require(percent1 == 95000, "OPE");
+    require(percent2 == 5000, "CPE");
+    require(keccak256(abi.encodePacked(tid1)) == keccak256(abi.encodePacked(tid2)), "TE");
+
+    _transferBegen(IERC721(publicNFT).ownerOf(tokenId - 1), amount);
 
     emit ReceiveBuySellFee(tokenId, amount);
     return true;
