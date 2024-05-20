@@ -21,10 +21,14 @@ contract PublicNFT is Ownable, IPublicNFT, ERC721Enumerable {
 
   uint256 private _nextTokenId = 1;
 
-  constructor(address _foundry, uint256 _appId, address _owner, string memory _name) ERC721(_name, _name) {
+  constructor(
+    address _foundry,
+    uint256 _appId,
+    address _owner,
+    string memory _name
+  ) ERC721(_name, _name) Ownable(_owner) {
     foundry = _foundry;
     appId = _appId;
-    _transferOwnership(_owner);
   }
 
   modifier onlyFoundry() {

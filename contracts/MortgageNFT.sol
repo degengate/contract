@@ -23,10 +23,14 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
   // tokenId => info
   mapping(uint256 => IMortgageNFT.Info) public override info;
 
-  constructor(address _foundry, uint256 _appId, address _owner, string memory _name) ERC721(_name, _name) {
+  constructor(
+    address _foundry,
+    uint256 _appId,
+    address _owner,
+    string memory _name
+  ) ERC721(_name, _name) Ownable(_owner) {
     foundry = _foundry;
     appId = _appId;
-    _transferOwnership(_owner);
   }
 
   function initialize(address _market) external override {
@@ -42,7 +46,7 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
   }
 
   function isApprovedOrOwner(address addr, uint256 tokenId) external view returns (bool) {
-    return _isApprovedOrOwner(addr, tokenId);
+    return _isAuthorized(_ownerOf(tokenId), addr, tokenId);
   }
 
   function mint(address to, string memory tid, uint256 amount) external override onlyMarket returns (uint256 tokenId) {
@@ -56,7 +60,7 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
   }
 
   function burn(uint256 tokenId) external override onlyMarket {
-    _requireMinted(tokenId);
+    _requireOwned(tokenId);
 
     _burn(tokenId);
     delete info[tokenId];
@@ -65,7 +69,7 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
   }
 
   function add(uint256 tokenId, uint256 amount) external override onlyMarket {
-    _requireMinted(tokenId);
+    _requireOwned(tokenId);
 
     info[tokenId].amount += amount;
 
@@ -73,7 +77,7 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
   }
 
   function remove(uint256 tokenId, uint256 amount) external override onlyMarket {
-    _requireMinted(tokenId);
+    _requireOwned(tokenId);
     require(info[tokenId].amount >= amount, "RAE");
 
     if (info[tokenId].amount == amount) {

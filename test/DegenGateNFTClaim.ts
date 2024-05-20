@@ -25,9 +25,9 @@ describe("DegenGateNFTClaim", function () {
     await info.degenGateNFTClaim.connect(info.deployWallet).transferOwnership(newOwner.address);
     expect(await info.degenGateNFTClaim.owner()).eq(newOwner.address);
 
-    await expect(info.degenGateNFTClaim.setSignatureAddress(newSign.address)).revertedWith(
-      "Ownable: caller is not the owner",
-    );
+    await expect(
+      info.degenGateNFTClaim.setSignatureAddress(newSign.address)
+    ).revertedWithCustomError(info.degenGateNFTClaim, "OwnableUnauthorizedAccount");
     await info.degenGateNFTClaim.connect(newOwner).setSignatureAddress(newSign.address);
     expect(await info.degenGateNFTClaim.signatureAddress()).eq(newSign.address);
   });
@@ -155,8 +155,8 @@ describe("DegenGateNFTClaim", function () {
     );
     await expect(info.degenGateNFTClaim.claimNFT("aaaaaa", nftOwner2.address, signatureClaimTidError)).revertedWith("TE1");
 
-    await expect(info.publicNFT.ownerOf(3)).revertedWith("ERC721: invalid token ID");
-    await expect(info.publicNFT.ownerOf(4)).revertedWith("ERC721: invalid token ID");
+    await expect(info.publicNFT.ownerOf(3)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken");
+    await expect(info.publicNFT.ownerOf(4)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken");
 
     let params2 = {
       info: {

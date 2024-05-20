@@ -10,6 +10,8 @@ describe("DegenGateVault", function () {
         expect(await info.degenGateVault.begen()).eq(await info.begen.getAddress())
         expect(await info.degenGateVault.degen()).eq(await info.mockDegen.getAddress())
         expect(await info.degenGateVault.degenGate()).eq(await info.degenGate.getAddress())
+
+        expect(await info.degenGateVault.owner()).eq(info.deployWallet.address);
     });
 
     it("addApproveDegen", async function () {
@@ -17,7 +19,7 @@ describe("DegenGateVault", function () {
 
         await expect(
             info.degenGateVault.connect(info.userWallet).addApproveDegen()
-        ).revertedWith("Ownable: caller is not the owner");
+        ).revertedWithCustomError(info.degenGateVault, "OwnableUnauthorizedAccount")
 
         expect(await info.degenGateVault.owner()).eq(info.deployWallet.address)
         await info.degenGateVault.connect(info.deployWallet).addApproveDegen()

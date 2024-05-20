@@ -372,7 +372,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
       info.degenGate
         .connect(info.deployWallet)
         .createTokenAndMultiply(params.info, params.nftPrice, params.deadline, signature, params.multiplyAmount, payTokenAmountMax),
-    ).revertedWith("ERC20: transfer amount exceeds balance");
+    ).revertedWithCustomError(info.begen, "ERC20InsufficientBalance")
   });
 
   it("begen == nft price + multiply | tid != cid", async function () {
@@ -427,10 +427,10 @@ describe("DegenGate.createTokenAndMultiply", function () {
       .createTokenAndMultiply.staticCall(params.info, params.nftPrice, params.deadline, signature, params.multiplyAmount, payTokenAmountMax);
 
     expect(result).eq(payTokenAmountMax)
-    await expect(info.publicNFT.ownerOf(3)).revertedWith("ERC721: invalid token ID");
-    await expect(info.publicNFT.ownerOf(4)).revertedWith("ERC721: invalid token ID");
+    await expect(info.publicNFT.ownerOf(3)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken")
+    await expect(info.publicNFT.ownerOf(4)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken")
 
-    await expect(info.mortgageNFT.ownerOf(2)).revertedWith("ERC721: invalid token ID");
+    await expect(info.mortgageNFT.ownerOf(2)).revertedWithCustomError(info.mortgageNFT, "ERC721NonexistentToken")
 
     await info.degenGate
       .connect(info.deployWallet)
@@ -624,10 +624,10 @@ describe("DegenGate.createTokenAndMultiply", function () {
       .createTokenAndMultiply.staticCall(params.info, params.nftPrice, params.deadline, signature, params.multiplyAmount, payTokenAmountMax);
 
     expect(result).eq(payTokenAmountMax)
-    await expect(info.publicNFT.ownerOf(3)).revertedWith("ERC721: invalid token ID");
-    await expect(info.publicNFT.ownerOf(4)).revertedWith("ERC721: invalid token ID");
+    await expect(info.publicNFT.ownerOf(3)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken")
+    await expect(info.publicNFT.ownerOf(4)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken")
 
-    await expect(info.mortgageNFT.ownerOf(2)).revertedWith("ERC721: invalid token ID");
+    await expect(info.mortgageNFT.ownerOf(2)).revertedWithCustomError(info.mortgageNFT, "ERC721NonexistentToken")
 
     await info.degenGate
       .connect(info.deployWallet)

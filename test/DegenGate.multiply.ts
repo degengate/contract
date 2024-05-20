@@ -515,7 +515,7 @@ describe("DegenGate.multiply", function () {
                 paramsMultiply.deadline,
                 paramsMultiplySignature
             )
-        ).revertedWith("ERC20: transfer amount exceeds balance");
+        ).revertedWithCustomError(info.begen, "ERC20InsufficientBalance")
 
     });
 
@@ -793,7 +793,7 @@ describe("DegenGate.multiply", function () {
             paramsMultiply.wrap,
             paramsMultiply.deadline,
             paramsMultiplySignature
-        )).revertedWith("ERC20: transfer amount exceeds balance")
+        )).revertedWithCustomError(info.mockDegen, "ERC20InsufficientBalance")
 
 
     });
@@ -1296,7 +1296,7 @@ describe("DegenGate.multiply", function () {
             paramsMultiply.wrap,
             paramsMultiply.deadline,
             paramsMultiplySignature
-        )).revertedWith("ERC20: transfer amount exceeds balance")
+        )).revertedWithCustomError(info.begen, "ERC20InsufficientBalance")
 
     });
 });

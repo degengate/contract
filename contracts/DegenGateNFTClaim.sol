@@ -3,6 +3,7 @@ pragma solidity >=0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
@@ -14,8 +15,6 @@ import "./interfaces/IPublicNFTVault.sol";
 import "./interfaces/IMarket.sol";
 
 contract DegenGateNFTClaim is INFTClaim, IPublicNFTVault, ERC165, Ownable, ERC721Holder {
-  using ECDSA for bytes32;
-
   address public immutable degenGate;
   address public immutable publicNFT;
   address public immutable market;
@@ -27,7 +26,7 @@ contract DegenGateNFTClaim is INFTClaim, IPublicNFTVault, ERC165, Ownable, ERC72
   event ClaimNFT(string tid, uint256 tokenId, address nftOwner, address sender);
   event ReceiveBuySellFee(uint256 tokenId, uint256 amount);
 
-  constructor(address _degenGate, address _publicNFT, address _market, address _signatureAddress) Ownable() {
+  constructor(address _degenGate, address _publicNFT, address _market, address _signatureAddress) Ownable(msg.sender) {
     degenGate = _degenGate;
     publicNFT = _publicNFT;
     market = _market;
@@ -104,7 +103,10 @@ contract DegenGateNFTClaim is INFTClaim, IPublicNFTVault, ERC165, Ownable, ERC72
   function _verifyClaimSignature(string memory tid, address nftOwner, bytes memory signature) private view {
     bytes32 raw = keccak256(abi.encode(tid, nftOwner));
 
-    require(SignatureChecker.isValidSignatureNow(signatureAddress, raw.toEthSignedMessageHash(), signature), "VSE");
+    require(
+      SignatureChecker.isValidSignatureNow(signatureAddress, MessageHashUtils.toEthSignedMessageHash(raw), signature),
+      "VSE"
+    );
   }
 
   fallback() external payable {}

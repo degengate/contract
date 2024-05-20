@@ -1,15 +1,19 @@
 {
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
-    "@openzeppelin/contracts": "^4.9.3",
+    "@nomicfoundation/hardhat-ethers": "^3.0.6",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "@openzeppelin/hardhat-upgrades": "^3.1.0",
     "base64-sol": "^1.1.0",
     "decimal.js": "^10.4.3",
     "dotenv": "^16.3.1",
+    "ethers": "^6.12.1",
     "hardhat": "^2.17.4",
     "hardhat-contract-sizer": "^2.10.0",
     "hardhat-gas-reporter": "^1.0.9",
+    "hardhat-insight": "^0.1.9",
     "prettier": "3.0.3",
-    "prettier-plugin-solidity": "^1.1.3",
-    "hardhat-insight": "^0.1.9"
+    "prettier-plugin-solidity": "^1.1.3"
   }
 }

@@ -43,11 +43,11 @@ describe("Market", function () {
       await info.market
         .connect(user1)
         .redeem(1, getTokenAmountWei(1000));
-      await expect(info.mortgageNFT.ownerOf(1)).revertedWith("ERC721: invalid token ID");
+      await expect(info.mortgageNFT.ownerOf(1)).revertedWithCustomError(info.mortgageNFT, "ERC721NonexistentToken");
       // cash not tokenid
-      await expect(info.market.connect(user1).cash(5, 100)).revertedWith("ERC721: invalid token ID");
+      await expect(info.market.connect(user1).cash(5, 100)).revertedWithCustomError(info.mortgageNFT, "ERC721NonexistentToken");
       // cash deleted tokenid
-      await expect(info.market.connect(user1).cash(1, 10)).revertedWith("ERC721: invalid token ID");
+      await expect(info.market.connect(user1).cash(1, 10)).revertedWithCustomError(info.mortgageNFT, "ERC721NonexistentToken");
       // cash other user tokenid
       await expect(info.market.connect(user1).cash(2, 10)).revertedWith("AOE");
 
@@ -255,7 +255,7 @@ describe("Market", function () {
 
       await info.market.connect(user1).cash(1, getTokenAmountWei(9000));
 
-      await expect(info.mortgageNFT.ownerOf(1)).revertedWith("ERC721: invalid token ID");
+      await expect(info.mortgageNFT.ownerOf(1)).revertedWithCustomError(info.mortgageNFT, "ERC721NonexistentToken");
       expect((await info.mortgageNFT.info(1)).amount).eq(
         getTokenAmountWei(10000) - getTokenAmountWei(1000) - getTokenAmountWei(9000),
       );

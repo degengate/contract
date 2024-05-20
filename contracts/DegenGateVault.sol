@@ -16,7 +16,7 @@ contract DegenGateVault is Ownable {
   event Collect(address user, uint256 amount, bytes data);
   event CollectAll(address user, uint256 amount, bytes data);
 
-  constructor(address _degenGate, address _begen, address _degen) Ownable() {
+  constructor(address _degenGate, address _begen, address _degen) Ownable(msg.sender) {
     degenGate = _degenGate;
     begen = _begen;
     degen = _degen;

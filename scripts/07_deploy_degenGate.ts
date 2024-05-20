@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { expect } from "chai";
 
 import {
@@ -20,29 +20,26 @@ async function main() {
   const wallets = await ethers.getSigners();
   const deployWallet = wallets[0];
 
-  const degenGate = await ethers.deployContract(
-    "DegenGate",
-    [
-      foundryAddress,
-      appid,
-      degenGateMortgageNFTAddress,
-      degenGateMarketAddress,
-      degenAddress,
-      degenGateVaultAddress,
-      degenGateNFTClaimAddress,
-      degenGateFundRecipientWalletAddress,
-      signatureWalletAddress,
-    ],
-    {
+  const DegenGate = await ethers.getContractFactory("DegenGate");
+  const degenGate = await upgrades.deployProxy(DegenGate, [
+    foundryAddress,
+    appid,
+    degenGateMortgageNFTAddress,
+    degenGateMarketAddress,
+    degenAddress,
+    degenGateVaultAddress,
+    degenGateNFTClaimAddress,
+    degenGateFundRecipientWalletAddress,
+    signatureWalletAddress,
+  ], {
+    txOverrides: {
       maxFeePerGas: config.maxFeePerGas,
       maxPriorityFeePerGas: config.maxPriorityFeePerGas,
       nonce: config.nonce0 + 7,
     },
-  );
-
+  });
   await degenGate.waitForDeployment();
-
-  console.log(`degenGate deployed to ${degenGate.target}`);
+  console.log("degenGate deployed to:", degenGate.target);
 
   expect(degenGate.target).eq(degenGateAddress);
 

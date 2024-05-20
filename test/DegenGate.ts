@@ -22,6 +22,8 @@ describe("DegenGate", function () {
 
         expect(await info.degenGate.begen()).eq(await info.begen.getAddress());
 
+        expect(await info.degenGate.owner()).eq(info.deployWallet.address);
+
     });
 
     it("setFundRecipient", async function () {
@@ -32,7 +34,7 @@ describe("DegenGate", function () {
         expect(await info.degenGate.owner()).eq(info.deployWallet.address)
         await expect(
             info.degenGate.connect(info.userWallet).setFundRecipient(info.userWallet.address)
-        ).revertedWith("Ownable: caller is not the owner");
+        ).revertedWithCustomError(info.degenGate, "OwnableUnauthorizedAccount")
         await info.degenGate.connect(info.deployWallet).setFundRecipient(info.userWallet.address)
         expect(await info.degenGate.fundRecipient()).eq(info.userWallet.address);
     })
@@ -45,7 +47,7 @@ describe("DegenGate", function () {
         expect(await info.degenGate.owner()).eq(info.deployWallet.address)
         await expect(
             info.degenGate.connect(info.userWallet).setSignatureAddress(info.userWallet.address)
-        ).revertedWith("Ownable: caller is not the owner");
+        ).revertedWithCustomError(info.degenGate, "OwnableUnauthorizedAccount")
         await info.degenGate.connect(info.deployWallet).setSignatureAddress(info.userWallet.address)
         expect(await info.degenGate.signatureAddress()).eq(info.userWallet.address);
     })

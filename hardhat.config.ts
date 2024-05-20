@@ -5,6 +5,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-insight";
 import "hardhat-gas-reporter";
 import "hardhat-contract-sizer";
+import "@openzeppelin/hardhat-upgrades";
 
 dotenv.config();
 

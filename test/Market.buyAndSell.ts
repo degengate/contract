@@ -108,7 +108,7 @@ describe("Market", function () {
       await info.simpleToken.approve(await info.market.getAddress(), 1)
       await expect(
         info.market.buy(params.tid, getTokenAmountWei(1000)),
-      ).revertedWith("ERC20: insufficient allowance");
+      ).revertedWithCustomError(info.simpleToken, "ERC20InsufficientAllowance")
       // buy amount > 1000W
       await info.simpleToken.approve(await info.market.getAddress(), BigInt(10) ** BigInt(18) * BigInt("10000000000"))
       await expect(

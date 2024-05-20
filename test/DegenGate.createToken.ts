@@ -343,8 +343,8 @@ describe("DegenGate.createToken", function () {
 
     await info.begen.approve(await info.degenGate.getAddress(), params.nftPrice - 1)
     await expect(
-      info.degenGate.connect(info.deployWallet).createToken(params.info, params.nftPrice, params.deadline, signature),
-    ).revertedWith("ERC20: insufficient allowance");
+      info.degenGate.connect(info.deployWallet).createToken(params.info, params.nftPrice, params.deadline, signature)
+    ).revertedWithCustomError(info.begen, "ERC20InsufficientAllowance")
   });
 
   it("begen < nft price balanceOf", async function () {
@@ -385,7 +385,7 @@ describe("DegenGate.createToken", function () {
     await info.begen.approve(await info.degenGate.getAddress(), MAX_UINT256)
     await expect(
       info.degenGate.connect(info.deployWallet).createToken(params.info, params.nftPrice, params.deadline, signature),
-    ).revertedWith("ERC20: transfer amount exceeds balance");
+    ).revertedWithCustomError(info.begen, "ERC20InsufficientBalance")
   });
 
   it("begen eq nft price | cid != tid", async function () {

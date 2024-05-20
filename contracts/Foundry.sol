@@ -12,8 +12,8 @@ import "./interfaces/IMortgageNFT.sol";
 import "./interfaces/IMarket.sol";
 
 contract Foundry is IFoundry, Ownable {
-  uint256 public constant override FEE_DENOMINATOR = 100000;
-  uint256 public constant override TOTAL_PERCENT = 100000;
+  uint256 public override FEE_DENOMINATOR = 100000;
+  uint256 public override TOTAL_PERCENT = 100000;
 
   address public immutable override publicNFTFactory;
   address public immutable override mortgageNFTFactory;
@@ -46,7 +46,7 @@ contract Foundry is IFoundry, Ownable {
     address _marketFactory,
     uint256 _defaultMortgageFee,
     address _defaultMortgageFeeRecipient
-  ) Ownable() {
+  ) Ownable(msg.sender) {
     publicNFTFactory = _publicNFTFactory;
     mortgageNFTFactory = _mortgageNFTFactory;
     marketFactory = _marketFactory;

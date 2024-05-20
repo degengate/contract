@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
 
@@ -50,9 +50,9 @@ export async function getAllContractAddress(deployWallet: HardhatEthersSigner): 
   // deploy curve 4
   // deploy begen 5
   // create degenGate app 6
-  // deploy degenGate 7
-  // deploy degenGateNFTClaim 8
-  // deploy degenGateVault 9 
+  // deploy degenGate 8
+  // deploy degenGateNFTClaim 9
+  // deploy degenGateVault 10
 
   const foundry = await getContractAddress(deployWallet.address, nextNoice);
   const publicNFTFactory = await getContractAddress(deployWallet.address, nextNoice + 1);
@@ -60,9 +60,9 @@ export async function getAllContractAddress(deployWallet: HardhatEthersSigner): 
   const marketFactory = await getContractAddress(deployWallet.address, nextNoice + 3);
   const curve = await getContractAddress(deployWallet.address, nextNoice + 4);
   const begen = await getContractAddress(deployWallet.address, nextNoice + 5);
-  const degenGate = await getContractAddress(deployWallet.address, nextNoice + 7);
-  const degenGateNFTClaim = await getContractAddress(deployWallet.address, nextNoice + 8);
-  const degenGateVault = await getContractAddress(deployWallet.address, nextNoice + 9);
+  const degenGate = await getContractAddress(deployWallet.address, nextNoice + 8);
+  const degenGateNFTClaim = await getContractAddress(deployWallet.address, nextNoice + 9);
+  const degenGateVault = await getContractAddress(deployWallet.address, nextNoice + 10);
 
   return {
     foundry: foundry,
@@ -212,9 +212,8 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
   market = (await ethers.getContractAt("Market", info.market)) as Market;
 
   // deploy degenGate
-  degenGate = (await (
-    await ethers.getContractFactory("DegenGate")
-  ).deploy(
+  const degenGate__factory = await ethers.getContractFactory("DegenGate");
+  const d = await upgrades.deployProxy(degenGate__factory, [
     addressInfo.foundry,
     appId,
     await mortgageNFT.getAddress(),
@@ -224,7 +223,12 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
     addressInfo.degenGateNFTClaim,
     degenGateFundRecipientWallet.address,
     signatureWallet.address,
-  )) as DegenGate;
+  ]);
+  await d.waitForDeployment();
+
+  degenGate = (await ethers.getContractAt("DegenGate", await d.getAddress())) as DegenGate;
+  expect(await degenGate.appId()).eq(appId)
+  expect(await degenGate.foundry()).eq(await foundry.getAddress())
 
   // deploy degenGateNFTClaim
   degenGateNFTClaim = (await (

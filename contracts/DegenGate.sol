@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./interfaces/IMarket.sol";
 import "./interfaces/IFoundry.sol";
 import "./interfaces/INFTClaim.sol";
 import "./interfaces/IBegen.sol";
 
-contract DegenGate is Ownable {
-  using ECDSA for bytes32;
-
+contract DegenGate is Initializable, OwnableUpgradeable {
   struct TokenInfo {
     string tid;
     string tName;
@@ -28,12 +28,12 @@ contract DegenGate is Ownable {
     uint256 specialBegenAmount;
   }
 
-  address public immutable foundry;
-  uint256 public immutable appId;
-  address public immutable mortgageNFT;
-  address public immutable market;
-  address public immutable degen;
-  address public immutable vault;
+  address public foundry;
+  uint256 public appId;
+  address public mortgageNFT;
+  address public market;
+  address public degen;
+  address public vault;
 
   address public nftClaim;
   address public fundRecipient;
@@ -87,7 +87,7 @@ contract DegenGate is Ownable {
     _;
   }
 
-  constructor(
+  function initialize(
     address _foundry,
     uint256 _appId,
     address _mortgageNFT,
@@ -97,7 +97,7 @@ contract DegenGate is Ownable {
     address _nftClaim,
     address _fundRecipient,
     address _signatureAddress
-  ) Ownable() {
+  ) public initializer {
     foundry = _foundry;
     appId = _appId;
     mortgageNFT = _mortgageNFT;
@@ -108,6 +108,8 @@ contract DegenGate is Ownable {
     nftClaim = _nftClaim;
     fundRecipient = _fundRecipient;
     signatureAddress = _signatureAddress;
+
+    __Ownable_init(msg.sender);
   }
 
   function createTokenWrap(
@@ -309,7 +311,11 @@ contract DegenGate is Ownable {
     bytes memory signature
   ) private view {
     bytes32 raw = keccak256(abi.encode(info, nftPrice, deadline, _msgSender()));
-    require(SignatureChecker.isValidSignatureNow(signatureAddress, raw.toEthSignedMessageHash(), signature), "VSE");
+
+    require(
+      SignatureChecker.isValidSignatureNow(signatureAddress, MessageHashUtils.toEthSignedMessageHash(raw), signature),
+      "VSE"
+    );
   }
 
   function _verifyCreateTokenWrapSignature(
@@ -320,7 +326,10 @@ contract DegenGate is Ownable {
     bytes memory signature
   ) private view {
     bytes32 raw = keccak256(abi.encode(info, wrap, nftPrice, deadline, _msgSender()));
-    require(SignatureChecker.isValidSignatureNow(signatureAddress, raw.toEthSignedMessageHash(), signature), "VSE");
+    require(
+      SignatureChecker.isValidSignatureNow(signatureAddress, MessageHashUtils.toEthSignedMessageHash(raw), signature),
+      "VSE"
+    );
   }
 
   function _verifyMultiplySignature(
@@ -331,7 +340,10 @@ contract DegenGate is Ownable {
     bytes memory signature
   ) private view {
     bytes32 raw = keccak256(abi.encode(tid, multiplyAmount, wrap, deadline, _msgSender()));
-    require(SignatureChecker.isValidSignatureNow(signatureAddress, raw.toEthSignedMessageHash(), signature), "VSE");
+    require(
+      SignatureChecker.isValidSignatureNow(signatureAddress, MessageHashUtils.toEthSignedMessageHash(raw), signature),
+      "VSE"
+    );
   }
 
   function _verifyMultiplyAddSignature(
@@ -342,7 +354,10 @@ contract DegenGate is Ownable {
     bytes memory signature
   ) private view {
     bytes32 raw = keccak256(abi.encode(nftTokenId, multiplyAmount, wrap, deadline, _msgSender()));
-    require(SignatureChecker.isValidSignatureNow(signatureAddress, raw.toEthSignedMessageHash(), signature), "VSE");
+    require(
+      SignatureChecker.isValidSignatureNow(signatureAddress, MessageHashUtils.toEthSignedMessageHash(raw), signature),
+      "VSE"
+    );
   }
 
   function _refundWrap(WrapInfo memory wrap, uint256 needPay) private {

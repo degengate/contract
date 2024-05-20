@@ -17,7 +17,7 @@ import {
 } from "./params.json";
 import config from "./config.json";
 
-let first_add = 11;
+let first_add = 12;
 
 async function main() {
   const foundry = await ethers.getContractAt("Foundry", foundryAddress);

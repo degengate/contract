@@ -170,18 +170,18 @@ describe("Foundry", function () {
     expect(await info.foundry.owner()).eq(info.deployWallet.address);
     await info.foundry.connect(info.deployWallet).transferOwnership(newOwner.address);
     expect(await info.foundry.owner()).eq(newOwner.address);
-    await expect(info.foundry.connect(info.deployWallet).transferOwnership(newOwner.address)).revertedWith(
-      "Ownable: caller is not the owner",
-    );
+    await expect(
+      info.foundry.connect(info.deployWallet).transferOwnership(newOwner.address)
+    ).revertedWithCustomError(info.foundry, "OwnableUnauthorizedAccount")
 
     expect(await info.foundry.mortgageFee(info.appId)).eq(info.mortgageFee);
     expect(await info.foundry.mortgageFee(0)).eq(0);
     expect(await info.foundry.mortgageFee(2)).eq(info.mortgageFee);
 
     let newMortgageFee = info.mortgageFee + 1;
-    await expect(info.foundry.connect(info.deployWallet).setMortgageFee(info.appId, newMortgageFee)).revertedWith(
-      "Ownable: caller is not the owner",
-    );
+    await expect(
+      info.foundry.connect(info.deployWallet).setMortgageFee(info.appId, newMortgageFee)
+    ).revertedWithCustomError(info.foundry, "OwnableUnauthorizedAccount")
 
     await info.foundry.connect(newOwner).setMortgageFee(info.appId, newMortgageFee);
     expect(await info.foundry.mortgageFee(info.appId)).eq(newMortgageFee);
@@ -216,9 +216,9 @@ describe("Foundry", function () {
     expect(await info.foundry.owner()).eq(info.deployWallet.address);
     await info.foundry.connect(info.deployWallet).transferOwnership(newOwner.address);
     expect(await info.foundry.owner()).eq(newOwner.address);
-    await expect(info.foundry.connect(info.deployWallet).transferOwnership(newOwner.address)).revertedWith(
-      "Ownable: caller is not the owner",
-    );
+    await expect(
+      info.foundry.connect(info.deployWallet).transferOwnership(newOwner.address)
+    ).revertedWithCustomError(info.foundry, "OwnableUnauthorizedAccount")
 
     expect(await info.foundry.mortgageFeeRecipient(info.appId)).eq(info.mortgageFeeWallet.address);
     expect(await info.foundry.mortgageFeeRecipient(0)).eq(ZERO_ADDRESS);
@@ -227,7 +227,7 @@ describe("Foundry", function () {
     let newMortgageFeeRecipient = info.wallets[info.nextWalletIndex + 2];
     await expect(
       info.foundry.connect(info.deployWallet).setMortgageFeeRecipient(info.appId, newMortgageFeeRecipient.address),
-    ).revertedWith("Ownable: caller is not the owner");
+    ).revertedWithCustomError(info.foundry, "OwnableUnauthorizedAccount")
 
     await info.foundry.connect(newOwner).setMortgageFeeRecipient(info.appId, newMortgageFeeRecipient.address);
 
@@ -595,11 +595,11 @@ describe("Foundry", function () {
 
       expect(await publicNFT.totalSupply()).eq(2 * i - 2);
 
-      await expect(publicNFT.ownerOf(2 * i - 1)).revertedWith("ERC721: invalid token ID");
-      await expect(publicNFT.ownerOf(2 * i)).revertedWith("ERC721: invalid token ID");
+      await expect(publicNFT.ownerOf(2 * i - 1)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken");
+      await expect(publicNFT.ownerOf(2 * i)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken");
 
-      await expect(publicNFT.tokenIdToInfo(2 * i - 1)).revertedWith("ERC721: invalid token ID");
-      await expect(publicNFT.tokenIdToInfo(2 * i)).revertedWith("ERC721: invalid token ID");
+      await expect(publicNFT.tokenIdToInfo(2 * i - 1)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken");
+      await expect(publicNFT.tokenIdToInfo(2 * i)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken");
 
       let tokenIds = await publicNFT.tidToTokenIds(tid);
       expect(tokenIds.length).eq(0);

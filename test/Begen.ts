@@ -17,10 +17,10 @@ describe("Begen", function () {
         expect(await info.begen.balanceOf(info.deployWallet.address)).eq(0)
         await expect(
             info.begen.connect(info.deployWallet).burnOrigin(1)
-        ).revertedWith("ERC20: burn amount exceeds balance")
+        ).revertedWithCustomError(info.begen, "ERC20InsufficientBalance")
         await expect(
             info.begen.connect(info.deployWallet).burnSender(1)
-        ).revertedWith("ERC20: burn amount exceeds balance")
+        ).revertedWithCustomError(info.begen, "ERC20InsufficientBalance")
     });
 
     it("burn success", async function () {
