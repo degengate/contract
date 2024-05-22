@@ -204,7 +204,7 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
   )) as Begen;
 
   // create degenGate app
-  await foundry.createApp("degenGate", degenGateOwnerWallet.address, addressInfo.degenGate, await curve.getAddress(), await begen.getAddress(), buySellFee);
+  await foundry.createApp(appName, degenGateOwnerWallet.address, addressInfo.degenGate, await curve.getAddress(), await begen.getAddress(), buySellFee);
 
   let info = await foundry.apps(appId);
   publicNFT = (await ethers.getContractAt("PublicNFT", info.publicNFT)) as PublicNFT;
