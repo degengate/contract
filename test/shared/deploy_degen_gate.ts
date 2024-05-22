@@ -38,6 +38,8 @@ export type AllContractAddressInfo = {
   degenGate: string;
   degenGateNFTClaim: string;
   degenGateVault: string;
+  publicNFTView: string;
+  mortgageNFTView: string;
 };
 
 export async function getAllContractAddress(deployWallet: HardhatEthersSigner): Promise<AllContractAddressInfo> {
@@ -53,6 +55,8 @@ export async function getAllContractAddress(deployWallet: HardhatEthersSigner): 
   // deploy degenGate 8
   // deploy degenGateNFTClaim 9
   // deploy degenGateVault 10
+  // deploy publicNFTView 11
+  // deploy mortgageNFTView 12
 
   const foundry = await getContractAddress(deployWallet.address, nextNoice);
   const publicNFTFactory = await getContractAddress(deployWallet.address, nextNoice + 1);
@@ -63,6 +67,8 @@ export async function getAllContractAddress(deployWallet: HardhatEthersSigner): 
   const degenGate = await getContractAddress(deployWallet.address, nextNoice + 8);
   const degenGateNFTClaim = await getContractAddress(deployWallet.address, nextNoice + 9);
   const degenGateVault = await getContractAddress(deployWallet.address, nextNoice + 10);
+  const publicNFTView = await getContractAddress(deployWallet.address, nextNoice + 11);
+  const mortgageNFTView = await getContractAddress(deployWallet.address, nextNoice + 12);
 
   return {
     foundry: foundry,
@@ -74,6 +80,8 @@ export async function getAllContractAddress(deployWallet: HardhatEthersSigner): 
     degenGate: degenGate,
     degenGateNFTClaim: degenGateNFTClaim,
     degenGateVault: degenGateVault,
+    publicNFTView: publicNFTView,
+    mortgageNFTView: mortgageNFTView,
   };
 }
 

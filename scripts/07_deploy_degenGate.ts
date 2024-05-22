@@ -35,7 +35,6 @@ async function main() {
     txOverrides: {
       maxFeePerGas: config.maxFeePerGas,
       maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-      nonce: config.nonce0 + 7,
     },
   });
   await degenGate.waitForDeployment();
