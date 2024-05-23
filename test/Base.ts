@@ -132,43 +132,6 @@ describe("Base", function () {
       paramsMultiplySignature
     )
 
-    // multiply add
-    let paramsMultiplyAdd = {
-      nftTokenId: multiplyResult.nftTokenId,
-      multiplyAmount: 200,
-      wrap: {
-        degenAmount: 200,
-        specialBegenAmount: 1
-      },
-      deadline: deadline,
-    }
-
-
-    let paramsMultiplyAddSignature = await info.signatureWallet.signMessage(
-      ethers.toBeArray(
-        ethers.keccak256(
-          ethers.AbiCoder.defaultAbiCoder().encode(
-            [
-              "uint256",
-              "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
-              "uint256",
-              "address",
-            ],
-            [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
-          ),
-        ),
-      ),
-    );
-
-    await info.degenGate.connect(info.userWallet).multiplyAdd(
-      paramsMultiplyAdd.nftTokenId,
-      paramsMultiplyAdd.multiplyAmount,
-      paramsMultiplyAdd.wrap,
-      paramsMultiplyAdd.deadline,
-      paramsMultiplyAddSignature
-    )
-
 
     // multiply
     let paramsMultiply2 = {
@@ -209,7 +172,7 @@ describe("Base", function () {
 
     // cash
     let userDegenBalanceOf_1 = await info.mockDegen.balanceOf(info.userWallet)
-    let userTokenAmount = paramsMultiply.multiplyAmount + paramsMultiplyAdd.multiplyAmount;
+    let userTokenAmount = paramsMultiply.multiplyAmount;
 
     expect((await info.mortgageNFT.info(multiplyResult.nftTokenId)).amount).eq(userTokenAmount);
     let cashResult = await info.degenGate.connect(info.userWallet).cash.staticCall(multiplyResult.nftTokenId, userTokenAmount);

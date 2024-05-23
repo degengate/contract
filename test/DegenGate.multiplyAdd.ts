@@ -7,7 +7,7 @@ import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
 const multiply_1000_BegenAmount = BigInt("11001100110011001100");
 const b1000_multiplyAdd_1000_BegenAmount = BigInt("11003300770165034105")
 
-async function createTokenAndMultiply_1000(info: DegenGateAllContractInfo): Promise<string> {
+async function createTokenAndMultiply_1000(info: DegenGateAllContractInfo): Promise<{ tid: string, tokenId: bigint }> {
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
 
@@ -76,6 +76,14 @@ async function createTokenAndMultiply_1000(info: DegenGateAllContractInfo): Prom
         ),
     );
 
+    const result = await info.degenGate.connect(info.userWallet).multiply.staticCall(
+        paramsMultiply.tid,
+        paramsMultiply.multiplyAmount,
+        paramsMultiply.wrap,
+        paramsMultiply.deadline,
+        paramsMultiplySignature
+    )
+
     await info.degenGate.connect(info.userWallet).multiply(
         paramsMultiply.tid,
         paramsMultiply.multiplyAmount,
@@ -84,252 +92,17 @@ async function createTokenAndMultiply_1000(info: DegenGateAllContractInfo): Prom
         paramsMultiplySignature
     )
 
-    return params.info.tid;
+    return {
+        tid: params.info.tid,
+        tokenId: result.nftTokenId,
+    };
 }
 
-describe("DegenGate.multiplyAdd", function () {
-    it("signature sender error", async function () {
-        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
-
-        await createTokenAndMultiply_1000(info)
-
-        // multiplyAdd
-        const currentTimestamp = Math.floor(new Date().getTime() / 1000);
-        const deadline = currentTimestamp + 60 * 60
-
-        let paramsMultiplyAdd = {
-            nftTokenId: 1,
-            multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
-            wrap: {
-                degenAmount: 0,
-                specialBegenAmount: b1000_multiplyAdd_1000_BegenAmount * BigInt(2)
-            },
-            deadline: deadline,
-        }
-
-        let paramsMultiplyAddSignature = await info.signatureWallet.signMessage(
-            ethers.toBeArray(
-                ethers.keccak256(
-                    ethers.AbiCoder.defaultAbiCoder().encode(
-                        [
-                            "uint256",
-                            "uint256",
-                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
-                            "uint256",
-                            "address",
-                        ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.deployWallet.address],
-                    ),
-                ),
-            ),
-        );
-
-        await expect(info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
-            paramsMultiplyAdd.multiplyAmount,
-            paramsMultiplyAdd.wrap,
-            paramsMultiplyAdd.deadline,
-            paramsMultiplyAddSignature
-        )).revertedWith("VSE")
-
-    });
-
-    it("signature info error", async function () {
-        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
-
-        await createTokenAndMultiply_1000(info)
-
-        // multiplyAdd
-        const currentTimestamp = Math.floor(new Date().getTime() / 1000);
-        const deadline = currentTimestamp + 60 * 60
-
-        let paramsMultiplyAdd = {
-            nftTokenId: 1,
-            multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
-            wrap: {
-                degenAmount: 0,
-                specialBegenAmount: b1000_multiplyAdd_1000_BegenAmount * BigInt(2)
-            },
-            deadline: deadline,
-        }
-
-        let paramsMultiplyAddSignature = await info.signatureWallet.signMessage(
-            ethers.toBeArray(
-                ethers.keccak256(
-                    ethers.AbiCoder.defaultAbiCoder().encode(
-                        [
-                            "uint256",
-                            "uint256",
-                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
-                            "uint256",
-                            "address",
-                        ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount + BigInt(10), paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
-                    ),
-                ),
-            ),
-        );
-
-        await expect(info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
-            paramsMultiplyAdd.multiplyAmount,
-            paramsMultiplyAdd.wrap,
-            paramsMultiplyAdd.deadline,
-            paramsMultiplyAddSignature
-        )).revertedWith("VSE")
-
-    });
-
-    it("signatureAddress error", async function () {
-        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
-
-        await createTokenAndMultiply_1000(info)
-
-        // multiplyAdd
-        const currentTimestamp = Math.floor(new Date().getTime() / 1000);
-        const deadline = currentTimestamp + 60 * 60
-
-        let paramsMultiplyAdd = {
-            nftTokenId: 1,
-            multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
-            wrap: {
-                degenAmount: 0,
-                specialBegenAmount: b1000_multiplyAdd_1000_BegenAmount * BigInt(2)
-            },
-            deadline: deadline,
-        }
-
-        let paramsMultiplyAddSignature = await info.deployWallet.signMessage(
-            ethers.toBeArray(
-                ethers.keccak256(
-                    ethers.AbiCoder.defaultAbiCoder().encode(
-                        [
-                            "uint256",
-                            "uint256",
-                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
-                            "uint256",
-                            "address",
-                        ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
-                    ),
-                ),
-            ),
-        );
-
-        await expect(info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
-            paramsMultiplyAdd.multiplyAmount,
-            paramsMultiplyAdd.wrap,
-            paramsMultiplyAdd.deadline,
-            paramsMultiplyAddSignature
-        )).revertedWith("VSE")
-        await info.degenGate.setSignatureAddress(info.deployWallet.address);
-        await info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
-            paramsMultiplyAdd.multiplyAmount,
-            paramsMultiplyAdd.wrap,
-            paramsMultiplyAdd.deadline,
-            paramsMultiplyAddSignature
-        )
-
-    });
-
-    it("deadline error", async function () {
-        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
-
-        await createTokenAndMultiply_1000(info)
-
-        // multiplyAdd
-        const currentTimestamp = Math.floor(new Date().getTime() / 1000);
-        const deadline = currentTimestamp - 60 * 60
-
-        let paramsMultiplyAdd = {
-            nftTokenId: 1,
-            multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
-            wrap: {
-                degenAmount: 0,
-                specialBegenAmount: b1000_multiplyAdd_1000_BegenAmount * BigInt(2)
-            },
-            deadline: deadline,
-        }
-
-        let paramsMultiplyAddSignature = await info.signatureWallet.signMessage(
-            ethers.toBeArray(
-                ethers.keccak256(
-                    ethers.AbiCoder.defaultAbiCoder().encode(
-                        [
-                            "uint256",
-                            "uint256",
-                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
-                            "uint256",
-                            "address",
-                        ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
-                    ),
-                ),
-            ),
-        );
-
-        await expect(info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
-            paramsMultiplyAdd.multiplyAmount,
-            paramsMultiplyAdd.wrap,
-            paramsMultiplyAdd.deadline,
-            paramsMultiplyAddSignature
-        )).revertedWith("CTE")
-
-    });
-
-    it("sender error", async function () {
-        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
-
-        await createTokenAndMultiply_1000(info)
-
-        // multiplyAdd
-        const currentTimestamp = Math.floor(new Date().getTime() / 1000);
-        const deadline = currentTimestamp + 60 * 60
-
-        let paramsMultiplyAdd = {
-            nftTokenId: 1,
-            multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
-            wrap: {
-                degenAmount: 0,
-                specialBegenAmount: b1000_multiplyAdd_1000_BegenAmount * BigInt(2)
-            },
-            deadline: deadline,
-        }
-
-        let paramsMultiplyAddSignature = await info.signatureWallet.signMessage(
-            ethers.toBeArray(
-                ethers.keccak256(
-                    ethers.AbiCoder.defaultAbiCoder().encode(
-                        [
-                            "uint256",
-                            "uint256",
-                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
-                            "uint256",
-                            "address",
-                        ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.deployWallet.address],
-                    ),
-                ),
-            ),
-        );
-
-        await expect(info.degenGate.connect(info.deployWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
-            paramsMultiplyAdd.multiplyAmount,
-            paramsMultiplyAdd.wrap,
-            paramsMultiplyAdd.deadline,
-            paramsMultiplyAddSignature
-        )).revertedWith("AOE")
-
-    });
-
+describe("DegenGate.multiply.exists", function () {
     it("only spec begen | > need", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
-        await createTokenAndMultiply_1000(info)
+        const cm_info = await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)
 
@@ -338,7 +111,7 @@ describe("DegenGate.multiplyAdd", function () {
         const deadline = currentTimestamp + 60 * 60
 
         let paramsMultiplyAdd = {
-            nftTokenId: 1,
+            tid: cm_info.tid,
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
             wrap: {
                 degenAmount: 0,
@@ -352,25 +125,26 @@ describe("DegenGate.multiplyAdd", function () {
                 ethers.keccak256(
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
-                            "uint256",
+                            "string",
                             "uint256",
                             "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
+                        [cm_info.tid, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
                     ),
                 ),
             ),
         );
 
-        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiplyAdd.staticCall(
-            paramsMultiplyAdd.nftTokenId,
+        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiply.staticCall(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
             paramsMultiplyAddSignature
         )
+        expect(multiplyAddResult.nftTokenId).eq(cm_info.tokenId);
 
         let userWallet_begen_1 = await info.begen.balanceOf(info.userWallet.address);
         let degenGate_begen_1 = await info.begen.balanceOf(await info.degenGate.getAddress());
@@ -388,24 +162,24 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
-        let oldAmount = (await info.mortgageNFT.info(paramsMultiplyAdd.nftTokenId)).amount;
+        let oldAmount = (await info.mortgageNFT.info(cm_info.tokenId)).amount;
         expect(oldAmount).gt(0)
 
-        await info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
+        await info.degenGate.connect(info.userWallet).multiply(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
             paramsMultiplyAddSignature
         )
 
-        expect(multiplyAddResult).eq(b1000_multiplyAdd_1000_BegenAmount)
+        expect(multiplyAddResult.payTokenAmount).eq(b1000_multiplyAdd_1000_BegenAmount)
 
-        expect((await info.mortgageNFT.info(paramsMultiplyAdd.nftTokenId)).amount).eq(
+        expect((await info.mortgageNFT.info(cm_info.tokenId)).amount).eq(
             oldAmount + paramsMultiplyAdd.multiplyAmount
         )
 
-        expect(await info.mortgageNFT.ownerOf(paramsMultiplyAdd.nftTokenId)).eq(info.userWallet.address);
+        expect(await info.mortgageNFT.ownerOf(cm_info.tokenId)).eq(info.userWallet.address);
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount + b1000_multiplyAdd_1000_BegenAmount);
 
@@ -430,7 +204,7 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(paramsMultiplyAdd.multiplyAmount / (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1)).eq(999)
         expect(paramsMultiplyAdd.multiplyAmount / (nftOnwer_begen_2 - nftOnwer_begen_1)).eq(99)
-        expect(multiplyAddResult).eq(
+        expect(multiplyAddResult.payTokenAmount).eq(
             (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1) + (nftOnwer_begen_2 - nftOnwer_begen_1)
         )
 
@@ -445,7 +219,7 @@ describe("DegenGate.multiplyAdd", function () {
     it("only spec begen | eq need", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
-        await createTokenAndMultiply_1000(info)
+        const cm_info = await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)
 
@@ -454,7 +228,7 @@ describe("DegenGate.multiplyAdd", function () {
         const deadline = currentTimestamp + 60 * 60
 
         let paramsMultiplyAdd = {
-            nftTokenId: 1,
+            tid: cm_info.tid,
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
             wrap: {
                 degenAmount: 0,
@@ -468,20 +242,20 @@ describe("DegenGate.multiplyAdd", function () {
                 ethers.keccak256(
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
-                            "uint256",
+                            "string",
                             "uint256",
                             "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
+                        [cm_info.tid, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
                     ),
                 ),
             ),
         );
 
-        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiplyAdd.staticCall(
-            paramsMultiplyAdd.nftTokenId,
+        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiply.staticCall(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
@@ -504,15 +278,15 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
-        await info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
+        await info.degenGate.connect(info.userWallet).multiply(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
             paramsMultiplyAddSignature
         )
 
-        expect(multiplyAddResult).eq(b1000_multiplyAdd_1000_BegenAmount)
+        expect(multiplyAddResult.payTokenAmount).eq(b1000_multiplyAdd_1000_BegenAmount)
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount + b1000_multiplyAdd_1000_BegenAmount);
 
@@ -537,7 +311,7 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(paramsMultiplyAdd.multiplyAmount / (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1)).eq(999)
         expect(paramsMultiplyAdd.multiplyAmount / (nftOnwer_begen_2 - nftOnwer_begen_1)).eq(99)
-        expect(multiplyAddResult).eq(
+        expect(multiplyAddResult.payTokenAmount).eq(
             (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1) + (nftOnwer_begen_2 - nftOnwer_begen_1)
         )
 
@@ -552,7 +326,7 @@ describe("DegenGate.multiplyAdd", function () {
     it("only spec begen | < need", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
-        await createTokenAndMultiply_1000(info)
+        const cm_info = await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)
 
@@ -561,7 +335,7 @@ describe("DegenGate.multiplyAdd", function () {
         const deadline = currentTimestamp + 60 * 60
 
         let paramsMultiplyAdd = {
-            nftTokenId: 1,
+            tid: cm_info.tid,
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
             wrap: {
                 degenAmount: 0,
@@ -575,13 +349,13 @@ describe("DegenGate.multiplyAdd", function () {
                 ethers.keccak256(
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
-                            "uint256",
+                            "string",
                             "uint256",
                             "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
+                        [cm_info.tid, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
                     ),
                 ),
             ),
@@ -589,8 +363,8 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
-        await expect(info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
+        await expect(info.degenGate.connect(info.userWallet).multiply(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
@@ -603,7 +377,7 @@ describe("DegenGate.multiplyAdd", function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
-        await createTokenAndMultiply_1000(info)
+        const cm_info = await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)
 
@@ -612,7 +386,7 @@ describe("DegenGate.multiplyAdd", function () {
         const deadline = currentTimestamp + 60 * 60
 
         let paramsMultiplyAdd = {
-            nftTokenId: 1,
+            tid: cm_info.tid,
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
             wrap: {
                 degenAmount: b1000_multiplyAdd_1000_BegenAmount * BigInt(2),
@@ -626,13 +400,13 @@ describe("DegenGate.multiplyAdd", function () {
                 ethers.keccak256(
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
-                            "uint256",
+                            "string",
                             "uint256",
                             "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
+                        [cm_info.tid, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
                     ),
                 ),
             ),
@@ -641,8 +415,8 @@ describe("DegenGate.multiplyAdd", function () {
         await info.mockDegen.transfer(info.userWallet.address, paramsMultiplyAdd.wrap.degenAmount);
         await info.mockDegen.connect(info.userWallet).approve(await info.degenGate.getAddress(), MAX_UINT256)
 
-        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiplyAdd.staticCall(
-            paramsMultiplyAdd.nftTokenId,
+        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiply.staticCall(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
@@ -665,15 +439,15 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
-        await info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
+        await info.degenGate.connect(info.userWallet).multiply(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
             paramsMultiplyAddSignature
         )
 
-        expect(multiplyAddResult).eq(b1000_multiplyAdd_1000_BegenAmount)
+        expect(multiplyAddResult.payTokenAmount).eq(b1000_multiplyAdd_1000_BegenAmount)
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount + b1000_multiplyAdd_1000_BegenAmount);
 
@@ -698,23 +472,23 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(paramsMultiplyAdd.multiplyAmount / (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1)).eq(999)
         expect(paramsMultiplyAdd.multiplyAmount / (nftOnwer_begen_2 - nftOnwer_begen_1)).eq(99)
-        expect(multiplyAddResult).eq(
+        expect(multiplyAddResult.payTokenAmount).eq(
             (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1) + (nftOnwer_begen_2 - nftOnwer_begen_1)
         )
 
-        expect(userWallet_degen_2).eq(userWallet_degen_1 - multiplyAddResult)
+        expect(userWallet_degen_2).eq(userWallet_degen_1 - multiplyAddResult.payTokenAmount)
         expect(degenGate_degen_2).eq(degenGate_degen_1).eq(0)
         expect(market_degen_2).eq(market_degen_1).eq(0)
         expect(nftOnwer_degen_2).eq(nftOnwer_degen_1)
         expect(mortgageFeeRecipient_degen_2).eq(mortgageFeeRecipient_degen_1).eq(0)
-        expect(degenGateVault_degen_2).eq(degenGateVault_degen_1 + multiplyAddResult)
+        expect(degenGateVault_degen_2).eq(degenGateVault_degen_1 + multiplyAddResult.payTokenAmount)
     });
 
     it("only degen | eq need", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
-        await createTokenAndMultiply_1000(info)
+        const cm_info = await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)
 
@@ -723,7 +497,7 @@ describe("DegenGate.multiplyAdd", function () {
         const deadline = currentTimestamp + 60 * 60
 
         let paramsMultiplyAdd = {
-            nftTokenId: 1,
+            tid: cm_info.tid,
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
             wrap: {
                 degenAmount: b1000_multiplyAdd_1000_BegenAmount,
@@ -737,13 +511,13 @@ describe("DegenGate.multiplyAdd", function () {
                 ethers.keccak256(
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
-                            "uint256",
+                            "string",
                             "uint256",
                             "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
+                        [cm_info.tid, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
                     ),
                 ),
             ),
@@ -752,8 +526,8 @@ describe("DegenGate.multiplyAdd", function () {
         await info.mockDegen.transfer(info.userWallet.address, paramsMultiplyAdd.wrap.degenAmount);
         await info.mockDegen.connect(info.userWallet).approve(await info.degenGate.getAddress(), MAX_UINT256)
 
-        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiplyAdd.staticCall(
-            paramsMultiplyAdd.nftTokenId,
+        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiply.staticCall(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
@@ -776,15 +550,15 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
-        await info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
+        await info.degenGate.connect(info.userWallet).multiply(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
             paramsMultiplyAddSignature
         )
 
-        expect(multiplyAddResult).eq(b1000_multiplyAdd_1000_BegenAmount)
+        expect(multiplyAddResult.payTokenAmount).eq(b1000_multiplyAdd_1000_BegenAmount)
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount + b1000_multiplyAdd_1000_BegenAmount);
 
@@ -809,23 +583,23 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(paramsMultiplyAdd.multiplyAmount / (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1)).eq(999)
         expect(paramsMultiplyAdd.multiplyAmount / (nftOnwer_begen_2 - nftOnwer_begen_1)).eq(99)
-        expect(multiplyAddResult).eq(
+        expect(multiplyAddResult.payTokenAmount).eq(
             (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1) + (nftOnwer_begen_2 - nftOnwer_begen_1)
         )
 
-        expect(userWallet_degen_2).eq(userWallet_degen_1 - multiplyAddResult)
+        expect(userWallet_degen_2).eq(userWallet_degen_1 - multiplyAddResult.payTokenAmount)
         expect(degenGate_degen_2).eq(degenGate_degen_1).eq(0)
         expect(market_degen_2).eq(market_degen_1).eq(0)
         expect(nftOnwer_degen_2).eq(nftOnwer_degen_1)
         expect(mortgageFeeRecipient_degen_2).eq(mortgageFeeRecipient_degen_1).eq(0)
-        expect(degenGateVault_degen_2).eq(degenGateVault_degen_1 + multiplyAddResult)
+        expect(degenGateVault_degen_2).eq(degenGateVault_degen_1 + multiplyAddResult.payTokenAmount)
     });
 
     it("only degen | < need", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
-        await createTokenAndMultiply_1000(info)
+        const cm_info = await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)
 
@@ -834,7 +608,7 @@ describe("DegenGate.multiplyAdd", function () {
         const deadline = currentTimestamp + 60 * 60
 
         let paramsMultiplyAdd = {
-            nftTokenId: 1,
+            tid: cm_info.tid,
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
             wrap: {
                 degenAmount: b1000_multiplyAdd_1000_BegenAmount - BigInt(1),
@@ -848,13 +622,13 @@ describe("DegenGate.multiplyAdd", function () {
                 ethers.keccak256(
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
-                            "uint256",
+                            "string",
                             "uint256",
                             "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
+                        [cm_info.tid, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
                     ),
                 ),
             ),
@@ -865,8 +639,8 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
-        await expect(info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
+        await expect(info.degenGate.connect(info.userWallet).multiply(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
@@ -879,7 +653,7 @@ describe("DegenGate.multiplyAdd", function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
-        await createTokenAndMultiply_1000(info)
+        const cm_info = await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)
 
@@ -888,7 +662,7 @@ describe("DegenGate.multiplyAdd", function () {
         const deadline = currentTimestamp + 60 * 60
 
         let paramsMultiplyAdd = {
-            nftTokenId: 1,
+            tid: cm_info.tid,
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
             wrap: {
                 degenAmount: BigInt(10) ** BigInt(18) * BigInt(12),
@@ -902,13 +676,13 @@ describe("DegenGate.multiplyAdd", function () {
                 ethers.keccak256(
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
-                            "uint256",
+                            "string",
                             "uint256",
                             "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
+                        [cm_info.tid, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
                     ),
                 ),
             ),
@@ -917,8 +691,8 @@ describe("DegenGate.multiplyAdd", function () {
         await info.mockDegen.transfer(info.userWallet.address, paramsMultiplyAdd.wrap.degenAmount);
         await info.mockDegen.connect(info.userWallet).approve(await info.degenGate.getAddress(), MAX_UINT256)
 
-        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiplyAdd.staticCall(
-            paramsMultiplyAdd.nftTokenId,
+        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiply.staticCall(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
@@ -941,15 +715,15 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
-        await info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
+        await info.degenGate.connect(info.userWallet).multiply(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
             paramsMultiplyAddSignature
         )
 
-        expect(multiplyAddResult).eq(b1000_multiplyAdd_1000_BegenAmount)
+        expect(multiplyAddResult.payTokenAmount).eq(b1000_multiplyAdd_1000_BegenAmount)
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount + b1000_multiplyAdd_1000_BegenAmount);
 
@@ -974,7 +748,7 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(paramsMultiplyAdd.multiplyAmount / (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1)).eq(999)
         expect(paramsMultiplyAdd.multiplyAmount / (nftOnwer_begen_2 - nftOnwer_begen_1)).eq(99)
-        expect(multiplyAddResult).eq(
+        expect(multiplyAddResult.payTokenAmount).eq(
             (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1) + (nftOnwer_begen_2 - nftOnwer_begen_1)
         )
 
@@ -990,7 +764,7 @@ describe("DegenGate.multiplyAdd", function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
-        await createTokenAndMultiply_1000(info)
+        const cm_info = await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)
 
@@ -999,7 +773,7 @@ describe("DegenGate.multiplyAdd", function () {
         const deadline = currentTimestamp + 60 * 60
 
         let paramsMultiplyAdd = {
-            nftTokenId: 1,
+            tid: cm_info.tid,
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
             wrap: {
                 degenAmount: BigInt(10) ** BigInt(18) * BigInt(12),
@@ -1013,13 +787,13 @@ describe("DegenGate.multiplyAdd", function () {
                 ethers.keccak256(
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
-                            "uint256",
+                            "string",
                             "uint256",
                             "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
+                        [cm_info.tid, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
                     ),
                 ),
             ),
@@ -1028,8 +802,8 @@ describe("DegenGate.multiplyAdd", function () {
         await info.mockDegen.transfer(info.userWallet.address, paramsMultiplyAdd.wrap.degenAmount);
         await info.mockDegen.connect(info.userWallet).approve(await info.degenGate.getAddress(), MAX_UINT256)
 
-        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiplyAdd.staticCall(
-            paramsMultiplyAdd.nftTokenId,
+        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiply.staticCall(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
@@ -1052,15 +826,15 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
-        await info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
+        await info.degenGate.connect(info.userWallet).multiply(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
             paramsMultiplyAddSignature
         )
 
-        expect(multiplyAddResult).eq(b1000_multiplyAdd_1000_BegenAmount)
+        expect(multiplyAddResult.payTokenAmount).eq(b1000_multiplyAdd_1000_BegenAmount)
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount + b1000_multiplyAdd_1000_BegenAmount);
 
@@ -1085,7 +859,7 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(paramsMultiplyAdd.multiplyAmount / (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1)).eq(999)
         expect(paramsMultiplyAdd.multiplyAmount / (nftOnwer_begen_2 - nftOnwer_begen_1)).eq(99)
-        expect(multiplyAddResult).eq(
+        expect(multiplyAddResult.payTokenAmount).eq(
             (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1) + (nftOnwer_begen_2 - nftOnwer_begen_1)
         )
 
@@ -1101,7 +875,7 @@ describe("DegenGate.multiplyAdd", function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
-        await createTokenAndMultiply_1000(info)
+        const cm_info = await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)
 
@@ -1110,7 +884,7 @@ describe("DegenGate.multiplyAdd", function () {
         const deadline = currentTimestamp + 60 * 60
 
         let paramsMultiplyAdd = {
-            nftTokenId: 1,
+            tid: cm_info.tid,
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
             wrap: {
                 degenAmount: BigInt(10) ** BigInt(18) * BigInt(2),
@@ -1124,13 +898,13 @@ describe("DegenGate.multiplyAdd", function () {
                 ethers.keccak256(
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
-                            "uint256",
+                            "string",
                             "uint256",
                             "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
+                        [cm_info.tid, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
                     ),
                 ),
             ),
@@ -1139,8 +913,8 @@ describe("DegenGate.multiplyAdd", function () {
         await info.mockDegen.transfer(info.userWallet.address, paramsMultiplyAdd.wrap.degenAmount);
         await info.mockDegen.connect(info.userWallet).approve(await info.degenGate.getAddress(), MAX_UINT256)
 
-        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiplyAdd.staticCall(
-            paramsMultiplyAdd.nftTokenId,
+        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiply.staticCall(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
@@ -1163,15 +937,15 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
-        await info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
+        await info.degenGate.connect(info.userWallet).multiply(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
             paramsMultiplyAddSignature
         )
 
-        expect(multiplyAddResult).eq(b1000_multiplyAdd_1000_BegenAmount)
+        expect(multiplyAddResult.payTokenAmount).eq(b1000_multiplyAdd_1000_BegenAmount)
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount + b1000_multiplyAdd_1000_BegenAmount);
 
@@ -1196,23 +970,23 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(paramsMultiplyAdd.multiplyAmount / (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1)).eq(999)
         expect(paramsMultiplyAdd.multiplyAmount / (nftOnwer_begen_2 - nftOnwer_begen_1)).eq(99)
-        expect(multiplyAddResult).eq(
+        expect(multiplyAddResult.payTokenAmount).eq(
             (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1) + (nftOnwer_begen_2 - nftOnwer_begen_1)
         )
 
-        expect(userWallet_degen_2).eq(userWallet_degen_1 - (multiplyAddResult - paramsMultiplyAdd.wrap.specialBegenAmount))
+        expect(userWallet_degen_2).eq(userWallet_degen_1 - (multiplyAddResult.payTokenAmount - paramsMultiplyAdd.wrap.specialBegenAmount))
         expect(degenGate_degen_2).eq(degenGate_degen_1).eq(0)
         expect(market_degen_2).eq(market_degen_1).eq(0)
         expect(nftOnwer_degen_2).eq(nftOnwer_degen_1)
         expect(mortgageFeeRecipient_degen_2).eq(mortgageFeeRecipient_degen_1).eq(0)
-        expect(degenGateVault_degen_2).eq(degenGateVault_degen_1 + (multiplyAddResult - paramsMultiplyAdd.wrap.specialBegenAmount))
+        expect(degenGateVault_degen_2).eq(degenGateVault_degen_1 + (multiplyAddResult.payTokenAmount - paramsMultiplyAdd.wrap.specialBegenAmount))
     });
 
     it("have spec begen and degen | spec begen < need | + degen eq need", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
-        await createTokenAndMultiply_1000(info)
+        const cm_info = await createTokenAndMultiply_1000(info)
         const nftOnwer = await info.publicNFT.ownerOf(1)
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)
 
@@ -1221,7 +995,7 @@ describe("DegenGate.multiplyAdd", function () {
         const deadline = currentTimestamp + 60 * 60
 
         let paramsMultiplyAdd = {
-            nftTokenId: 1,
+            tid: cm_info.tid,
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
             wrap: {
                 degenAmount: BigInt(10) ** BigInt(18) * BigInt(1),
@@ -1235,13 +1009,13 @@ describe("DegenGate.multiplyAdd", function () {
                 ethers.keccak256(
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
-                            "uint256",
+                            "string",
                             "uint256",
                             "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
+                        [cm_info.tid, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
                     ),
                 ),
             ),
@@ -1250,8 +1024,8 @@ describe("DegenGate.multiplyAdd", function () {
         await info.mockDegen.transfer(info.userWallet.address, paramsMultiplyAdd.wrap.degenAmount);
         await info.mockDegen.connect(info.userWallet).approve(await info.degenGate.getAddress(), MAX_UINT256)
 
-        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiplyAdd.staticCall(
-            paramsMultiplyAdd.nftTokenId,
+        let multiplyAddResult = await info.degenGate.connect(info.userWallet).multiply.staticCall(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
@@ -1274,15 +1048,15 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
-        await info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
+        await info.degenGate.connect(info.userWallet).multiply(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,
             paramsMultiplyAddSignature
         )
 
-        expect(multiplyAddResult).eq(b1000_multiplyAdd_1000_BegenAmount)
+        expect(multiplyAddResult.payTokenAmount).eq(b1000_multiplyAdd_1000_BegenAmount)
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount + b1000_multiplyAdd_1000_BegenAmount);
 
@@ -1307,32 +1081,30 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(paramsMultiplyAdd.multiplyAmount / (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1)).eq(999)
         expect(paramsMultiplyAdd.multiplyAmount / (nftOnwer_begen_2 - nftOnwer_begen_1)).eq(99)
-        expect(multiplyAddResult).eq(
+        expect(multiplyAddResult.payTokenAmount).eq(
             (mortgageFeeRecipient_begen_2 - mortgageFeeRecipient_begen_1) + (nftOnwer_begen_2 - nftOnwer_begen_1)
         )
 
-        expect(userWallet_degen_2).eq(userWallet_degen_1 - (multiplyAddResult - paramsMultiplyAdd.wrap.specialBegenAmount))
+        expect(userWallet_degen_2).eq(userWallet_degen_1 - (multiplyAddResult.payTokenAmount - paramsMultiplyAdd.wrap.specialBegenAmount))
         expect(degenGate_degen_2).eq(degenGate_degen_1).eq(0)
         expect(market_degen_2).eq(market_degen_1).eq(0)
         expect(nftOnwer_degen_2).eq(nftOnwer_degen_1)
         expect(mortgageFeeRecipient_degen_2).eq(mortgageFeeRecipient_degen_1).eq(0)
-        expect(degenGateVault_degen_2).eq(degenGateVault_degen_1 + (multiplyAddResult - paramsMultiplyAdd.wrap.specialBegenAmount))
+        expect(degenGateVault_degen_2).eq(degenGateVault_degen_1 + (multiplyAddResult.payTokenAmount - paramsMultiplyAdd.wrap.specialBegenAmount))
     });
 
     it("have spec begen and degen | spec begen < need | + degen < need", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
-        await createTokenAndMultiply_1000(info)
-        const nftOnwer = await info.publicNFT.ownerOf(1)
-        const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.appId)
+        const cm_info = await createTokenAndMultiply_1000(info)
 
         // multiplyAdd
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
 
         let paramsMultiplyAdd = {
-            nftTokenId: 1,
+            tid: cm_info.tid,
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000),
             wrap: {
                 degenAmount: BigInt(10) ** BigInt(18) * BigInt(1),
@@ -1346,13 +1118,13 @@ describe("DegenGate.multiplyAdd", function () {
                 ethers.keccak256(
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
-                            "uint256",
+                            "string",
                             "uint256",
                             "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyAdd.nftTokenId, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
+                        [cm_info.tid, paramsMultiplyAdd.multiplyAmount, paramsMultiplyAdd.wrap, paramsMultiplyAdd.deadline, info.userWallet.address],
                     ),
                 ),
             ),
@@ -1363,8 +1135,8 @@ describe("DegenGate.multiplyAdd", function () {
 
         expect(await info.begen.totalSupply()).eq(multiply_1000_BegenAmount);
 
-        await expect(info.degenGate.connect(info.userWallet).multiplyAdd(
-            paramsMultiplyAdd.nftTokenId,
+        await expect(info.degenGate.connect(info.userWallet).multiply(
+            cm_info.tid,
             paramsMultiplyAdd.multiplyAmount,
             paramsMultiplyAdd.wrap,
             paramsMultiplyAdd.deadline,

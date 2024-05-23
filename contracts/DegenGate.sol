@@ -12,6 +12,7 @@ import "./interfaces/IMarket.sol";
 import "./interfaces/IFoundry.sol";
 import "./interfaces/INFTClaim.sol";
 import "./interfaces/IBegen.sol";
+import "./interfaces/IMortgageNFT.sol";
 
 contract DegenGate is Initializable, OwnableUpgradeable {
   struct TokenInfo {
@@ -56,7 +57,6 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     WrapInfo wrap,
     address sender
   );
-  event MultiplyAdd(uint256 tokenId, uint256 multiplyAmount, uint256 payTokenAmount, WrapInfo wrap, address sender);
   event Cash(uint256 tokenId, uint256 tokenAmount, uint256 payTokenAmount, address sender);
 
   event CreateToken(
@@ -146,33 +146,18 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     IBegen(begen()).mint(address(this), wrap.degenAmount + wrap.specialBegenAmount);
 
     _approveBegenToMarket();
-    (nftTokenId, payTokenAmount) = IMarket(market).multiplyProxy(tid, multiplyAmount, msg.sender);
+
+    (bool exists, uint256 tokenId) = _find_first_mortgage(tid);
+    if (exists) {
+      nftTokenId = tokenId;
+      payTokenAmount = IMarket(market).multiplyAddProxy(nftTokenId, multiplyAmount);
+    } else {
+      (nftTokenId, payTokenAmount) = IMarket(market).multiplyProxy(tid, multiplyAmount, msg.sender);
+    }
 
     _refundWrap(wrap, payTokenAmount);
 
     emit Multiply(nftTokenId, tid, multiplyAmount, payTokenAmount, wrap, msg.sender);
-  }
-
-  function multiplyAdd(
-    uint256 nftTokenId,
-    uint256 multiplyAmount,
-    WrapInfo memory wrap,
-    uint256 deadline,
-    bytes memory signature
-  ) external checkTimestamp(deadline) returns (uint256 payTokenAmount) {
-    _verifyMultiplyAddSignature(nftTokenId, multiplyAmount, wrap, deadline, signature);
-
-    require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
-
-    _TFDegenFromSender(vault, wrap.degenAmount);
-    IBegen(begen()).mint(address(this), wrap.degenAmount + wrap.specialBegenAmount);
-
-    _approveBegenToMarket();
-    payTokenAmount = IMarket(market).multiplyAddProxy(nftTokenId, multiplyAmount);
-
-    _refundWrap(wrap, payTokenAmount);
-
-    emit MultiplyAdd(nftTokenId, multiplyAmount, payTokenAmount, wrap, msg.sender);
   }
 
   function cash(uint256 nftTokenId, uint256 tokenAmount) external returns (uint256 payTokenAmount) {
@@ -258,6 +243,22 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     return IMarket(market).payToken();
   }
 
+  function _find_first_mortgage(string memory tid) private view returns (bool exists, uint256 tokenId) {
+    IMortgageNFT.Info[] memory infos = IMortgageNFT(mortgageNFT).tokenInfosOfOwnerByTid(msg.sender, tid);
+    if (infos.length == 0) {
+      exists = false;
+    } else {
+      exists = true;
+      tokenId = infos[0].tokenId;
+      for (uint256 index = 0; index < infos.length; index++) {
+        uint256 currentTokenId = infos[index].tokenId;
+        if (currentTokenId < tokenId) {
+          tokenId = currentTokenId;
+        }
+      }
+    }
+  }
+
   function _createTokenWithoutPay(TokenInfo memory info) private returns (uint256[] memory nftTokenIds) {
     address oNFTOwner;
     if (keccak256(abi.encodePacked(info.tid)) == keccak256(abi.encodePacked(info.cid))) {
@@ -340,20 +341,6 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     bytes memory signature
   ) private view {
     bytes32 raw = keccak256(abi.encode(tid, multiplyAmount, wrap, deadline, _msgSender()));
-    require(
-      SignatureChecker.isValidSignatureNow(signatureAddress, MessageHashUtils.toEthSignedMessageHash(raw), signature),
-      "VSE"
-    );
-  }
-
-  function _verifyMultiplyAddSignature(
-    uint256 nftTokenId,
-    uint256 multiplyAmount,
-    WrapInfo memory wrap,
-    uint256 deadline,
-    bytes memory signature
-  ) private view {
-    bytes32 raw = keccak256(abi.encode(nftTokenId, multiplyAmount, wrap, deadline, _msgSender()));
     require(
       SignatureChecker.isValidSignatureNow(signatureAddress, MessageHashUtils.toEthSignedMessageHash(raw), signature),
       "VSE"

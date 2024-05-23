@@ -2,6 +2,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
+import { MaxInt256 } from "ethers";
 
 describe("DegenGate.cash", function () {
 
@@ -118,14 +119,14 @@ describe("DegenGate.cash", function () {
                             "uint256",
                             "address",
                         ],
-                        [paramsMultiplyOther.tid, paramsMultiplyOther.multiplyAmount, paramsMultiplyOther.wrap, paramsMultiplyOther.deadline, info.userWallet.address],
+                        [paramsMultiplyOther.tid, paramsMultiplyOther.multiplyAmount, paramsMultiplyOther.wrap, paramsMultiplyOther.deadline, info.deployWallet.address],
                     ),
                 ),
             ),
         );
 
-        await info.mockDegen.transfer(info.userWallet.address, paramsMultiplyOther.wrap.degenAmount);
-        let result2 = await info.degenGate.connect(info.userWallet).multiply.staticCall(
+        await info.mockDegen.approve(await info.degenGate.getAddress(), MaxInt256)
+        let result2 = await info.degenGate.connect(info.deployWallet).multiply.staticCall(
             paramsMultiplyOther.tid,
             paramsMultiplyOther.multiplyAmount,
             paramsMultiplyOther.wrap,
@@ -133,7 +134,7 @@ describe("DegenGate.cash", function () {
             paramsMultiplyOtherSignature
         )
 
-        await info.degenGate.connect(info.userWallet).multiply(
+        await info.degenGate.connect(info.deployWallet).multiply(
             paramsMultiplyOther.tid,
             paramsMultiplyOther.multiplyAmount,
             paramsMultiplyOther.wrap,

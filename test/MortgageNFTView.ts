@@ -6,13 +6,14 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { getTokenAmountWei, parseTokenURI, saveSVG } from "./shared/utils";
 import { MortgageNFTView } from "../typechain-types";
 import { DegenGateAllContractInfo } from "./shared/deploy_degen_gate";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
 const nft_name = "Castle Option"
 const nft_symbol = "CO"
 
 const nft_json_desc = "This NFT represents a collateral option within the Gate of Degen.\n⚠️ DISCLAIMER: Always perform due diligence before purchasing this NFT. Verify that the image reflects the correct number of option in the collateral. Refresh cached images on trading platforms to ensure you have the latest data."
 
-async function multiply(tid: string, info: DegenGateAllContractInfo, multiplyAmount: bigint): Promise<{
+async function multiply(tid: string, info: DegenGateAllContractInfo, multiplyAmount: bigint, userWallet: HardhatEthersSigner): Promise<{
   nftTokenId: bigint;
   payTokenAmount: bigint;
 }> {
@@ -40,13 +41,13 @@ async function multiply(tid: string, info: DegenGateAllContractInfo, multiplyAmo
             "uint256",
             "address",
           ],
-          [paramsMultiply.tid, paramsMultiply.multiplyAmount, paramsMultiply.wrap, paramsMultiply.deadline, info.userWallet.address],
+          [paramsMultiply.tid, paramsMultiply.multiplyAmount, paramsMultiply.wrap, paramsMultiply.deadline, userWallet.address],
         ),
       ),
     ),
   );
 
-  let result = await info.degenGate.connect(info.userWallet).multiply.staticCall(
+  let result = await info.degenGate.connect(userWallet).multiply.staticCall(
     paramsMultiply.tid,
     paramsMultiply.multiplyAmount,
     paramsMultiply.wrap,
@@ -54,7 +55,7 @@ async function multiply(tid: string, info: DegenGateAllContractInfo, multiplyAmo
     paramsMultiplySignature
   )
 
-  await info.degenGate.connect(info.userWallet).multiply(
+  await info.degenGate.connect(userWallet).multiply(
     paramsMultiply.tid,
     paramsMultiply.multiplyAmount,
     paramsMultiply.wrap,
@@ -105,6 +106,10 @@ describe("MortgageNFTView", function () {
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60;
 
+    let user1 = info.wallets[info.nextWalletIndex + 1];
+    let user2 = info.wallets[info.nextWalletIndex + 2];
+    let user3 = info.wallets[info.nextWalletIndex + 3];
+
     // create token
     let params = {
       info: {
@@ -142,7 +147,7 @@ describe("MortgageNFTView", function () {
     // createTokenWrap
     await info.degenGate.connect(info.userWallet).createTokenWrap(params.info, params.wrap, params.nftPrice, params.deadline, signature);
 
-    let multiplyResult1 = await multiply(params.info.tid, info, getTokenAmountWei(12345))
+    let multiplyResult1 = await multiply(params.info.tid, info, getTokenAmountWei(12345), user1)
 
     expect(await info.mortgageNFT.name()).eq(nft_name);
     expect(await info.mortgageNFT.symbol()).eq(nft_symbol);
@@ -153,7 +158,7 @@ describe("MortgageNFTView", function () {
     expect(json1.description).eq(nft_json_desc);
     saveSVG("mnft1", json1.image);
 
-    let multiplyResult2 = await multiply(params.info.tid, info, BigInt(10) ** BigInt(16) * BigInt(216789))
+    let multiplyResult2 = await multiply(params.info.tid, info, BigInt(10) ** BigInt(16) * BigInt(216789), user2)
 
     const mnft2 = await info.mortgageNFT.tokenURI(multiplyResult2.nftTokenId);
     const json2 = parseTokenURI(mnft2);
@@ -161,7 +166,7 @@ describe("MortgageNFTView", function () {
     expect(json2.description).eq(nft_json_desc);
     saveSVG("mnft2", json2.image);
 
-    let multiplyResult3 = await multiply(params.info.tid, info, BigInt(10) ** BigInt(17) * BigInt(123))
+    let multiplyResult3 = await multiply(params.info.tid, info, BigInt(10) ** BigInt(17) * BigInt(123), user3)
 
     const mnft3 = await info.mortgageNFT.tokenURI(multiplyResult3.nftTokenId);
     const json3 = parseTokenURI(mnft3);

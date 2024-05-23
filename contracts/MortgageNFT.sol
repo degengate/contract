@@ -21,7 +21,7 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
   uint256 private _nextTokenId = 1;
 
   // tokenId => info
-  mapping(uint256 => IMortgageNFT.Info) public override info;
+  mapping(uint256 => IMortgageNFT.Info) private _info;
 
   constructor(
     address _foundry,
@@ -45,6 +45,12 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
     _;
   }
 
+  function info(uint256 tokenId) external view override returns (string memory tid, uint256 amount) {
+    IMortgageNFT.Info memory res = _info[tokenId];
+    tid = res.tid;
+    amount = res.amount;
+  }
+
   function isApprovedOrOwner(address addr, uint256 tokenId) external view returns (bool) {
     return _isAuthorized(_ownerOf(tokenId), addr, tokenId);
   }
@@ -53,7 +59,7 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
     tokenId = _nextTokenId;
     _nextTokenId += 1;
 
-    info[tokenId] = Info({tid: tid, amount: amount});
+    _info[tokenId] = Info({tid: tid, tokenId: tokenId, amount: amount});
     _safeMint(to, tokenId);
 
     emit Mint(to, tid, amount);
@@ -63,7 +69,7 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
     _requireOwned(tokenId);
 
     _burn(tokenId);
-    delete info[tokenId];
+    delete _info[tokenId];
 
     emit Burn(tokenId);
   }
@@ -71,20 +77,20 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
   function add(uint256 tokenId, uint256 amount) external override onlyMarket {
     _requireOwned(tokenId);
 
-    info[tokenId].amount += amount;
+    _info[tokenId].amount += amount;
 
     emit Add(tokenId, amount);
   }
 
   function remove(uint256 tokenId, uint256 amount) external override onlyMarket {
     _requireOwned(tokenId);
-    require(info[tokenId].amount >= amount, "RAE");
+    require(_info[tokenId].amount >= amount, "RAE");
 
-    if (info[tokenId].amount == amount) {
+    if (_info[tokenId].amount == amount) {
       _burn(tokenId);
-      delete info[tokenId];
+      delete _info[tokenId];
     } else {
-      info[tokenId].amount -= amount;
+      _info[tokenId].amount -= amount;
     }
 
     emit Remove(tokenId, amount);
@@ -101,7 +107,7 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
     infos = new IMortgageNFT.Info[](count);
     for (uint256 index = 0; index < count; index++) {
       uint256 tokenId = tokenOfOwnerByIndex(_owner, index);
-      infos[index] = info[tokenId];
+      infos[index] = _info[tokenId];
     }
   }
 
@@ -114,7 +120,7 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
 
     for (uint256 index = 0; index < count; index++) {
       uint256 tokenId = tokenOfOwnerByIndex(_owner, index);
-      if (keccak256(abi.encodePacked(info[tokenId].tid)) == keccak256(abi.encodePacked(tid))) {
+      if (keccak256(abi.encodePacked(_info[tokenId].tid)) == keccak256(abi.encodePacked(tid))) {
         tidCount += 1;
       }
     }
@@ -124,8 +130,8 @@ contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
       uint256 currentIndex = 0;
       for (uint256 index = 0; index < count; index++) {
         uint256 tokenId = tokenOfOwnerByIndex(_owner, index);
-        if (keccak256(abi.encodePacked(info[tokenId].tid)) == keccak256(abi.encodePacked(tid))) {
-          infos[currentIndex] = info[tokenId];
+        if (keccak256(abi.encodePacked(_info[tokenId].tid)) == keccak256(abi.encodePacked(tid))) {
+          infos[currentIndex] = _info[tokenId];
           currentIndex += 1;
         }
       }

@@ -4,6 +4,7 @@ pragma solidity >=0.8.20;
 interface IMortgageNFT {
   struct Info {
     string tid;
+    uint256 tokenId;
     uint256 amount;
   }
 
