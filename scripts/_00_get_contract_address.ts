@@ -41,7 +41,8 @@ async function main() {
   const output = {
     appid: 1,
     mortgageFee: 100,
-    buySellFee: 1000,
+    buyFee: 1000,
+    sellFee: 0,
     degenAddress: degen_address,
     mortgageFeeWalletAddress: mw_address,
     degenGateFundRecipientWalletAddress: mw_address,

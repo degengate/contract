@@ -183,8 +183,8 @@ describe("DegenGate.cash", function () {
 
         expect(userWallet_begen_2).eq(userWallet_begen_1)
         expect(degenGate_begen_2).eq(degenGate_begen_1).eq(0)
-        expect(deployWallet_begen_2 - deployWallet_begen_1).gt(0)
-        expect(market_begen_2).eq(market_begen_1 - result3 - (deployWallet_begen_2 - deployWallet_begen_1)).eq(0)
+        expect(deployWallet_begen_2).eq(deployWallet_begen_1)
+        expect(market_begen_2).eq(market_begen_1 - result3).eq(0)
         expect(mortgageFeeRecipient_begen_2).eq(mortgageFeeRecipient_begen_1)
         expect(degenGateVault_begen_2).eq(degenGateVault_begen_1).eq(0)
 

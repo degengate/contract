@@ -147,7 +147,7 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
   let nextWalletIndex = 6;
   let mortgageFee = 100;
   let buyFee = 1000;
-  let sellFee = 1000;
+  let sellFee = 0;
   let appId = 1;
   let appName = "degenGate";
 

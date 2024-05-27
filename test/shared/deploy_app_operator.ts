@@ -104,7 +104,7 @@ export type AppOperatorAllContractInfo = {
 };
 
 
-export async function deployAppOperatorAllContract(): Promise<AppOperatorAllContractInfo> {
+export async function deployAppOperatorAllContract(_sellFee: number): Promise<AppOperatorAllContractInfo> {
   let wallets;
   let deployWalletIndex = 0;
   let deployWallet: HardhatEthersSigner;
@@ -121,7 +121,7 @@ export async function deployAppOperatorAllContract(): Promise<AppOperatorAllCont
   let nextWalletIndex = 6;
   let mortgageFee = 100;
   let buyFee = 1000;
-  let sellFee = 1000;
+  let sellFee = _sellFee;
   let appId = 1;
   let appName = "appOperator";
 

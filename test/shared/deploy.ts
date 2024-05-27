@@ -8,14 +8,17 @@ export const MAX_UINT256 = BigInt(2) ** BigInt(256) - BigInt(1);
 export type AllContractInfo = {
     degenGateInfo: DegenGateAllContractInfo,
     appOperatorAllContractInfo: AppOperatorAllContractInfo
+    sellFeeZeroappOperatorAllContractInfo: AppOperatorAllContractInfo
 }
 
 export async function deployAllContracts(): Promise<AllContractInfo> {
     let degenGateInfo = await deployDegenGateAllContract();
-    let appOperatorAllContractInfo = await deployAppOperatorAllContract();
+    let appOperatorAllContractInfo = await deployAppOperatorAllContract(1000);
+    let sellFeeZeroappOperatorAllContractInfo = await deployAppOperatorAllContract(0);
 
     return {
         degenGateInfo: degenGateInfo,
         appOperatorAllContractInfo: appOperatorAllContractInfo,
+        sellFeeZeroappOperatorAllContractInfo: sellFeeZeroappOperatorAllContractInfo,
     }
 }

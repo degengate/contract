@@ -4,7 +4,8 @@ import { expect } from "chai";
 import {
   foundryAddress,
   degenGateAddress,
-  buySellFee,
+  buyFee,
+  sellFee,
   begenAddress,
   curveAddress,
   appid,
@@ -19,7 +20,7 @@ async function main() {
   const deployWallet = wallets[0];
 
   const foundry = await ethers.getContractAt("Foundry", foundryAddress);
-  const a = await foundry.createApp("degenGate", deployWallet.address, degenGateAddress, curveAddress, begenAddress, buySellFee, {
+  const a = await foundry.createApp("degenGate", deployWallet.address, degenGateAddress, curveAddress, begenAddress, buyFee, sellFee, {
     maxFeePerGas: config.maxFeePerGas,
     maxPriorityFeePerGas: config.maxPriorityFeePerGas,
     nonce: config.nonce0 + 6,
@@ -52,7 +53,8 @@ async function main() {
   expect(await market.payToken()).eq(begenAddress);
   expect(await market.publicNFT()).eq(appInfo.publicNFT);
   expect(await market.mortgageNFT()).eq(appInfo.mortgageNFT);
-  expect(await market.buySellFee()).eq(buySellFee);
+  expect(await market.buyFee()).eq(buyFee);
+  expect(await market.sellFee()).eq(sellFee);
 
   let curve = await market.curve();
   expect(curve).eq(curveAddress);
