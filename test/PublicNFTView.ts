@@ -4,7 +4,7 @@ import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { parseTokenURI, saveSVG } from "./shared/utils";
-import { PublicNFTView } from "../typechain-types";
+import { PublicNFTView, PublicNFTViewBG } from "../typechain-types";
 
 const nft_name = "Gate of Degen"
 const nft_symbol = "GOD"
@@ -29,6 +29,10 @@ describe("PublicNFTView", function () {
   it("deploy", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
+    let publicNFTViewBG = (await (
+      await ethers.getContractFactory("PublicNFTViewBG")
+    ).deploy()) as PublicNFTViewBG;
+
     let publicNFTView = (await (
       await ethers.getContractFactory("PublicNFTView")
     ).deploy(
@@ -36,6 +40,7 @@ describe("PublicNFTView", function () {
       info.appId,
       await info.publicNFT.getAddress(),
       await info.degenGateNFTClaim.getAddress(),
+      await publicNFTViewBG.getAddress()
     )) as PublicNFTView;
 
     expect(await publicNFTView.appId()).eq(info.appId);
@@ -49,6 +54,10 @@ describe("PublicNFTView", function () {
   it("test c and o not eq", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
+    let publicNFTViewBG = (await (
+      await ethers.getContractFactory("PublicNFTViewBG")
+    ).deploy()) as PublicNFTViewBG;
+
     let publicNFTView = (await (
       await ethers.getContractFactory("PublicNFTView")
     ).deploy(
@@ -56,6 +65,7 @@ describe("PublicNFTView", function () {
       info.appId,
       await info.publicNFT.getAddress(),
       await info.degenGateNFTClaim.getAddress(),
+      await publicNFTViewBG.getAddress()
     )) as PublicNFTView;
 
     await info.publicNFT.connect(info.degenGateOwnerWallet).setPublicNFTView(await publicNFTView.getAddress());
@@ -149,6 +159,10 @@ describe("PublicNFTView", function () {
   it("test c and o eq", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
+    let publicNFTViewBG = (await (
+      await ethers.getContractFactory("PublicNFTViewBG")
+    ).deploy()) as PublicNFTViewBG;
+
     let publicNFTView = (await (
       await ethers.getContractFactory("PublicNFTView")
     ).deploy(
@@ -156,6 +170,7 @@ describe("PublicNFTView", function () {
       info.appId,
       await info.publicNFT.getAddress(),
       await info.degenGateNFTClaim.getAddress(),
+      await publicNFTViewBG.getAddress()
     )) as PublicNFTView;
 
     await info.publicNFT.connect(info.degenGateOwnerWallet).setPublicNFTView(await publicNFTView.getAddress());

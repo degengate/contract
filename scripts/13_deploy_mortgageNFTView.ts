@@ -17,7 +17,7 @@ async function main() {
     {
       maxFeePerGas: config.maxFeePerGas,
       maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-      nonce: config.nonce0 + 12,
+      nonce: config.nonce0 + 13,
     },
   );
 

@@ -9,6 +9,7 @@ describe("Begen", function () {
 
         expect(await info.begen.vault()).eq(await info.degenGateVault.getAddress())
         expect(await info.begen.degenGate()).eq(await info.degenGate.getAddress())
+        expect(await info.begen.MAX_TOKEN_SUPPLY()).eq(BigInt(10) ** BigInt(18) * BigInt("36965935954"))
     });
 
     it("burn error", async function () {
@@ -130,5 +131,106 @@ describe("Begen", function () {
         await expect(
             info.begen.connect(info.deployWallet).mint(info.deployWallet.address, 1)
         ).revertedWith("SE")
+    });
+
+    it("mint eq MAX_TOKEN_SUPPLY", async function () {
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
+
+        const MAX_TOKEN_SUPPLY = await info.begen.MAX_TOKEN_SUPPLY();
+        const currentTimestamp = Math.floor(new Date().getTime() / 1000);
+        const deadline = currentTimestamp + 60 * 60
+
+        // create token
+        let params = {
+            info: {
+                tid: "a",
+                tName: "a",
+                cid: "a",
+                cName: "a",
+                followers: 123,
+                omf: 2212,
+            },
+            wrap: {
+                degenAmount: 0,
+                specialBegenAmount: MAX_TOKEN_SUPPLY
+            },
+            deadline: deadline,
+            nftPrice: MAX_TOKEN_SUPPLY,
+        };
+        let signature = await info.signatureWallet.signMessage(
+            ethers.toBeArray(
+                ethers.keccak256(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [
+                            "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
+                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+                            "uint256",
+                            "uint256",
+                            "address",
+                        ],
+                        [params.info, params.wrap, params.nftPrice, params.deadline, info.deployWallet.address],
+                    ),
+                ),
+            ),
+        );
+
+
+        expect(await info.begen.totalSupply()).eq(0);
+
+        // createTokenWrap
+        await info.degenGate.connect(info.deployWallet).createTokenWrap(params.info, params.wrap, params.nftPrice, params.deadline, signature);
+
+        expect(await info.begen.totalSupply()).eq(MAX_TOKEN_SUPPLY);
+
+    });
+
+    it("mint > MAX_TOKEN_SUPPLY", async function () {
+        const info = (await loadFixture(deployAllContracts)).degenGateInfo;
+
+        const MAX_TOKEN_SUPPLY = await info.begen.MAX_TOKEN_SUPPLY();
+        const currentTimestamp = Math.floor(new Date().getTime() / 1000);
+        const deadline = currentTimestamp + 60 * 60
+
+        // create token
+        let params = {
+            info: {
+                tid: "a",
+                tName: "a",
+                cid: "a",
+                cName: "a",
+                followers: 123,
+                omf: 2212,
+            },
+            wrap: {
+                degenAmount: 0,
+                specialBegenAmount: MAX_TOKEN_SUPPLY + BigInt(1)
+            },
+            deadline: deadline,
+            nftPrice: MAX_TOKEN_SUPPLY + BigInt(1),
+        };
+        let signature = await info.signatureWallet.signMessage(
+            ethers.toBeArray(
+                ethers.keccak256(
+                    ethers.AbiCoder.defaultAbiCoder().encode(
+                        [
+                            "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
+                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+                            "uint256",
+                            "uint256",
+                            "address",
+                        ],
+                        [params.info, params.wrap, params.nftPrice, params.deadline, info.deployWallet.address],
+                    ),
+                ),
+            ),
+        );
+
+
+        expect(await info.begen.totalSupply()).eq(0);
+
+        // createTokenWrap
+        await expect(
+            info.degenGate.connect(info.deployWallet).createTokenWrap(params.info, params.wrap, params.nftPrice, params.deadline, signature)
+        ).revertedWith("MTSE")
     });
 });

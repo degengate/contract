@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { parseTokenURI } from "./shared/utils";
 import { ethers } from "hardhat";
-import { PublicNFT, PublicNFTView } from "../typechain-types";
+import { PublicNFT, PublicNFTView, PublicNFTViewBG } from "../typechain-types";
 import { MaxInt256 } from "ethers";
 
 describe("PublicNFT", function () {
@@ -118,6 +118,10 @@ describe("PublicNFT", function () {
     );
     expect(tokenInfo.image).eq("");
 
+    let publicNFTViewBG = (await (
+      await ethers.getContractFactory("PublicNFTViewBG")
+    ).deploy()) as PublicNFTViewBG;
+
     let publicNFTView = (await (
       await ethers.getContractFactory("PublicNFTView")
     ).deploy(
@@ -125,6 +129,7 @@ describe("PublicNFT", function () {
       info.appId,
       await info.publicNFT.getAddress(),
       await info.degenGateNFTClaim.getAddress(),
+      await publicNFTViewBG.getAddress()
     )) as PublicNFTView;
 
     await expect(info.publicNFT.setPublicNFTView(await publicNFTView.getAddress())).revertedWithCustomError(info.publicNFT, "OwnableUnauthorizedAccount")

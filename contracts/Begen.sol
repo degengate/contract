@@ -7,6 +7,7 @@ import "./interfaces/IBegen.sol";
 contract Begen is IBegen, ERC20 {
   address public immutable degenGate;
   address public immutable vault;
+  uint256 public immutable MAX_TOKEN_SUPPLY = 36_965_935_954 * (10 ** decimals());
 
   event Mint(address account, uint256 amount);
   event BurnSender(address account, uint256 amount);
@@ -19,6 +20,7 @@ contract Begen is IBegen, ERC20 {
 
   function mint(address account, uint256 amount) external override {
     require(msg.sender == degenGate, "SE");
+    require(totalSupply() + amount <= MAX_TOKEN_SUPPLY, "MTSE");
 
     _mint(account, amount);
 

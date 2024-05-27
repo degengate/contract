@@ -11,7 +11,7 @@ async function main() {
     let a = await degenGateVaultCon.addApproveDegen({
         maxFeePerGas: config.maxFeePerGas,
         maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-        nonce: config.nonce0 + 15,
+        nonce: config.nonce0 + 16,
     })
     const result1 = await a.wait();
     console.log(`addApproveDegen at ${result1?.hash}`);

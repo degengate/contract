@@ -10,7 +10,7 @@ async function main() {
   const a = await mortgageNFT.setMortgageNFTView(degenGateMortgageNFTViewAddress, {
     maxFeePerGas: config.maxFeePerGas,
     maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-    nonce: config.nonce0 + 14,
+    nonce: config.nonce0 + 15,
   });
   const result = await a.wait();
 

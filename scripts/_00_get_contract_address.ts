@@ -63,6 +63,7 @@ async function main() {
     degenGateVaultAddress: info.degenGateVault,
     degenGatePublicNFTAddress: degenGatePublicNFT,
     degenGateMortgageNFTAddress: degenGateMortgageNFT,
+    degenGatePublicNFTViewBGAddress: info.publicNFTViewBG,
     degenGatePublicNFTViewAddress: info.publicNFTView,
     degenGateMortgageNFTViewAddress: info.mortgageNFTView,
     degenGateMarketAddress: degenGateMarket,

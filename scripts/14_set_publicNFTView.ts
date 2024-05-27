@@ -10,7 +10,7 @@ async function main() {
   const a = await publicNFT.setPublicNFTView(degenGatePublicNFTViewAddress, {
     maxFeePerGas: config.maxFeePerGas,
     maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-    nonce: config.nonce0 + 13,
+    nonce: config.nonce0 + 14,
   });
   const result = await a.wait();
 
