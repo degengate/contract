@@ -17,11 +17,12 @@ contract MarketFactory is IMarketFactory {
     uint256 totalPercent,
     address curve,
     address payToken,
-    uint256 buySellFee
+    uint256 buyFee,
+    uint256 sellFee
   ) external override returns (address addr) {
     require(msg.sender == foundry, "onlyFoundry");
 
-    addr = address(new Market(foundry, appId, feeDenominator, totalPercent, curve, payToken, buySellFee));
+    addr = address(new Market(foundry, appId, feeDenominator, totalPercent, curve, payToken, buyFee, sellFee));
 
     emit Create(appId, addr);
   }

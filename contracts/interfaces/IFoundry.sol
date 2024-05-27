@@ -19,7 +19,8 @@ interface IFoundry {
     address operator,
     address curve,
     address payToken,
-    uint256 buySellFee,
+    uint256 buyFee,
+    uint256 sellFee,
     address publicNFT,
     address mortgageNFT,
     address market,
@@ -75,7 +76,8 @@ interface IFoundry {
     address operator,
     address curve,
     address payToken,
-    uint256 buySellFee
+    uint256 buyFee,
+    uint256 sellFee
   ) external;
 
   function createToken(

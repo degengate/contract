@@ -90,7 +90,9 @@ interface IMarket {
 
   function payToken() external view returns (address);
 
-  function buySellFee() external view returns (uint256);
+  function buyFee() external view returns (uint256);
+
+  function sellFee() external view returns (uint256);
 
   function publicNFT() external view returns (address);
 

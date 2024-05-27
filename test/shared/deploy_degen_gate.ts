@@ -107,7 +107,8 @@ export type DegenGateAllContractInfo = {
   degenGateFundRecipientWallet: HardhatEthersSigner;
   nextWalletIndex: number;
   mortgageFee: number;
-  buySellFee: number;
+  buyFee: number;
+  sellFee: number;
   appId: number;
   appName: string;
 
@@ -145,7 +146,8 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
   let degenGateFundRecipientWallet: HardhatEthersSigner;
   let nextWalletIndex = 6;
   let mortgageFee = 100;
-  let buySellFee = 1000;
+  let buyFee = 1000;
+  let sellFee = 1000;
   let appId = 1;
   let appName = "degenGate";
 
@@ -216,7 +218,7 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
   )) as Begen;
 
   // create degenGate app
-  await foundry.createApp(appName, degenGateOwnerWallet.address, addressInfo.degenGate, await curve.getAddress(), await begen.getAddress(), buySellFee);
+  await foundry.createApp(appName, degenGateOwnerWallet.address, addressInfo.degenGate, await curve.getAddress(), await begen.getAddress(), buyFee, sellFee);
 
   let info = await foundry.apps(appId);
   publicNFT = (await ethers.getContractAt("PublicNFT", info.publicNFT)) as PublicNFT;
@@ -282,7 +284,8 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
     degenGateFundRecipientWallet,
     nextWalletIndex,
     mortgageFee,
-    buySellFee,
+    buyFee,
+    sellFee,
     appId,
     appName,
 

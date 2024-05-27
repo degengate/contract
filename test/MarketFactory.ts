@@ -19,7 +19,8 @@ describe("MarketFactory", function () {
         await info.foundry.TOTAL_PERCENT(),
         await info.curve.getAddress(),
         ZERO_ADDRESS,
-        info.buySellFee,
+        info.buyFee,
+        info.sellFee,
       ),
     ).revertedWith("onlyFoundry");
   });

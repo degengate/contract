@@ -10,7 +10,8 @@ describe("Market", function () {
     expect(await info.market.totalPercent()).eq(await info.foundry.TOTAL_PERCENT());
     expect(await info.market.mortgageNFT()).eq(await info.mortgageNFT.getAddress());
     expect(await info.market.publicNFT()).eq(await info.publicNFT.getAddress());
-    expect(await info.market.buySellFee()).eq(info.buySellFee);
+    expect(await info.market.buyFee()).eq(info.buyFee);
+    expect(await info.market.sellFee()).eq(info.sellFee);
     expect(await info.market.curve()).eq(await info.curve.getAddress());
     expect(await info.market.feeDenominator()).eq(await info.foundry.FEE_DENOMINATOR());
     expect(await info.market.foundry()).eq(await info.foundry.getAddress());

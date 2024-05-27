@@ -175,7 +175,8 @@ describe("PublicNFT", function () {
       app2OperatorWallet.address,
       await info.curve.getAddress(),
       ZERO_ADDRESS,
-      info.buySellFee,
+      info.buyFee,
+      info.sellFee,
     );
 
     let appId_2 = info.appId + 1;

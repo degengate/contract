@@ -84,7 +84,8 @@ export type AppOperatorAllContractInfo = {
   appOperatorFundRecipientWallet: HardhatEthersSigner;
   nextWalletIndex: number;
   mortgageFee: number;
-  buySellFee: number;
+  buyFee: number;
+  sellFee: number;
   appId: number;
   appName: string;
 
@@ -119,7 +120,8 @@ export async function deployAppOperatorAllContract(): Promise<AppOperatorAllCont
   let appOperatorFundRecipientWallet: HardhatEthersSigner;
   let nextWalletIndex = 6;
   let mortgageFee = 100;
-  let buySellFee = 1000;
+  let buyFee = 1000;
+  let sellFee = 1000;
   let appId = 1;
   let appName = "appOperator";
 
@@ -180,7 +182,7 @@ export async function deployAppOperatorAllContract(): Promise<AppOperatorAllCont
   )) as SimpleToken;
 
   // create app
-  await foundry.createApp(appName, appOperatorOwnerWallet.address, addressInfo.appOperator, await curve.getAddress(), await simpleToken.getAddress(), buySellFee);
+  await foundry.createApp(appName, appOperatorOwnerWallet.address, addressInfo.appOperator, await curve.getAddress(), await simpleToken.getAddress(), buyFee, sellFee);
 
   let info = await foundry.apps(appId);
   publicNFT = (await ethers.getContractAt("PublicNFT", info.publicNFT)) as PublicNFT;
@@ -221,7 +223,8 @@ export async function deployAppOperatorAllContract(): Promise<AppOperatorAllCont
     appOperatorFundRecipientWallet,
     nextWalletIndex,
     mortgageFee,
-    buySellFee,
+    buyFee,
+    sellFee,
     appId,
     appName,
 

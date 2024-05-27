@@ -22,7 +22,8 @@ contract Market is IMarket, ReentrancyGuard {
 
   address public immutable override curve;
   address public immutable override payToken;
-  uint256 public immutable override buySellFee;
+  uint256 public immutable override buyFee;
+  uint256 public immutable override sellFee;
 
   address public override publicNFT;
   address public override mortgageNFT;
@@ -45,7 +46,8 @@ contract Market is IMarket, ReentrancyGuard {
     uint256 _totalPercent,
     address _curve,
     address _payToken,
-    uint256 _buySellFee
+    uint256 _buyFee,
+    uint256 _sellFee
   ) {
     foundry = _foundry;
     appId = _appId;
@@ -55,7 +57,8 @@ contract Market is IMarket, ReentrancyGuard {
 
     curve = _curve;
     payToken = _payToken;
-    buySellFee = _buySellFee;
+    buyFee = _buyFee;
+    sellFee = _sellFee;
   }
 
   function initialize(address _publicNFT, address _mortgageNFT) external override {
@@ -412,7 +415,7 @@ contract Market is IMarket, ReentrancyGuard {
     uint256 amount = getBuyPayTokenAmount(tid, tokenAmount);
 
     uint256 totalFee;
-    (totalFee, feeTokenIds, feeTos, feeAmounts) = _getFee(tid, amount);
+    (totalFee, feeTokenIds, feeTos, feeAmounts) = _getFee(tid, amount, buyFee);
     payTokenAmount = amount + totalFee;
 
     _totalSupply[tid] += tokenAmount;
@@ -430,7 +433,7 @@ contract Market is IMarket, ReentrancyGuard {
     uint256 amount = getSellPayTokenAmount(tid, tokenAmount);
 
     uint256 totalFee;
-    (totalFee, feeTokenIds, feeTos, feeAmounts) = _getFee(tid, amount);
+    (totalFee, feeTokenIds, feeTos, feeAmounts) = _getFee(tid, amount, sellFee);
     payTokenAmount = amount - totalFee;
 
     _totalSupply[tid] -= tokenAmount;
@@ -558,7 +561,8 @@ contract Market is IMarket, ReentrancyGuard {
 
   function _getFee(
     string memory tid,
-    uint256 amount
+    uint256 amount,
+    uint256 buyOrSellFee
   )
     private
     view
@@ -570,7 +574,7 @@ contract Market is IMarket, ReentrancyGuard {
     feeAmounts = new uint256[](percents.length);
 
     for (uint256 i = 0; i < percents.length; i++) {
-      uint256 feeAmount = (amount * buySellFee * percents[i]) / totalPercent / feeDenominator;
+      uint256 feeAmount = (amount * buyOrSellFee * percents[i]) / totalPercent / feeDenominator;
       feeAmounts[i] = feeAmount;
       totalFee += feeAmount;
     }
@@ -632,18 +636,24 @@ contract Market is IMarket, ReentrancyGuard {
   }
 
   function _transferEth(address to, uint256 value) private {
-    (bool success, ) = to.call{value: value}(new bytes(0));
-    require(success, "TEE");
+    if (value > 0) {
+      (bool success, ) = to.call{value: value}(new bytes(0));
+      require(success, "TEE");
+    }
   }
 
   function _transferEthWithData(uint256 tokenId, address to, uint256 value) private {
-    _transferEth(to, value);
-    bool success = IPublicNFTVault(to).recordReceiveBuySellFee(tokenId, value);
-    require(success, "TEWDE");
+    if (value > 0) {
+      _transferEth(to, value);
+      bool success = IPublicNFTVault(to).recordReceiveBuySellFee(tokenId, value);
+      require(success, "TEWDE");
+    }
   }
 
   function _transferERC20PayToken(address to, uint256 value) private {
-    SafeERC20.safeTransfer(IERC20(payToken), to, value);
+    if (value > 0) {
+      SafeERC20.safeTransfer(IERC20(payToken), to, value);
+    }
   }
 
   function _transferERC20PayTokenWithData(uint256 tokenId, address to, uint256 value) private {

@@ -73,7 +73,8 @@ contract Foundry is IFoundry, Ownable {
     address _operator,
     address _curve,
     address _payToken,
-    uint256 _buySellFee
+    uint256 _buyFee,
+    uint256 _sellFee
   ) external override {
     uint256 appId = nextAppId;
     nextAppId += 1;
@@ -86,7 +87,8 @@ contract Foundry is IFoundry, Ownable {
       TOTAL_PERCENT,
       _curve,
       _payToken,
-      _buySellFee
+      _buyFee,
+      _sellFee
     );
 
     IMortgageNFT(mortgageNFT).initialize(market);
@@ -112,7 +114,8 @@ contract Foundry is IFoundry, Ownable {
       _operator,
       _curve,
       _payToken,
-      _buySellFee,
+      _buyFee,
+      _sellFee,
       publicNFT,
       mortgageNFT,
       market,

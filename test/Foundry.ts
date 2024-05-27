@@ -80,7 +80,8 @@ describe("Foundry", function () {
     // deploy curve
     let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
 
-    let buySellFee = info.buySellFee + 11;
+    let buyFee = info.buyFee + 11;
+    let sellFee = info.sellFee + 12;
     // create app
     let app2OwnerWallet = info.wallets[info.nextWalletIndex];
     let app2OperatorWallet = info.wallets[info.nextWalletIndex + 1];
@@ -90,7 +91,8 @@ describe("Foundry", function () {
       app2OperatorWallet.address,
       await curve.getAddress(),
       ZERO_ADDRESS,
-      buySellFee,
+      buyFee,
+      sellFee
     );
     console.log("publicNFTFactory ", await info.publicNFTFactory.getAddress())
 
@@ -103,7 +105,8 @@ describe("Foundry", function () {
         app2OperatorWallet.address,
         await curve.getAddress(),
         ZERO_ADDRESS,
-        buySellFee,
+        buyFee,
+        sellFee,
         "0xE451980132E65465d0a498c53f0b5227326Dd73F",
         "0x6D544390Eb535d61e196c87d6B9c80dCD8628Acd",
         "0xb0279Db6a2F1E01fbC8483FCCef0Be2bC6299cC3",
@@ -153,7 +156,8 @@ describe("Foundry", function () {
     // deploy curve
     let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
 
-    let buySellFee = info.buySellFee + 11;
+    let buyFee = info.buyFee + 11;
+    let sellFee = info.sellFee + 12;
     // create app
     let app2OwnerWallet = info.wallets[info.nextWalletIndex];
     let app2OperatorWallet = info.wallets[info.nextWalletIndex + 1];
@@ -163,7 +167,8 @@ describe("Foundry", function () {
       app2OperatorWallet.address,
       await curve.getAddress(),
       ZERO_ADDRESS,
-      buySellFee,
+      buyFee,
+      sellFee,
     );
 
     let newOwner = info.wallets[info.nextWalletIndex + 2];
@@ -199,7 +204,8 @@ describe("Foundry", function () {
     // deploy curve
     let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
 
-    let buySellFee = info.buySellFee + 11;
+    let buyFee = info.buyFee + 11;
+    let sellFee = info.sellFee + 12;
     // create app
     let app2OwnerWallet = info.wallets[info.nextWalletIndex];
     let app2OperatorWallet = info.wallets[info.nextWalletIndex + 1];
@@ -209,7 +215,8 @@ describe("Foundry", function () {
       app2OperatorWallet.address,
       await curve.getAddress(),
       ZERO_ADDRESS,
-      buySellFee,
+      buyFee,
+      sellFee,
     );
 
     let newOwner = info.wallets[info.nextWalletIndex + 2];
@@ -245,7 +252,8 @@ describe("Foundry", function () {
     // deploy curve
     let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
 
-    let buySellFee = info.buySellFee + 11;
+    let buyFee = info.buyFee + 11;
+    let sellFee = info.sellFee + 12;
     // create app
     let app2OwnerWallet = info.wallets[info.nextWalletIndex];
     let app2OperatorWallet = info.wallets[info.nextWalletIndex + 1];
@@ -255,7 +263,8 @@ describe("Foundry", function () {
       app2OperatorWallet.address,
       await curve.getAddress(),
       ZERO_ADDRESS,
-      buySellFee,
+      buyFee,
+      sellFee,
     );
 
     expect(await info.foundry.nextAppId()).eq(3);
@@ -311,7 +320,8 @@ describe("Foundry", function () {
       app2OperatorWallet.address,
       await info.curve.getAddress(),
       ZERO_ADDRESS,
-      info.buySellFee,
+      info.buyFee,
+      info.sellFee,
     );
 
     await info.foundry
@@ -526,7 +536,8 @@ describe("Foundry", function () {
     // deploy curve
     let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
 
-    let buySellFee = info.buySellFee + 11;
+    let buyFee = info.buyFee + 11;
+    let sellFee = info.sellFee + 12;
     // create app
     let app2OwnerWallet = info.wallets[info.nextWalletIndex];
     let app2OperatorWallet = info.wallets[info.nextWalletIndex + 1];
@@ -546,7 +557,8 @@ describe("Foundry", function () {
         app2OperatorWallet.address,
         await curve.getAddress(),
         ZERO_ADDRESS,
-        buySellFee,
+        buyFee,
+        sellFee,
       );
       expect(await info.foundry.nextAppId()).eq(i + 1);
 
@@ -578,7 +590,8 @@ describe("Foundry", function () {
       app2OperatorWallet.address,
       await info.curve.getAddress(),
       ZERO_ADDRESS,
-      info.buySellFee,
+      info.buyFee,
+      info.sellFee,
     );
 
     let appId_2 = info.appId + 1;
