@@ -64,12 +64,14 @@ contract DegenGateNFTClaim is INFTClaim, IPublicNFTVault, ERC165, Ownable, ERC72
 
     (string memory tid1, uint256 percent1, , ) = IPublicNFT(publicNFT).tokenIdToInfo(tokenId);
     (string memory tid2, uint256 percent2, , ) = IPublicNFT(publicNFT).tokenIdToInfo(tokenId - 1);
-    require(percent1 == 95000, "OPE");
-    require(percent2 == 5000, "CPE");
-    require(keccak256(abi.encodePacked(tid1)) == keccak256(abi.encodePacked(tid2)), "TE");
 
-    if (amount > 0) {
-      _transferBegen(IERC721(publicNFT).ownerOf(tokenId - 1), amount);
+    bool flag1 = percent1 == 95000;
+    bool flag2 = percent2 == 5000;
+    bool flag3 = keccak256(abi.encodePacked(tid1)) == keccak256(abi.encodePacked(tid2));
+    if (flag1 && flag2 && flag3 && !isClaim[tid1]) {
+      if (amount > 0) {
+        _transferBegen(IERC721(publicNFT).ownerOf(tokenId - 1), amount);
+      }
     }
 
     emit ReceiveBuySellFee(tokenId, amount);

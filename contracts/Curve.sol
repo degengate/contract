@@ -6,7 +6,7 @@ import "./interfaces/ICurve.sol";
 contract Curve is ICurve {
   uint256 public constant X25 = 10000000000000000000000000;
 
-  function curveMath(uint256 base, uint256 add) external pure returns (uint256) {
+  function curveMath(uint256 base, uint256 add) external pure override returns (uint256) {
     return _curveMath(base + add) - _curveMath(base);
   }
 

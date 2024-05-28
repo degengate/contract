@@ -15,6 +15,7 @@ describe("Market", function () {
     expect(await info.market.curve()).eq(await info.curve.getAddress());
     expect(await info.market.feeDenominator()).eq(await info.foundry.FEE_DENOMINATOR());
     expect(await info.market.foundry()).eq(await info.foundry.getAddress());
+    expect(await info.market.payToken()).eq(await info.simpleToken.getAddress());
   });
 
   it("initialize", async function () {

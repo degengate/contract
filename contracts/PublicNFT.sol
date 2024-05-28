@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "base64-sol/base64.sol";
 
-import "./interfaces/IFoundry.sol";
 import "./interfaces/IPublicNFT.sol";
 import "./interfaces/INFTView.sol";
 

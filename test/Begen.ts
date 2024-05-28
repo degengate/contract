@@ -7,6 +7,10 @@ describe("Begen", function () {
     it("view", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
+        expect(await info.begen.name()).eq("Begen")
+        expect(await info.begen.symbol()).eq("BEGEN")
+        expect(await info.begen.totalSupply()).eq(0)
+
         expect(await info.begen.vault()).eq(await info.degenGateVault.getAddress())
         expect(await info.begen.degenGate()).eq(await info.degenGate.getAddress())
         expect(await info.begen.MAX_TOKEN_SUPPLY()).eq(BigInt(10) ** BigInt(18) * BigInt("36965935954"))

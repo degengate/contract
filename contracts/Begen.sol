@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -13,7 +13,7 @@ contract Begen is IBegen, ERC20 {
   event BurnSender(address account, uint256 amount);
   event BurnOrigin(address account, uint256 amount);
 
-  constructor(address _degenGate, address _vault) ERC20("begen", "Begen") {
+  constructor(address _degenGate, address _vault) ERC20("Begen", "BEGEN") {
     degenGate = _degenGate;
     vault = _vault;
   }

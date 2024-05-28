@@ -390,14 +390,10 @@ contract Market is IMarket, ReentrancyGuard {
     payTokenAmount = sellAmount - redeemPayTokenAmount;
 
     if (_payTokenIsERC20()) {
-      if (payTokenAmount > 0) {
-        _transferERC20PayToken(msg.sender, payTokenAmount);
-      }
+      _transferERC20PayToken(msg.sender, payTokenAmount);
       _batchTransferERC20PayTokenToNFTOwners(feeTokenIds, feeTos, feeAmounts);
     } else {
-      if (payTokenAmount > 0) {
-        _transferEth(msg.sender, payTokenAmount);
-      }
+      _transferEth(msg.sender, payTokenAmount);
       _batchTransferEthToNFTOwners(feeTokenIds, feeTos, feeAmounts);
     }
 
@@ -643,11 +639,9 @@ contract Market is IMarket, ReentrancyGuard {
   }
 
   function _transferEthWithData(uint256 tokenId, address to, uint256 value) private {
-    if (value > 0) {
-      _transferEth(to, value);
-      bool success = IPublicNFTVault(to).recordReceiveBuySellFee(tokenId, value);
-      require(success, "TEWDE");
-    }
+    _transferEth(to, value);
+    bool success = IPublicNFTVault(to).recordReceiveBuySellFee(tokenId, value);
+    require(success, "TEWDE");
   }
 
   function _transferERC20PayToken(address to, uint256 value) private {

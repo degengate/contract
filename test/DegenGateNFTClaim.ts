@@ -7,6 +7,8 @@ describe("DegenGateNFTClaim", function () {
   it("view", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
+    expect(await info.degenGateNFTClaim.begen()).eq(await info.begen.getAddress());
+
     expect(await info.degenGateNFTClaim.degenGate()).eq(await info.degenGate.getAddress());
     expect(await info.degenGateNFTClaim.publicNFT()).eq(await info.publicNFT.getAddress());
     expect(await info.degenGateNFTClaim.market()).eq(await info.market.getAddress());
