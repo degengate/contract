@@ -634,7 +634,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
       .createTokenAndMultiply(params.info, params.nftPrice, params.deadline, signature, params.multiplyAmount, payTokenAmountMax);
 
     expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
-    expect(await info.publicNFT.ownerOf(4)).eq(info.deployWallet.address);
+    expect(await info.publicNFT.ownerOf(4)).eq(await info.degenGateNFTClaim.getAddress());
 
     let info1 = await info.publicNFT.tokenIdToInfo(3)
     expect(info1.tid).eq(params.info.tid)
@@ -662,7 +662,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
     let mortgage_begen_add = mortgage_begen_2 - mortgage_begen_1;
 
     expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
-    expect(await info.publicNFT.ownerOf(4)).eq(info.deployWallet.address);
+    expect(await info.publicNFT.ownerOf(4)).eq(await info.degenGateNFTClaim.getAddress());
 
     expect(degenGateNFTClaim_begen_2).eq(degenGateNFTClaim_begen_1).eq(0);
 

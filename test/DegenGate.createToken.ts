@@ -511,7 +511,7 @@ describe("DegenGate.createToken", function () {
     let degenGateFundRecipientWallet_Begen2 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
 
     expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
-    expect(await info.publicNFT.ownerOf(4)).eq(await info.deployWallet.getAddress());
+    expect(await info.publicNFT.ownerOf(4)).eq(await info.degenGateNFTClaim.getAddress());
 
     let info1 = await info.publicNFT.tokenIdToInfo(3)
     expect(info1.tid).eq(params.info.tid)

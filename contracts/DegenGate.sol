@@ -260,25 +260,14 @@ contract DegenGate is Initializable, OwnableUpgradeable {
   }
 
   function _createTokenWithoutPay(TokenInfo memory info) private returns (uint256[] memory nftTokenIds) {
-    address oNFTOwner;
-    if (keccak256(abi.encodePacked(info.tid)) == keccak256(abi.encodePacked(info.cid))) {
-      oNFTOwner = _msgSender();
-    } else {
-      oNFTOwner = nftClaim;
-    }
-
     nftTokenIds = IFoundry(foundry).createToken(
       appId,
       info.tid,
       _encodeTdata(info.tName, info.cid, info.cName, info.followers, info.omf),
       _nftPercents(),
-      _nftOwners(_msgSender(), oNFTOwner),
+      _nftOwners(_msgSender(), nftClaim),
       new bytes[](2)
     );
-
-    if (_msgSender() == oNFTOwner) {
-      INFTClaim(nftClaim).setClaim(info.tid);
-    }
   }
 
   function _nftPercents() private pure returns (uint256[] memory) {

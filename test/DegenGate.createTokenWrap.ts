@@ -257,7 +257,7 @@ describe("DegenGate.createTokenWrap", function () {
         expect(await info.publicNFT.totalSupply()).eq(2)
 
         expect(await info.publicNFT.ownerOf(1)).eq(info.deployWallet.address)
-        expect(await info.publicNFT.ownerOf(2)).eq(info.deployWallet.address)
+        expect(await info.publicNFT.ownerOf(2)).eq(await info.degenGateNFTClaim.getAddress())
 
         let deployWallet_begen_2 = await info.begen.balanceOf(info.deployWallet.address);
         let degenGate_begen_2 = await info.begen.balanceOf(await info.degenGate.getAddress());

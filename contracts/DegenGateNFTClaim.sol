@@ -39,13 +39,6 @@ contract DegenGateNFTClaim is INFTClaim, IPublicNFTVault, ERC165, Ownable, ERC72
     emit SetSignatureAddress(_signatureAddress, msg.sender);
   }
 
-  function setClaim(string memory tid) external override {
-    require(msg.sender == degenGate, "SE");
-
-    isClaim[tid] = true;
-    emit SetClaim(tid);
-  }
-
   function claimNFT(string memory tid, address nftOwner, bytes memory signature) external {
     require(!isClaim[tid], "CE");
 

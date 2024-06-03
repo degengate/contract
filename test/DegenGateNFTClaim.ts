@@ -239,8 +239,8 @@ describe("DegenGateNFTClaim", function () {
 
 
     expect(await info.publicNFT.ownerOf(3)).eq(info.userWallet.address);
-    expect(await info.publicNFT.ownerOf(4)).eq(info.userWallet.address);
-    expect(await info.degenGateNFTClaim.isClaim(params2.info.tid)).eq(true);
+    expect(await info.publicNFT.ownerOf(4)).eq(await info.degenGateNFTClaim.getAddress());
+    expect(await info.degenGateNFTClaim.isClaim(params2.info.tid)).eq(false);
 
     // claim onft
     let signatureClaim2 = await info.signatureWallet.signMessage(
@@ -250,8 +250,11 @@ describe("DegenGateNFTClaim", function () {
         ),
       ),
     );
-    // re claim
-    await expect(info.degenGateNFTClaim.claimNFT(params2.info.tid, nftOwner2.address, signatureClaim2)).revertedWith("CE");
+
+    // claim
+    await info.degenGateNFTClaim.claimNFT(params2.info.tid, nftOwner2.address, signatureClaim2)
+    expect(await info.degenGateNFTClaim.isClaim(params2.info.tid)).eq(true);
+    expect(await info.publicNFT.ownerOf(4)).eq(nftOwner2.address);
   });
 
   it("setClaim", async function () {
@@ -337,7 +340,6 @@ describe("DegenGateNFTClaim", function () {
     )
 
     expect(await info.degenGateNFTClaim.isClaim(params.info.tid)).eq(false);
-    await expect(info.degenGateNFTClaim.setClaim(params.info.tid)).revertedWith("SE");
   });
 
 });
