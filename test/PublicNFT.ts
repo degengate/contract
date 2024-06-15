@@ -47,7 +47,7 @@ describe("PublicNFT", function () {
       },
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 0
+        specialPointAmount: 0
       },
       deadline: deadline,
       nftPrice: 0,
@@ -58,7 +58,7 @@ describe("PublicNFT", function () {
           ethers.AbiCoder.defaultAbiCoder().encode(
             [
               "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "uint256",
               "address",
@@ -77,7 +77,7 @@ describe("PublicNFT", function () {
       multiplyAmount: 100,
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 200
+        specialPointAmount: 200
       },
       deadline: deadline,
     }
@@ -89,7 +89,7 @@ describe("PublicNFT", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "address",
             ],
@@ -409,7 +409,7 @@ describe("PublicNFT", function () {
       },
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 0
+        specialPointAmount: 0
       },
       deadline: deadline,
       nftPrice: 0,
@@ -420,7 +420,7 @@ describe("PublicNFT", function () {
           ethers.AbiCoder.defaultAbiCoder().encode(
             [
               "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "uint256",
               "address",
@@ -439,7 +439,7 @@ describe("PublicNFT", function () {
       multiplyAmount: 100,
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 200
+        specialPointAmount: 200
       },
       deadline: deadline,
     }
@@ -451,7 +451,7 @@ describe("PublicNFT", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "address",
             ],

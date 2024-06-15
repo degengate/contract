@@ -20,7 +20,7 @@ describe("DegenGate", function () {
         expect(await info.degenGate.fundRecipient()).eq(info.degenGateFundRecipientWallet.address);
         expect(await info.degenGate.signatureAddress()).eq(info.signatureWallet.address);
 
-        expect(await info.degenGate.begen()).eq(await info.begen.getAddress());
+        expect(await info.degenGate.point()).eq(await info.point.getAddress());
 
         expect(await info.degenGate.owner()).eq(info.deployWallet.address);
 

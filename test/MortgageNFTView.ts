@@ -25,7 +25,7 @@ async function multiply(tid: string, info: DegenGateAllContractInfo, multiplyAmo
     multiplyAmount: multiplyAmount,
     wrap: {
       degenAmount: 0,
-      specialBegenAmount: multiplyAmount * BigInt(10)
+      specialPointAmount: multiplyAmount * BigInt(10)
     },
     deadline: deadline,
   }
@@ -37,7 +37,7 @@ async function multiply(tid: string, info: DegenGateAllContractInfo, multiplyAmo
           [
             "string",
             "uint256",
-            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+            "tuple(uint256 degenAmount, uint256 specialPointAmount)",
             "uint256",
             "address",
           ],
@@ -122,7 +122,7 @@ describe("MortgageNFTView", function () {
       },
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 0
+        specialPointAmount: 0
       },
       deadline: deadline,
       nftPrice: 0,
@@ -133,7 +133,7 @@ describe("MortgageNFTView", function () {
           ethers.AbiCoder.defaultAbiCoder().encode(
             [
               "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "uint256",
               "address",

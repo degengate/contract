@@ -6,7 +6,7 @@ import {
   degenGateAddress,
   buyFee,
   sellFee,
-  begenAddress,
+  pointAddress,
   curveAddress,
   appid,
   degenGatePublicNFTAddress,
@@ -20,7 +20,7 @@ async function main() {
   const deployWallet = wallets[0];
 
   const foundry = await ethers.getContractAt("Foundry", foundryAddress);
-  const a = await foundry.createApp("degenGate", deployWallet.address, degenGateAddress, curveAddress, begenAddress, buyFee, sellFee, {
+  const a = await foundry.createApp("degenGate", deployWallet.address, degenGateAddress, curveAddress, pointAddress, buyFee, sellFee, {
     maxFeePerGas: config.maxFeePerGas,
     maxPriorityFeePerGas: config.maxPriorityFeePerGas,
     nonce: config.nonce0 + 6,
@@ -50,7 +50,7 @@ async function main() {
   expect(await market.totalPercent()).eq(await foundry.TOTAL_PERCENT());
   expect(await market.foundry()).eq(foundryAddress);
   expect(await market.appId()).eq(appid);
-  expect(await market.payToken()).eq(begenAddress);
+  expect(await market.payToken()).eq(pointAddress);
   expect(await market.publicNFT()).eq(appInfo.publicNFT);
   expect(await market.mortgageNFT()).eq(appInfo.mortgageNFT);
   expect(await market.buyFee()).eq(buyFee);

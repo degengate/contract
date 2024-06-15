@@ -3,36 +3,36 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { deployAllContracts } from "./shared/deploy";
 
-describe("Begen", function () {
+describe("Point", function () {
     it("view", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
-        expect(await info.begen.name()).eq("Begen")
-        expect(await info.begen.symbol()).eq("BEGEN")
-        expect(await info.begen.totalSupply()).eq(0)
+        expect(await info.point.name()).eq("Point")
+        expect(await info.point.symbol()).eq("POINT")
+        expect(await info.point.totalSupply()).eq(0)
 
-        expect(await info.begen.vault()).eq(await info.degenGateVault.getAddress())
-        expect(await info.begen.degenGate()).eq(await info.degenGate.getAddress())
-        expect(await info.begen.MAX_TOKEN_SUPPLY()).eq(BigInt(10) ** BigInt(18) * BigInt("36965935954"))
+        expect(await info.point.vault()).eq(await info.degenGateVault.getAddress())
+        expect(await info.point.degenGate()).eq(await info.degenGate.getAddress())
+        expect(await info.point.MAX_TOKEN_SUPPLY()).eq(BigInt(10) ** BigInt(18) * BigInt("36965935954"))
     });
 
     it("burn error", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
-        expect(await info.begen.balanceOf(info.deployWallet.address)).eq(0)
+        expect(await info.point.balanceOf(info.deployWallet.address)).eq(0)
         await expect(
-            info.begen.connect(info.deployWallet).burnOrigin(1)
-        ).revertedWithCustomError(info.begen, "ERC20InsufficientBalance")
+            info.point.connect(info.deployWallet).burnOrigin(1)
+        ).revertedWithCustomError(info.point, "ERC20InsufficientBalance")
         await expect(
-            info.begen.connect(info.deployWallet).burnSender(1)
-        ).revertedWithCustomError(info.begen, "ERC20InsufficientBalance")
+            info.point.connect(info.deployWallet).burnSender(1)
+        ).revertedWithCustomError(info.point, "ERC20InsufficientBalance")
     });
 
     it("burn success", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
-        expect(await info.begen.balanceOf(info.deployWallet.address)).eq(0)
+        expect(await info.point.balanceOf(info.deployWallet.address)).eq(0)
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -76,7 +76,7 @@ describe("Begen", function () {
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(10000),
             wrap: {
                 degenAmount: BigInt(10) ** BigInt(18) * BigInt(10000),
-                specialBegenAmount: 0
+                specialPointAmount: 0
             },
             deadline: deadline,
         }
@@ -88,7 +88,7 @@ describe("Begen", function () {
                         [
                             "string",
                             "uint256",
-                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+                            "tuple(uint256 degenAmount, uint256 specialPointAmount)",
                             "uint256",
                             "address",
                         ],
@@ -107,40 +107,40 @@ describe("Begen", function () {
         )
 
         // burn sender
-        let deployWalletBegenAmount_1 = await info.begen.balanceOf(info.deployWallet.address);
-        expect(deployWalletBegenAmount_1).gt(BigInt(10) ** BigInt(18) * BigInt(100))
-        let begenTotalSupply_1 = await info.begen.totalSupply();
+        let deployWalletPointAmount_1 = await info.point.balanceOf(info.deployWallet.address);
+        expect(deployWalletPointAmount_1).gt(BigInt(10) ** BigInt(18) * BigInt(100))
+        let pointTotalSupply_1 = await info.point.totalSupply();
 
         let burnAmount_1 = BigInt(10) ** BigInt(18) * BigInt(10);
-        await info.begen.connect(info.deployWallet).burnSender(burnAmount_1);
-        let deployWalletBegenAmount_2 = await info.begen.balanceOf(info.deployWallet.address);
-        let begenTotalSupply_2 = await info.begen.totalSupply();
+        await info.point.connect(info.deployWallet).burnSender(burnAmount_1);
+        let deployWalletPointAmount_2 = await info.point.balanceOf(info.deployWallet.address);
+        let pointTotalSupply_2 = await info.point.totalSupply();
 
-        expect(deployWalletBegenAmount_2).eq(deployWalletBegenAmount_1 - burnAmount_1);
-        expect(begenTotalSupply_2).eq(begenTotalSupply_1 - burnAmount_1);
+        expect(deployWalletPointAmount_2).eq(deployWalletPointAmount_1 - burnAmount_1);
+        expect(pointTotalSupply_2).eq(pointTotalSupply_1 - burnAmount_1);
 
         // burn tx origin
         let burnAmount_2 = BigInt(10) ** BigInt(18) * BigInt(21);
-        await info.begen.connect(info.deployWallet).burnOrigin(burnAmount_2);
-        let deployWalletBegenAmount_3 = await info.begen.balanceOf(info.deployWallet.address);
-        let begenTotalSupply_3 = await info.begen.totalSupply();
+        await info.point.connect(info.deployWallet).burnOrigin(burnAmount_2);
+        let deployWalletPointAmount_3 = await info.point.balanceOf(info.deployWallet.address);
+        let pointTotalSupply_3 = await info.point.totalSupply();
 
-        expect(deployWalletBegenAmount_3).eq(deployWalletBegenAmount_2 - burnAmount_2);
-        expect(begenTotalSupply_3).eq(begenTotalSupply_2 - burnAmount_2);
+        expect(deployWalletPointAmount_3).eq(deployWalletPointAmount_2 - burnAmount_2);
+        expect(pointTotalSupply_3).eq(pointTotalSupply_2 - burnAmount_2);
     });
 
     it("mint error", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
         await expect(
-            info.begen.connect(info.deployWallet).mint(info.deployWallet.address, 1)
+            info.point.connect(info.deployWallet).mint(info.deployWallet.address, 1)
         ).revertedWith("SE")
     });
 
     it("mint eq MAX_TOKEN_SUPPLY", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
-        const MAX_TOKEN_SUPPLY = await info.begen.MAX_TOKEN_SUPPLY();
+        const MAX_TOKEN_SUPPLY = await info.point.MAX_TOKEN_SUPPLY();
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
 
@@ -156,7 +156,7 @@ describe("Begen", function () {
             },
             wrap: {
                 degenAmount: 0,
-                specialBegenAmount: MAX_TOKEN_SUPPLY
+                specialPointAmount: MAX_TOKEN_SUPPLY
             },
             deadline: deadline,
             nftPrice: MAX_TOKEN_SUPPLY,
@@ -167,7 +167,7 @@ describe("Begen", function () {
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
                             "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+                            "tuple(uint256 degenAmount, uint256 specialPointAmount)",
                             "uint256",
                             "uint256",
                             "address",
@@ -179,19 +179,19 @@ describe("Begen", function () {
         );
 
 
-        expect(await info.begen.totalSupply()).eq(0);
+        expect(await info.point.totalSupply()).eq(0);
 
         // createTokenWrap
         await info.degenGate.connect(info.deployWallet).createTokenWrap(params.info, params.wrap, params.nftPrice, params.deadline, signature);
 
-        expect(await info.begen.totalSupply()).eq(MAX_TOKEN_SUPPLY);
+        expect(await info.point.totalSupply()).eq(MAX_TOKEN_SUPPLY);
 
     });
 
     it("mint > MAX_TOKEN_SUPPLY", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
-        const MAX_TOKEN_SUPPLY = await info.begen.MAX_TOKEN_SUPPLY();
+        const MAX_TOKEN_SUPPLY = await info.point.MAX_TOKEN_SUPPLY();
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
 
@@ -207,7 +207,7 @@ describe("Begen", function () {
             },
             wrap: {
                 degenAmount: 0,
-                specialBegenAmount: MAX_TOKEN_SUPPLY + BigInt(1)
+                specialPointAmount: MAX_TOKEN_SUPPLY + BigInt(1)
             },
             deadline: deadline,
             nftPrice: MAX_TOKEN_SUPPLY + BigInt(1),
@@ -218,7 +218,7 @@ describe("Begen", function () {
                     ethers.AbiCoder.defaultAbiCoder().encode(
                         [
                             "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+                            "tuple(uint256 degenAmount, uint256 specialPointAmount)",
                             "uint256",
                             "uint256",
                             "address",
@@ -230,7 +230,7 @@ describe("Begen", function () {
         );
 
 
-        expect(await info.begen.totalSupply()).eq(0);
+        expect(await info.point.totalSupply()).eq(0);
 
         // createTokenWrap
         await expect(

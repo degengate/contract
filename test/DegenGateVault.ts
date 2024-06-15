@@ -7,7 +7,7 @@ describe("DegenGateVault", function () {
     it("view", async function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
-        expect(await info.degenGateVault.begen()).eq(await info.begen.getAddress())
+        expect(await info.degenGateVault.point()).eq(await info.point.getAddress())
         expect(await info.degenGateVault.degen()).eq(await info.mockDegen.getAddress())
         expect(await info.degenGateVault.degenGate()).eq(await info.degenGate.getAddress())
 
@@ -29,7 +29,7 @@ describe("DegenGateVault", function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
-        expect(await info.begen.balanceOf(info.deployWallet.address)).eq(0)
+        expect(await info.point.balanceOf(info.deployWallet.address)).eq(0)
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -73,7 +73,7 @@ describe("DegenGateVault", function () {
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(10000),
             wrap: {
                 degenAmount: BigInt(10) ** BigInt(18) * BigInt(10000),
-                specialBegenAmount: 0
+                specialPointAmount: 0
             },
             deadline: deadline,
         }
@@ -85,7 +85,7 @@ describe("DegenGateVault", function () {
                         [
                             "string",
                             "uint256",
-                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+                            "tuple(uint256 degenAmount, uint256 specialPointAmount)",
                             "uint256",
                             "address",
                         ],
@@ -104,24 +104,24 @@ describe("DegenGateVault", function () {
         )
 
         // collectAll
-        let deployWalletBegenAmount_1 = await info.begen.balanceOf(info.deployWallet.address);
+        let deployWalletPointAmount_1 = await info.point.balanceOf(info.deployWallet.address);
         let deployWalletDegenAmount_1 = await info.mockDegen.balanceOf(info.deployWallet.address);
 
-        expect(deployWalletBegenAmount_1).gt(BigInt(10) ** BigInt(18) * BigInt(100))
-        let begenTotalSupply_1 = await info.begen.totalSupply();
+        expect(deployWalletPointAmount_1).gt(BigInt(10) ** BigInt(18) * BigInt(100))
+        let pointTotalSupply_1 = await info.point.totalSupply();
 
         await info.degenGateVault.connect(info.deployWallet).collectAll("0x");
 
-        let deployWalletBegenAmount_2 = await info.begen.balanceOf(info.deployWallet.address);
+        let deployWalletPointAmount_2 = await info.point.balanceOf(info.deployWallet.address);
         let deployWalletDegenAmount_2 = await info.mockDegen.balanceOf(info.deployWallet.address);
 
-        let begenTotalSupply_2 = await info.begen.totalSupply();
+        let pointTotalSupply_2 = await info.point.totalSupply();
 
-        expect(deployWalletBegenAmount_2).eq(0);
-        expect(begenTotalSupply_1 - begenTotalSupply_2).eq(deployWalletBegenAmount_1);
+        expect(deployWalletPointAmount_2).eq(0);
+        expect(pointTotalSupply_1 - pointTotalSupply_2).eq(deployWalletPointAmount_1);
         expect(
             deployWalletDegenAmount_2 - deployWalletDegenAmount_1
-        ).eq(deployWalletBegenAmount_1)
+        ).eq(deployWalletPointAmount_1)
 
         await expect(
             info.degenGateVault.connect(info.deployWallet).collectAll("0x")
@@ -133,7 +133,7 @@ describe("DegenGateVault", function () {
         const info = (await loadFixture(deployAllContracts)).degenGateInfo;
         await info.degenGateVault.addApproveDegen();
 
-        expect(await info.begen.balanceOf(info.deployWallet.address)).eq(0)
+        expect(await info.point.balanceOf(info.deployWallet.address)).eq(0)
 
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
         const deadline = currentTimestamp + 60 * 60
@@ -177,7 +177,7 @@ describe("DegenGateVault", function () {
             multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(10000),
             wrap: {
                 degenAmount: BigInt(10) ** BigInt(18) * BigInt(10000),
-                specialBegenAmount: 0
+                specialPointAmount: 0
             },
             deadline: deadline,
         }
@@ -189,7 +189,7 @@ describe("DegenGateVault", function () {
                         [
                             "string",
                             "uint256",
-                            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+                            "tuple(uint256 degenAmount, uint256 specialPointAmount)",
                             "uint256",
                             "address",
                         ],
@@ -208,28 +208,28 @@ describe("DegenGateVault", function () {
         )
 
         // collect
-        let deployWalletBegenAmount_1 = await info.begen.balanceOf(info.deployWallet.address);
+        let deployWalletPointAmount_1 = await info.point.balanceOf(info.deployWallet.address);
         let deployWalletDegenAmount_1 = await info.mockDegen.balanceOf(info.deployWallet.address);
 
-        expect(deployWalletBegenAmount_1).gt(BigInt(10) ** BigInt(18) * BigInt(100))
-        let begenTotalSupply_1 = await info.begen.totalSupply();
+        expect(deployWalletPointAmount_1).gt(BigInt(10) ** BigInt(18) * BigInt(100))
+        let pointTotalSupply_1 = await info.point.totalSupply();
 
         let collectAmount = BigInt(10) ** BigInt(18) * BigInt(11)
         await info.degenGateVault.connect(info.deployWallet).collect(collectAmount, "0x");
 
-        let deployWalletBegenAmount_2 = await info.begen.balanceOf(info.deployWallet.address);
+        let deployWalletPointAmount_2 = await info.point.balanceOf(info.deployWallet.address);
         let deployWalletDegenAmount_2 = await info.mockDegen.balanceOf(info.deployWallet.address);
 
-        let begenTotalSupply_2 = await info.begen.totalSupply();
+        let pointTotalSupply_2 = await info.point.totalSupply();
 
-        expect(deployWalletBegenAmount_2).eq(deployWalletBegenAmount_1 - collectAmount);
-        expect(begenTotalSupply_1 - begenTotalSupply_2).eq(collectAmount);
+        expect(deployWalletPointAmount_2).eq(deployWalletPointAmount_1 - collectAmount);
+        expect(pointTotalSupply_1 - pointTotalSupply_2).eq(collectAmount);
         expect(
             deployWalletDegenAmount_2 - deployWalletDegenAmount_1
         ).eq(collectAmount)
 
         await expect(
-            info.degenGateVault.connect(info.deployWallet).collect(deployWalletBegenAmount_2 + BigInt(1), "0x")
+            info.degenGateVault.connect(info.deployWallet).collect(deployWalletPointAmount_2 + BigInt(1), "0x")
         ).revertedWith("BE");
     });
 });

@@ -1,12 +1,12 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
-import { begenAddress, degenGateAddress, degenGateVaultAddress } from "./params.json";
+import { pointAddress, degenGateAddress, degenGateVaultAddress } from "./params.json";
 import config from "./config.json";
 
 async function main() {
-    const begen = await ethers.deployContract(
-        "Begen",
+    const point = await ethers.deployContract(
+        "Point",
         [degenGateAddress, degenGateVaultAddress],
         {
             maxFeePerGas: config.maxFeePerGas,
@@ -15,18 +15,18 @@ async function main() {
         }
     );
 
-    await begen.waitForDeployment();
+    await point.waitForDeployment();
 
-    console.log(`Begen deployed to ${begen.target}`);
+    console.log(`Point deployed to ${point.target}`);
 
-    expect(begen.target).eq(begenAddress);
+    expect(point.target).eq(pointAddress);
 
     console.log("check ...");
 
-    const begenCon = await ethers.getContractAt("Begen", begenAddress);
+    const pointCon = await ethers.getContractAt("Point", pointAddress);
 
-    expect(await begenCon.degenGate()).eq(degenGateAddress);
-    expect(await begenCon.vault()).eq(degenGateVaultAddress);
+    expect(await pointCon.degenGate()).eq(degenGateAddress);
+    expect(await pointCon.vault()).eq(degenGateVaultAddress);
 }
 
 main().catch((error) => {

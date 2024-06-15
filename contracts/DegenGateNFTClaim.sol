@@ -63,7 +63,7 @@ contract DegenGateNFTClaim is INFTClaim, IPublicNFTVault, ERC165, Ownable, ERC72
     bool flag3 = keccak256(abi.encodePacked(tid1)) == keccak256(abi.encodePacked(tid2));
     if (flag1 && flag2 && flag3 && !isClaim[tid1]) {
       if (amount > 0) {
-        _transferBegen(IERC721(publicNFT).ownerOf(tokenId - 1), amount);
+        _transferPoint(IERC721(publicNFT).ownerOf(tokenId - 1), amount);
       }
     }
 
@@ -75,7 +75,7 @@ contract DegenGateNFTClaim is INFTClaim, IPublicNFTVault, ERC165, Ownable, ERC72
     return interfaceId == type(IPublicNFTVault).interfaceId || super.supportsInterface(interfaceId);
   }
 
-  function begen() public view returns (address) {
+  function point() public view returns (address) {
     return IMarket(market).payToken();
   }
 
@@ -93,8 +93,8 @@ contract DegenGateNFTClaim is INFTClaim, IPublicNFTVault, ERC165, Ownable, ERC72
     require(tokenId != 0, "TE2");
   }
 
-  function _transferBegen(address to, uint256 value) private {
-    SafeERC20.safeTransfer(IERC20(begen()), to, value);
+  function _transferPoint(address to, uint256 value) private {
+    SafeERC20.safeTransfer(IERC20(point()), to, value);
   }
 
   function _verifyClaimSignature(string memory tid, address nftOwner, bytes memory signature) private view {

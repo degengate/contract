@@ -176,7 +176,7 @@ export async function deployAppOperatorAllContract(_sellFee: number): Promise<Ap
   // deploy curve
   curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
 
-  // deploy begen
+  // deploy simpleToken
   simpleToken = (await (await ethers.getContractFactory("SimpleToken")).deploy(
     BigInt(10) ** BigInt(54)
   )) as SimpleToken;

@@ -12,7 +12,7 @@ import {
   degenGateVaultAddress,
   degenGateMortgageNFTAddress,
   degenGateMarketAddress,
-  begenAddress,
+  pointAddress,
 } from "./params.json";
 import config from "./config.json";
 
@@ -53,7 +53,7 @@ async function main() {
   expect(await degenGateCon.nftClaim()).eq(degenGateNFTClaimAddress);
   expect(await degenGateCon.fundRecipient()).eq(degenGateFundRecipientWalletAddress);
   expect(await degenGateCon.signatureAddress()).eq(signatureWalletAddress);
-  expect(await degenGateCon.begen()).eq(begenAddress);
+  expect(await degenGateCon.point()).eq(pointAddress);
 
   expect(await degenGateCon.owner()).eq(deployWallet.address);
 }

@@ -7,7 +7,7 @@ describe("DegenGateNFTClaim", function () {
   it("view", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
-    expect(await info.degenGateNFTClaim.begen()).eq(await info.begen.getAddress());
+    expect(await info.degenGateNFTClaim.point()).eq(await info.point.getAddress());
 
     expect(await info.degenGateNFTClaim.degenGate()).eq(await info.degenGate.getAddress());
     expect(await info.degenGateNFTClaim.publicNFT()).eq(await info.publicNFT.getAddress());
@@ -55,7 +55,7 @@ describe("DegenGateNFTClaim", function () {
       },
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 0
+        specialPointAmount: 0
       },
       deadline: deadline,
       nftPrice: 0,
@@ -66,7 +66,7 @@ describe("DegenGateNFTClaim", function () {
           ethers.AbiCoder.defaultAbiCoder().encode(
             [
               "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "uint256",
               "address",
@@ -89,7 +89,7 @@ describe("DegenGateNFTClaim", function () {
       multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(100),
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: BigInt(10) ** BigInt(18) * BigInt(100)
+        specialPointAmount: BigInt(10) ** BigInt(18) * BigInt(100)
       },
       deadline: deadline,
     }
@@ -101,7 +101,7 @@ describe("DegenGateNFTClaim", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "address",
             ],
@@ -171,7 +171,7 @@ describe("DegenGateNFTClaim", function () {
       },
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 0
+        specialPointAmount: 0
       },
       deadline: deadline,
       nftPrice: 0,
@@ -182,7 +182,7 @@ describe("DegenGateNFTClaim", function () {
           ethers.AbiCoder.defaultAbiCoder().encode(
             [
               "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "uint256",
               "address",
@@ -205,7 +205,7 @@ describe("DegenGateNFTClaim", function () {
       multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(100),
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: BigInt(10) ** BigInt(18) * BigInt(100)
+        specialPointAmount: BigInt(10) ** BigInt(18) * BigInt(100)
       },
       deadline: deadline,
     }
@@ -217,7 +217,7 @@ describe("DegenGateNFTClaim", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "address",
             ],
@@ -275,7 +275,7 @@ describe("DegenGateNFTClaim", function () {
       },
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 0
+        specialPointAmount: 0
       },
       deadline: deadline,
       nftPrice: 0,
@@ -286,7 +286,7 @@ describe("DegenGateNFTClaim", function () {
           ethers.AbiCoder.defaultAbiCoder().encode(
             [
               "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "uint256",
               "address",
@@ -309,7 +309,7 @@ describe("DegenGateNFTClaim", function () {
       multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(100),
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: BigInt(10) ** BigInt(18) * BigInt(100)
+        specialPointAmount: BigInt(10) ** BigInt(18) * BigInt(100)
       },
       deadline: deadline,
     }
@@ -321,7 +321,7 @@ describe("DegenGateNFTClaim", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "address",
             ],

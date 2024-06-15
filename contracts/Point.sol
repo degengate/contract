@@ -2,9 +2,9 @@
 pragma solidity >=0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "./interfaces/IBegen.sol";
+import "./interfaces/IPoint.sol";
 
-contract Begen is IBegen, ERC20 {
+contract Point is IPoint, ERC20 {
   address public immutable degenGate;
   address public immutable vault;
   uint256 public immutable MAX_TOKEN_SUPPLY = 36_965_935_954 * (10 ** decimals());
@@ -13,7 +13,7 @@ contract Begen is IBegen, ERC20 {
   event BurnSender(address account, uint256 amount);
   event BurnOrigin(address account, uint256 amount);
 
-  constructor(address _degenGate, address _vault) ERC20("Begen", "BEGEN") {
+  constructor(address _degenGate, address _vault) ERC20("Point", "POINT") {
     degenGate = _degenGate;
     vault = _vault;
   }

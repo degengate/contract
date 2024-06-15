@@ -3,7 +3,7 @@ import { expect } from "chai";
 
 import {
     degenGateAddress,
-    begenAddress,
+    pointAddress,
     degenAddress,
     degenGateVaultAddress,
 } from "./params.json";
@@ -17,7 +17,7 @@ async function main() {
         "DegenGateVault",
         [
             degenGateAddress,
-            begenAddress,
+            pointAddress,
             degenAddress,
         ],
         {
@@ -39,7 +39,7 @@ async function main() {
 
     expect(await degenGateVaultCon.degenGate()).eq(degenGateAddress);
     expect(await degenGateVaultCon.degen()).eq(degenAddress);
-    expect(await degenGateVaultCon.begen()).eq(begenAddress);
+    expect(await degenGateVaultCon.point()).eq(pointAddress);
 
     expect(await degenGateVaultCon.owner()).eq(deployWallet.address);
 }

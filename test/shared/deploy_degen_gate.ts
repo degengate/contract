@@ -14,7 +14,7 @@ import {
   DegenGate,
   MockDegen,
   DegenGateNFTClaim,
-  Begen,
+  Point,
   DegenGateVault
 } from "../../typechain-types";
 
@@ -34,7 +34,7 @@ export type AllContractAddressInfo = {
   mortgageNFTFactory: string;
   marketFactory: string;
   curve: string;
-  begen: string;
+  point: string;
   degenGate: string;
   degenGateNFTClaim: string;
   degenGateVault: string;
@@ -51,7 +51,7 @@ export async function getAllContractAddress(deployWallet: HardhatEthersSigner): 
   // deploy mortgageNFTFactory 2
   // deploy marketFactory 3
   // deploy curve 4
-  // deploy begen 5
+  // deploy point 5
   // create degenGate app 6
   // deploy degenGate 8
   // deploy degenGateNFTClaim 9
@@ -65,7 +65,7 @@ export async function getAllContractAddress(deployWallet: HardhatEthersSigner): 
   const mortgageNFTFactory = await getContractAddress(deployWallet.address, nextNoice + 2);
   const marketFactory = await getContractAddress(deployWallet.address, nextNoice + 3);
   const curve = await getContractAddress(deployWallet.address, nextNoice + 4);
-  const begen = await getContractAddress(deployWallet.address, nextNoice + 5);
+  const point = await getContractAddress(deployWallet.address, nextNoice + 5);
   const degenGate = await getContractAddress(deployWallet.address, nextNoice + 8);
   const degenGateNFTClaim = await getContractAddress(deployWallet.address, nextNoice + 9);
   const degenGateVault = await getContractAddress(deployWallet.address, nextNoice + 10);
@@ -79,7 +79,7 @@ export async function getAllContractAddress(deployWallet: HardhatEthersSigner): 
     mortgageNFTFactory: mortgageNFTFactory,
     marketFactory: marketFactory,
     curve: curve,
-    begen: begen,
+    point: point,
     degenGate: degenGate,
     degenGateNFTClaim: degenGateNFTClaim,
     degenGateVault: degenGateVault,
@@ -118,7 +118,7 @@ export type DegenGateAllContractInfo = {
   mortgageNFTFactory: MortgageNFTFactory;
   marketFactory: MarketFactory;
   curve: Curve;
-  begen: Begen;
+  point: Point;
 
   publicNFT: PublicNFT;
   mortgageNFT: MortgageNFT;
@@ -157,7 +157,7 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
   let mortgageNFTFactory: MortgageNFTFactory;
   let marketFactory: MarketFactory;
   let curve: Curve;
-  let begen: Begen;
+  let point: Point;
 
   let publicNFT: PublicNFT;
   let mortgageNFT: MortgageNFT;
@@ -212,13 +212,13 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
   // deploy curve
   curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
 
-  // deploy begen
-  begen = (await (await ethers.getContractFactory("Begen")).deploy(
+  // deploy point
+  point = (await (await ethers.getContractFactory("Point")).deploy(
     addressInfo.degenGate, addressInfo.degenGateVault
-  )) as Begen;
+  )) as Point;
 
   // create degenGate app
-  await foundry.createApp(appName, degenGateOwnerWallet.address, addressInfo.degenGate, await curve.getAddress(), await begen.getAddress(), buyFee, sellFee);
+  await foundry.createApp(appName, degenGateOwnerWallet.address, addressInfo.degenGate, await curve.getAddress(), await point.getAddress(), buyFee, sellFee);
 
   let info = await foundry.apps(appId);
   publicNFT = (await ethers.getContractAt("PublicNFT", info.publicNFT)) as PublicNFT;
@@ -254,7 +254,7 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
     await ethers.getContractFactory("DegenGateVault")
   ).deploy(
     await degenGate.getAddress(),
-    await begen.getAddress(),
+    await point.getAddress(),
     await mockDegen.getAddress()
   )) as DegenGateVault;
 
@@ -263,7 +263,7 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
   expect(await mortgageNFTFactory.getAddress()).eq(addressInfo.mortgageNFTFactory);
   expect(await marketFactory.getAddress()).eq(addressInfo.marketFactory);
   expect(await curve.getAddress()).eq(addressInfo.curve);
-  expect(await begen.getAddress()).eq(addressInfo.begen);
+  expect(await point.getAddress()).eq(addressInfo.point);
   expect(await degenGate.getAddress()).eq(addressInfo.degenGate);
   expect(await degenGateNFTClaim.getAddress()).eq(addressInfo.degenGateNFTClaim);
   expect(await degenGateVault.getAddress()).eq(addressInfo.degenGateVault);
@@ -295,7 +295,7 @@ export async function deployDegenGateAllContract(): Promise<DegenGateAllContract
     mortgageNFTFactory,
     marketFactory,
     curve,
-    begen,
+    point,
     publicNFT,
     mortgageNFT,
     market,

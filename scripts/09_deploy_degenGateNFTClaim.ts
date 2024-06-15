@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
-import { appid, foundryAddress, signatureWalletAddress, degenGateNFTClaimAddress, degenGateAddress, degenGatePublicNFTAddress, begenAddress } from "./params.json";
+import { appid, foundryAddress, signatureWalletAddress, degenGateNFTClaimAddress, degenGateAddress, degenGatePublicNFTAddress, pointAddress } from "./params.json";
 import config from "./config.json";
 
 async function main() {
@@ -35,7 +35,7 @@ async function main() {
   expect(await degenGateNFTClaimCon.publicNFT()).eq(degenGatePublicNFTAddress);
   expect(await degenGateNFTClaimCon.signatureAddress()).eq(signatureWalletAddress);
   expect(await degenGateNFTClaimCon.owner()).eq(deployWallet.address);
-  expect(await degenGateNFTClaimCon.begen()).eq(begenAddress);
+  expect(await degenGateNFTClaimCon.point()).eq(pointAddress);
   expect(await degenGateNFTClaimCon.market()).eq(info.market);
 }
 

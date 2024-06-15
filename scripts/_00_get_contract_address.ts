@@ -58,7 +58,7 @@ async function main() {
     mortgageNFTFactoryAddress: info.mortgageNFTFactory,
     marketFactoryAddress: info.marketFactory,
     curveAddress: info.curve,
-    begenAddress: info.begen,
+    pointAddress: info.point,
     degenGateAddress: info.degenGate,
     degenGateNFTClaimAddress: info.degenGateNFTClaim,
     degenGateVaultAddress: info.degenGateVault,

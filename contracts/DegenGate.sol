@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IMarket.sol";
 import "./interfaces/IFoundry.sol";
 import "./interfaces/INFTClaim.sol";
-import "./interfaces/IBegen.sol";
+import "./interfaces/IPoint.sol";
 import "./interfaces/IMortgageNFT.sol";
 
 contract DegenGate is Initializable, OwnableUpgradeable {
@@ -26,7 +26,7 @@ contract DegenGate is Initializable, OwnableUpgradeable {
 
   struct WrapInfo {
     uint256 degenAmount;
-    uint256 specialBegenAmount;
+    uint256 specialPointAmount;
   }
 
   address public foundry;
@@ -123,12 +123,12 @@ contract DegenGate is Initializable, OwnableUpgradeable {
 
     uint256[] memory nftTokenIds = _createTokenWithoutPay(info);
 
-    require(wrap.degenAmount + wrap.specialBegenAmount >= nftPrice, "PE");
+    require(wrap.degenAmount + wrap.specialPointAmount >= nftPrice, "PE");
 
-    if (nftPrice > wrap.specialBegenAmount) {
-      _TFDegenFromSender(vault, nftPrice - wrap.specialBegenAmount);
+    if (nftPrice > wrap.specialPointAmount) {
+      _TFDegenFromSender(vault, nftPrice - wrap.specialPointAmount);
     }
-    IBegen(begen()).mint(fundRecipient, nftPrice);
+    IPoint(point()).mint(fundRecipient, nftPrice);
 
     emit CreateTokenWrap(info, wrap, nftTokenIds[0], nftTokenIds[1], nftPrice, deadline, msg.sender);
   }
@@ -143,9 +143,9 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     _verifyMultiplySignature(tid, multiplyAmount, wrap, deadline, signature);
 
     _TFDegenFromSender(vault, wrap.degenAmount);
-    IBegen(begen()).mint(address(this), wrap.degenAmount + wrap.specialBegenAmount);
+    IPoint(point()).mint(address(this), wrap.degenAmount + wrap.specialPointAmount);
 
-    _approveBegenToMarket();
+    _approvePointToMarket();
 
     (bool exists, uint256 tokenId) = _find_first_mortgage(tid);
     if (exists) {
@@ -165,7 +165,7 @@ contract DegenGate is Initializable, OwnableUpgradeable {
 
     payTokenAmount = IMarket(market).cashProxy(nftTokenId, tokenAmount);
 
-    IBegen(begen()).burnSender(payTokenAmount);
+    IPoint(point()).burnSender(payTokenAmount);
     _TFDegenFromVault(msg.sender, payTokenAmount);
 
     emit Cash(nftTokenId, tokenAmount, payTokenAmount, msg.sender);
@@ -182,7 +182,7 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     uint256[] memory nftTokenIds = _createTokenWithoutPay(info);
 
     if (nftPrice > 0) {
-      _TFBegenFromSender(fundRecipient, nftPrice);
+      _TFPointFromSender(fundRecipient, nftPrice);
     }
 
     emit CreateToken(info, nftTokenIds[0], nftTokenIds[1], nftPrice, deadline, msg.sender);
@@ -202,17 +202,17 @@ contract DegenGate is Initializable, OwnableUpgradeable {
 
     uint256 tokenId;
 
-    _TFBegenFromSender(address(this), payTokenAmountMax);
-    _approveBegenToMarket();
+    _TFPointFromSender(address(this), payTokenAmountMax);
+    _approvePointToMarket();
     (tokenId, payTokenAmount) = IMarket(market).multiplyProxy(info.tid, multiplyAmount, msg.sender);
 
     payTokenAmount = nftPrice + payTokenAmount;
 
     require(payTokenAmountMax >= payTokenAmount, "PE");
     if (nftPrice > 0) {
-      _transferBegen(fundRecipient, nftPrice);
+      _transferPoint(fundRecipient, nftPrice);
     }
-    _refundBegen(payTokenAmountMax, payTokenAmount);
+    _refundPoint(payTokenAmountMax, payTokenAmount);
 
     emit CreateTokenAndMultiply(
       info,
@@ -239,7 +239,7 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     emit SetSignatureAddress(_signatureAddress, msg.sender);
   }
 
-  function begen() public view returns (address) {
+  function point() public view returns (address) {
     return IMarket(market).payToken();
   }
 
@@ -337,26 +337,26 @@ contract DegenGate is Initializable, OwnableUpgradeable {
   }
 
   function _refundWrap(WrapInfo memory wrap, uint256 needPay) private {
-    uint256 wrapMax = wrap.degenAmount + wrap.specialBegenAmount;
+    uint256 wrapMax = wrap.degenAmount + wrap.specialPointAmount;
 
     if (wrapMax <= needPay) {
       return;
     }
 
     uint256 value = wrapMax - needPay;
-    IBegen(begen()).burnSender(value);
+    IPoint(point()).burnSender(value);
 
-    if (wrap.specialBegenAmount >= needPay) {
+    if (wrap.specialPointAmount >= needPay) {
       _TFDegenFromVault(msg.sender, wrap.degenAmount);
     } else {
       _TFDegenFromVault(msg.sender, value);
     }
   }
 
-  function _refundBegen(uint256 payMax, uint256 needPay) private {
+  function _refundPoint(uint256 payMax, uint256 needPay) private {
     if (payMax > needPay) {
       uint256 refund = payMax - needPay;
-      _transferBegen(msg.sender, refund);
+      _transferPoint(msg.sender, refund);
     }
   }
 
@@ -366,9 +366,9 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     }
   }
 
-  function _TFBegenFromSender(address to, uint256 value) private {
+  function _TFPointFromSender(address to, uint256 value) private {
     if (value > 0) {
-      SafeERC20.safeTransferFrom(IERC20(begen()), msg.sender, to, value);
+      SafeERC20.safeTransferFrom(IERC20(point()), msg.sender, to, value);
     }
   }
 
@@ -378,15 +378,15 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     }
   }
 
-  function _transferBegen(address to, uint256 value) private {
+  function _transferPoint(address to, uint256 value) private {
     if (value > 0) {
-      SafeERC20.safeTransfer(IERC20(begen()), to, value);
+      SafeERC20.safeTransfer(IERC20(point()), to, value);
     }
   }
 
-  function _approveBegenToMarket() private {
-    if (IERC20(begen()).allowance(address(this), market) != type(uint256).max) {
-      IERC20(begen()).approve(market, type(uint256).max);
+  function _approvePointToMarket() private {
+    if (IERC20(point()).allowance(address(this), market) != type(uint256).max) {
+      IERC20(point()).approve(market, type(uint256).max);
     }
   }
 }

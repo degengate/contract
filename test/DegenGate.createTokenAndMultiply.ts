@@ -22,7 +22,7 @@ async function createTokenAndMultiply_100000(info: DegenGateAllContractInfo) {
     },
     wrap: {
       degenAmount: 0,
-      specialBegenAmount: 0
+      specialPointAmount: 0
     },
     deadline: deadline,
     nftPrice: 0,
@@ -33,7 +33,7 @@ async function createTokenAndMultiply_100000(info: DegenGateAllContractInfo) {
         ethers.AbiCoder.defaultAbiCoder().encode(
           [
             "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+            "tuple(uint256 degenAmount, uint256 specialPointAmount)",
             "uint256",
             "uint256",
             "address",
@@ -53,7 +53,7 @@ async function createTokenAndMultiply_100000(info: DegenGateAllContractInfo) {
     multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(100000),
     wrap: {
       degenAmount: 0,
-      specialBegenAmount: BigInt(10) ** BigInt(18) * BigInt(200000)
+      specialPointAmount: BigInt(10) ** BigInt(18) * BigInt(200000)
     },
     deadline: deadline,
   }
@@ -65,7 +65,7 @@ async function createTokenAndMultiply_100000(info: DegenGateAllContractInfo) {
           [
             "string",
             "uint256",
-            "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+            "tuple(uint256 degenAmount, uint256 specialPointAmount)",
             "uint256",
             "address",
           ],
@@ -123,7 +123,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
       ),
     );
 
-    await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
+    await info.point.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
 
     await info.degenGate
       .connect(info.deployWallet)
@@ -169,7 +169,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
       ),
     );
 
-    await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
+    await info.point.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
 
     await expect(
       info.degenGate
@@ -217,7 +217,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
       ),
     );
 
-    await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
+    await info.point.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
 
     await expect(
       info.degenGate
@@ -265,7 +265,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
       ),
     );
 
-    await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
+    await info.point.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
 
     await expect(
       info.degenGate
@@ -318,7 +318,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
       ),
     );
 
-    await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
+    await info.point.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
 
     await expect(
       info.degenGate
@@ -328,7 +328,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
 
   });
 
-  it("begen < nft price + multiply", async function () {
+  it("point < nft price + multiply", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
@@ -366,16 +366,16 @@ describe("DegenGate.createTokenAndMultiply", function () {
       ),
     );
 
-    await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
+    await info.point.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
 
     await expect(
       info.degenGate
         .connect(info.deployWallet)
         .createTokenAndMultiply(params.info, params.nftPrice, params.deadline, signature, params.multiplyAmount, payTokenAmountMax),
-    ).revertedWithCustomError(info.begen, "ERC20InsufficientBalance")
+    ).revertedWithCustomError(info.point, "ERC20InsufficientBalance")
   });
 
-  it("begen == nft price + multiply | tid != cid", async function () {
+  it("point == nft price + multiply | tid != cid", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
@@ -413,14 +413,14 @@ describe("DegenGate.createTokenAndMultiply", function () {
       ),
     );
 
-    let deployWallet_begen_1 = await info.begen.balanceOf(info.deployWallet.address);
-    let degenGate_begen_1 = await info.begen.balanceOf(await info.degenGate.getAddress());
-    let degenGateFundRecipientWallet_begen_1 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
-    let market_begen_1 = await info.begen.balanceOf(await info.market.getAddress());
-    let mortgage_begen_1 = await info.begen.balanceOf(info.mortgageFeeWallet.address);
-    let degenGateNFTClaim_begen_1 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
+    let deployWallet_point_1 = await info.point.balanceOf(info.deployWallet.address);
+    let degenGate_point_1 = await info.point.balanceOf(await info.degenGate.getAddress());
+    let degenGateFundRecipientWallet_point_1 = await info.point.balanceOf(info.degenGateFundRecipientWallet.address);
+    let market_point_1 = await info.point.balanceOf(await info.market.getAddress());
+    let mortgage_point_1 = await info.point.balanceOf(info.mortgageFeeWallet.address);
+    let degenGateNFTClaim_point_1 = await info.point.balanceOf(await info.degenGateNFTClaim.getAddress());
 
-    await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
+    await info.point.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
 
     let result = await info.degenGate
       .connect(info.deployWallet)
@@ -452,35 +452,35 @@ describe("DegenGate.createTokenAndMultiply", function () {
 
     let curve = await info.market.getPayTokenAmount(0, params.multiplyAmount);
 
-    let deployWallet_begen_2 = await info.begen.balanceOf(info.deployWallet.address);
-    let degenGate_begen_2 = await info.begen.balanceOf(await info.degenGate.getAddress());
-    let degenGateFundRecipientWallet_begen_2 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
-    let market_begen_2 = await info.begen.balanceOf(await info.market.getAddress());
-    let mortgage_begen_2 = await info.begen.balanceOf(info.mortgageFeeWallet.address);
-    let degenGateNFTClaim_begen_2 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
+    let deployWallet_point_2 = await info.point.balanceOf(info.deployWallet.address);
+    let degenGate_point_2 = await info.point.balanceOf(await info.degenGate.getAddress());
+    let degenGateFundRecipientWallet_point_2 = await info.point.balanceOf(info.degenGateFundRecipientWallet.address);
+    let market_point_2 = await info.point.balanceOf(await info.market.getAddress());
+    let mortgage_point_2 = await info.point.balanceOf(info.mortgageFeeWallet.address);
+    let degenGateNFTClaim_point_2 = await info.point.balanceOf(await info.degenGateNFTClaim.getAddress());
 
-    // deployWallet_begen_1 - nftPrice - multiplyPayAmount + nftFee = deployWallet_begen_2
-    let nft_fee_begen = deployWallet_begen_2 - deployWallet_begen_1 + result;
-    let mortgage_begen_add = mortgage_begen_2 - mortgage_begen_1;
+    // deployWallet_point_1 - nftPrice - multiplyPayAmount + nftFee = deployWallet_point_2
+    let nft_fee_point = deployWallet_point_2 - deployWallet_point_1 + result;
+    let mortgage_point_add = mortgage_point_2 - mortgage_point_1;
 
     expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
     expect(await info.publicNFT.ownerOf(4)).eq(await info.degenGateNFTClaim.getAddress());
 
-    expect(degenGateNFTClaim_begen_2).eq(degenGateNFTClaim_begen_1).eq(0)
+    expect(degenGateNFTClaim_point_2).eq(degenGateNFTClaim_point_1).eq(0)
 
-    expect(curve / mortgage_begen_add).eq(1000);
-    expect(curve / (nft_fee_begen)).eq(100);
+    expect(curve / mortgage_point_add).eq(1000);
+    expect(curve / (nft_fee_point)).eq(100);
 
-    expect(result - params.nftPrice).eq(mortgage_begen_add + nft_fee_begen);
+    expect(result - params.nftPrice).eq(mortgage_point_add + nft_fee_point);
 
-    expect((curve + nft_fee_begen) / (result - params.nftPrice)).eq(91);
+    expect((curve + nft_fee_point) / (result - params.nftPrice)).eq(91);
 
-    expect(degenGate_begen_2).eq(degenGate_begen_1).eq(0);
-    expect(degenGateFundRecipientWallet_begen_2).eq(degenGateFundRecipientWallet_begen_1 + params.nftPrice);
-    expect(market_begen_2).eq(market_begen_1).eq(0);
+    expect(degenGate_point_2).eq(degenGate_point_1).eq(0);
+    expect(degenGateFundRecipientWallet_point_2).eq(degenGateFundRecipientWallet_point_1 + params.nftPrice);
+    expect(market_point_2).eq(market_point_1).eq(0);
   });
 
-  it("begen > nft price + multiply", async function () {
+  it("point > nft price + multiply", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
@@ -518,14 +518,14 @@ describe("DegenGate.createTokenAndMultiply", function () {
       ),
     );
 
-    let deployWallet_begen_1 = await info.begen.balanceOf(info.deployWallet.address);
-    let degenGate_begen_1 = await info.begen.balanceOf(await info.degenGate.getAddress());
-    let degenGateFundRecipientWallet_begen_1 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
-    let market_begen_1 = await info.begen.balanceOf(await info.market.getAddress());
-    let mortgage_begen_1 = await info.begen.balanceOf(info.mortgageFeeWallet.address);
-    let degenGateNFTClaim_begen_1 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
+    let deployWallet_point_1 = await info.point.balanceOf(info.deployWallet.address);
+    let degenGate_point_1 = await info.point.balanceOf(await info.degenGate.getAddress());
+    let degenGateFundRecipientWallet_point_1 = await info.point.balanceOf(info.degenGateFundRecipientWallet.address);
+    let market_point_1 = await info.point.balanceOf(await info.market.getAddress());
+    let mortgage_point_1 = await info.point.balanceOf(info.mortgageFeeWallet.address);
+    let degenGateNFTClaim_point_1 = await info.point.balanceOf(await info.degenGateNFTClaim.getAddress());
 
-    await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
+    await info.point.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
 
     let result = await info.degenGate
       .connect(info.deployWallet)
@@ -539,31 +539,31 @@ describe("DegenGate.createTokenAndMultiply", function () {
 
     let curve = await info.market.getPayTokenAmount(0, params.multiplyAmount);
 
-    let deployWallet_begen_2 = await info.begen.balanceOf(info.deployWallet.address);
-    let degenGate_begen_2 = await info.begen.balanceOf(await info.degenGate.getAddress());
-    let degenGateFundRecipientWallet_begen_2 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
-    let market_begen_2 = await info.begen.balanceOf(await info.market.getAddress());
-    let mortgage_begen_2 = await info.begen.balanceOf(info.mortgageFeeWallet.address);
-    let degenGateNFTClaim_begen_2 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
+    let deployWallet_point_2 = await info.point.balanceOf(info.deployWallet.address);
+    let degenGate_point_2 = await info.point.balanceOf(await info.degenGate.getAddress());
+    let degenGateFundRecipientWallet_point_2 = await info.point.balanceOf(info.degenGateFundRecipientWallet.address);
+    let market_point_2 = await info.point.balanceOf(await info.market.getAddress());
+    let mortgage_point_2 = await info.point.balanceOf(info.mortgageFeeWallet.address);
+    let degenGateNFTClaim_point_2 = await info.point.balanceOf(await info.degenGateNFTClaim.getAddress());
 
-    // deployWallet_begen_1 - nftPrice - multiplyPayAmount + nftFee = deployWallet_begen_2
-    let nft_fee_begen = deployWallet_begen_2 - deployWallet_begen_1 + result;
-    let mortgage_begen_add = mortgage_begen_2 - mortgage_begen_1;
+    // deployWallet_point_1 - nftPrice - multiplyPayAmount + nftFee = deployWallet_point_2
+    let nft_fee_point = deployWallet_point_2 - deployWallet_point_1 + result;
+    let mortgage_point_add = mortgage_point_2 - mortgage_point_1;
 
     expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
     expect(await info.publicNFT.ownerOf(4)).eq(await info.degenGateNFTClaim.getAddress());
 
-    expect(degenGateNFTClaim_begen_2).eq(degenGateNFTClaim_begen_1).eq(0);
-    expect(curve / mortgage_begen_add).eq(1000);
-    expect(curve / nft_fee_begen).eq(100);
+    expect(degenGateNFTClaim_point_2).eq(degenGateNFTClaim_point_1).eq(0);
+    expect(curve / mortgage_point_add).eq(1000);
+    expect(curve / nft_fee_point).eq(100);
 
-    expect(result - params.nftPrice).eq(mortgage_begen_add + nft_fee_begen);
+    expect(result - params.nftPrice).eq(mortgage_point_add + nft_fee_point);
 
-    expect((curve + nft_fee_begen) / (result - params.nftPrice)).eq(91);
+    expect((curve + nft_fee_point) / (result - params.nftPrice)).eq(91);
 
-    expect(degenGate_begen_2).eq(degenGate_begen_1).eq(0);
-    expect(degenGateFundRecipientWallet_begen_2).eq(degenGateFundRecipientWallet_begen_1 + params.nftPrice);
-    expect(market_begen_2).eq(market_begen_1).eq(0);
+    expect(degenGate_point_2).eq(degenGate_point_1).eq(0);
+    expect(degenGateFundRecipientWallet_point_2).eq(degenGateFundRecipientWallet_point_1 + params.nftPrice);
+    expect(market_point_2).eq(market_point_1).eq(0);
 
     await expect(
       info.degenGate
@@ -572,7 +572,7 @@ describe("DegenGate.createTokenAndMultiply", function () {
     ).revertedWith("TE");
   });
 
-  it("begen == nft price + multiply onft==cnft", async function () {
+  it("point == nft price + multiply onft==cnft", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
     await createTokenAndMultiply_100000(info)
 
@@ -610,14 +610,14 @@ describe("DegenGate.createTokenAndMultiply", function () {
       ),
     );
 
-    let deployWallet_begen_1 = await info.begen.balanceOf(info.deployWallet.address);
-    let degenGate_begen_1 = await info.begen.balanceOf(await info.degenGate.getAddress());
-    let degenGateFundRecipientWallet_begen_1 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
-    let market_begen_1 = await info.begen.balanceOf(await info.market.getAddress());
-    let mortgage_begen_1 = await info.begen.balanceOf(info.mortgageFeeWallet.address);
-    let degenGateNFTClaim_begen_1 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
+    let deployWallet_point_1 = await info.point.balanceOf(info.deployWallet.address);
+    let degenGate_point_1 = await info.point.balanceOf(await info.degenGate.getAddress());
+    let degenGateFundRecipientWallet_point_1 = await info.point.balanceOf(info.degenGateFundRecipientWallet.address);
+    let market_point_1 = await info.point.balanceOf(await info.market.getAddress());
+    let mortgage_point_1 = await info.point.balanceOf(info.mortgageFeeWallet.address);
+    let degenGateNFTClaim_point_1 = await info.point.balanceOf(await info.degenGateNFTClaim.getAddress());
 
-    await info.begen.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
+    await info.point.connect(info.deployWallet).approve(await info.degenGate.getAddress(), payTokenAmountMax);
 
     let result = await info.degenGate
       .connect(info.deployWallet)
@@ -650,32 +650,32 @@ describe("DegenGate.createTokenAndMultiply", function () {
 
     let curve = await info.market.getPayTokenAmount(0, params.multiplyAmount);
 
-    let deployWallet_begen_2 = await info.begen.balanceOf(info.deployWallet.address);
-    let degenGate_begen_2 = await info.begen.balanceOf(await info.degenGate.getAddress());
-    let degenGateFundRecipientWallet_begen_2 = await info.begen.balanceOf(info.degenGateFundRecipientWallet.address);
-    let market_begen_2 = await info.begen.balanceOf(await info.market.getAddress());
-    let mortgage_begen_2 = await info.begen.balanceOf(info.mortgageFeeWallet.address);
-    let degenGateNFTClaim_begen_2 = await info.begen.balanceOf(await info.degenGateNFTClaim.getAddress());
+    let deployWallet_point_2 = await info.point.balanceOf(info.deployWallet.address);
+    let degenGate_point_2 = await info.point.balanceOf(await info.degenGate.getAddress());
+    let degenGateFundRecipientWallet_point_2 = await info.point.balanceOf(info.degenGateFundRecipientWallet.address);
+    let market_point_2 = await info.point.balanceOf(await info.market.getAddress());
+    let mortgage_point_2 = await info.point.balanceOf(info.mortgageFeeWallet.address);
+    let degenGateNFTClaim_point_2 = await info.point.balanceOf(await info.degenGateNFTClaim.getAddress());
 
-    // deployWallet_begen_1 - nftPrice - multiplyPayAmount + nftFee = deployWallet_begen_2
-    let nftFee = deployWallet_begen_2 - deployWallet_begen_1 + result;
-    let mortgage_begen_add = mortgage_begen_2 - mortgage_begen_1;
+    // deployWallet_point_1 - nftPrice - multiplyPayAmount + nftFee = deployWallet_point_2
+    let nftFee = deployWallet_point_2 - deployWallet_point_1 + result;
+    let mortgage_point_add = mortgage_point_2 - mortgage_point_1;
 
     expect(await info.publicNFT.ownerOf(3)).eq(info.deployWallet.address);
     expect(await info.publicNFT.ownerOf(4)).eq(await info.degenGateNFTClaim.getAddress());
 
-    expect(degenGateNFTClaim_begen_2).eq(degenGateNFTClaim_begen_1).eq(0);
+    expect(degenGateNFTClaim_point_2).eq(degenGateNFTClaim_point_1).eq(0);
 
-    expect(curve / mortgage_begen_add).eq(1000);
+    expect(curve / mortgage_point_add).eq(1000);
     expect(curve / nftFee).eq(100);
 
-    expect(result - params.nftPrice).eq(mortgage_begen_add + nftFee);
+    expect(result - params.nftPrice).eq(mortgage_point_add + nftFee);
 
     expect((curve + nftFee) / (result - params.nftPrice)).eq(91);
 
-    expect(degenGate_begen_2).eq(degenGate_begen_1).eq(0);
-    expect(degenGateFundRecipientWallet_begen_2).eq(degenGateFundRecipientWallet_begen_1 + params.nftPrice);
-    expect(market_begen_2).eq(market_begen_1).eq(0);
+    expect(degenGate_point_2).eq(degenGate_point_1).eq(0);
+    expect(degenGateFundRecipientWallet_point_2).eq(degenGateFundRecipientWallet_point_1 + params.nftPrice);
+    expect(market_point_2).eq(market_point_1).eq(0);
   });
 
 });

@@ -55,7 +55,7 @@ describe("Base", function () {
       },
       wrap: {
         degenAmount: 100,
-        specialBegenAmount: 24
+        specialPointAmount: 24
       },
       deadline: deadline,
       nftPrice: 123,
@@ -66,7 +66,7 @@ describe("Base", function () {
           ethers.AbiCoder.defaultAbiCoder().encode(
             [
               "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "uint256",
               "address",
@@ -94,7 +94,7 @@ describe("Base", function () {
       multiplyAmount: 100,
       wrap: {
         degenAmount: 100,
-        specialBegenAmount: 100
+        specialPointAmount: 100
       },
       deadline: deadline,
     }
@@ -106,7 +106,7 @@ describe("Base", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "address",
             ],
@@ -139,7 +139,7 @@ describe("Base", function () {
       multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(1000000),
       wrap: {
         degenAmount: BigInt(10) ** BigInt(18) * BigInt(1000000),
-        specialBegenAmount: 0
+        specialPointAmount: 0
       },
       deadline: deadline,
     }
@@ -151,7 +151,7 @@ describe("Base", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "address",
             ],
@@ -182,15 +182,15 @@ describe("Base", function () {
     expect(userDegenBalanceOf_2).eq(userDegenBalanceOf_1 + cashResult)
 
     let nftOwnerA1DegenBalanceOf_1 = await info.mockDegen.balanceOf(nftOwner.address)
-    let nftOwnerA1BegenBalanceOf_1 = await info.begen.balanceOf(nftOwner.address)
+    let nftOwnerA1PointBalanceOf_1 = await info.point.balanceOf(nftOwner.address)
     await info.degenGateVault.connect(nftOwner).collectAll("0x");
     let nftOwnerA1DegenBalanceOf_2 = await info.mockDegen.balanceOf(nftOwner.address)
-    let nftOwnerA1BegenBalanceOf_2 = await info.begen.balanceOf(nftOwner.address)
+    let nftOwnerA1PointBalanceOf_2 = await info.point.balanceOf(nftOwner.address)
 
     expect(
       nftOwnerA1DegenBalanceOf_2 - nftOwnerA1DegenBalanceOf_1
     ).eq(
-      nftOwnerA1BegenBalanceOf_1 - nftOwnerA1BegenBalanceOf_2
+      nftOwnerA1PointBalanceOf_1 - nftOwnerA1PointBalanceOf_2
     )
   });
 });

@@ -48,7 +48,7 @@ describe("MortgageNFT", function () {
       },
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 0
+        specialPointAmount: 0
       },
       deadline: deadline,
       nftPrice: 0,
@@ -59,7 +59,7 @@ describe("MortgageNFT", function () {
           ethers.AbiCoder.defaultAbiCoder().encode(
             [
               "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "uint256",
               "address",
@@ -78,7 +78,7 @@ describe("MortgageNFT", function () {
       multiplyAmount: BigInt(10) ** BigInt(18) * BigInt(100),
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: BigInt(10) ** BigInt(18) * BigInt(200),
+        specialPointAmount: BigInt(10) ** BigInt(18) * BigInt(200),
       },
       deadline: deadline,
     }
@@ -90,7 +90,7 @@ describe("MortgageNFT", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "address",
             ],
@@ -566,7 +566,7 @@ describe("MortgageNFT", function () {
       },
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 0
+        specialPointAmount: 0
       },
       deadline: deadline,
       nftPrice: 0,
@@ -577,7 +577,7 @@ describe("MortgageNFT", function () {
           ethers.AbiCoder.defaultAbiCoder().encode(
             [
               "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "uint256",
               "address",
@@ -596,7 +596,7 @@ describe("MortgageNFT", function () {
       multiplyAmount: 100,
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 200
+        specialPointAmount: 200
       },
       deadline: deadline,
     }
@@ -608,7 +608,7 @@ describe("MortgageNFT", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "address",
             ],
@@ -685,7 +685,7 @@ describe("MortgageNFT", function () {
       },
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 0
+        specialPointAmount: 0
       },
       deadline: deadline,
       nftPrice: 0,
@@ -696,7 +696,7 @@ describe("MortgageNFT", function () {
           ethers.AbiCoder.defaultAbiCoder().encode(
             [
               "tuple(string tid, string tName, string cid, string cName, uint256 followers, uint256 omf)",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "uint256",
               "address",
@@ -715,7 +715,7 @@ describe("MortgageNFT", function () {
       multiplyAmount: 100,
       wrap: {
         degenAmount: 0,
-        specialBegenAmount: 200
+        specialPointAmount: 200
       },
       deadline: deadline,
     }
@@ -727,7 +727,7 @@ describe("MortgageNFT", function () {
             [
               "string",
               "uint256",
-              "tuple(uint256 degenAmount, uint256 specialBegenAmount)",
+              "tuple(uint256 degenAmount, uint256 specialPointAmount)",
               "uint256",
               "address",
             ],
