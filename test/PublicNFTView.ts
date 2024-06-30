@@ -14,15 +14,15 @@ function get_cnft_json_name(username: string) {
 }
 
 function get_onft_json_name(username: string) {
-  return `@${username} - Lord`
+  return `@${username} - Crown`
 }
 
 function get_cnft_json_desc(username: string) {
-  return `The Keyholder to receive 100% of the total castle tax from @${username}'s trades. Once @${username} takes over the castle, the Keyholder will then receive 5%.`
+  return `The Keyholder to receive 100% of the total castle tax from @${username}'s trades. Once @${username} reclaim the Crown, the Keyholder will then receive 5%.`
 }
 
 function get_onft_json_desc(username: string) {
-  return `This lord holder to receive 95% of the total castle tax from @${username}'s trades once @${username} takes over the castle.`
+  return `This Crown holder to receive 95% of the total castle tax from @${username}'s trades once @${username} reclaim the Crown.`
 }
 
 describe("PublicNFTView", function () {
@@ -127,7 +127,7 @@ describe("PublicNFTView", function () {
       get_onft_json_desc("degengate"),
     );
 
-    saveSVG("lord.noteq.no", json2.image);
+    saveSVG("crown.noteq.no", json2.image);
 
     // b claim onft
     let signatureAClaim = await info.signatureWallet.signMessage(
@@ -153,7 +153,7 @@ describe("PublicNFTView", function () {
     expect(json4.description).eq(
       get_onft_json_desc("degengate"),
     );
-    saveSVG("lord.noteq.yes", json4.image);
+    saveSVG("crown.noteq.yes", json4.image);
   });
 
   it("test c and o eq", async function () {
@@ -226,6 +226,6 @@ describe("PublicNFTView", function () {
     expect(json2.description).eq(
       get_onft_json_desc("tom"),
     );
-    saveSVG("lord.eq", json2.image);
+    saveSVG("crown.eq", json2.image);
   });
 });

@@ -4,7 +4,22 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { parseTokenURI } from "./shared/utils";
 import { ethers } from "hardhat";
 import { PublicNFT, PublicNFTView, PublicNFTViewBG } from "../typechain-types";
-import { MaxInt256 } from "ethers";
+
+function get_cnft_json_name(username: string) {
+  return `@${username} - Key`
+}
+
+function get_onft_json_name(username: string) {
+  return `@${username} - Crown`
+}
+
+function get_cnft_json_desc(username: string) {
+  return `The Keyholder to receive 100% of the total castle tax from @${username}'s trades. Once @${username} reclaim the Crown, the Keyholder will then receive 5%.`
+}
+
+function get_onft_json_desc(username: string) {
+  return `This Crown holder to receive 95% of the total castle tax from @${username}'s trades once @${username} reclaim the Crown.`
+}
 
 describe("PublicNFT", function () {
   it("deploy", async function () {
@@ -140,17 +155,13 @@ describe("PublicNFT", function () {
     expect(await info.publicNFT.publicNFTView()).eq(await publicNFTView.getAddress());
 
     const tokenInfo2 = parseTokenURI(await info.publicNFT.tokenURI(1));
-    expect(tokenInfo2.name).eq("@a - Key");
-    expect(tokenInfo2.description).eq(
-      "The Keyholder to receive 100% of the total castle tax from @a's trades. Once @a takes over the castle, the Keyholder will then receive 5%.",
-    );
+    expect(tokenInfo2.name).eq(get_cnft_json_name("a"));
+    expect(tokenInfo2.description).eq(get_cnft_json_desc("a"));
     expect(tokenInfo2.image).not.eq("");
 
     const tokenInfo3 = parseTokenURI(await info.publicNFT.tokenURI(2));
-    expect(tokenInfo3.name).eq("@a - Lord");
-    expect(tokenInfo3.description).eq(
-      "This lord holder to receive 95% of the total castle tax from @a's trades once @a takes over the castle.",
-    );
+    expect(tokenInfo3.name).eq(get_onft_json_name("a"));
+    expect(tokenInfo3.description).eq(get_onft_json_desc("a"));
     expect(tokenInfo3.image).not.eq("");
   });
 
