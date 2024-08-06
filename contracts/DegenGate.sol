@@ -40,6 +40,8 @@ contract DegenGate is Initializable, OwnableUpgradeable {
   address public fundRecipient;
   address public signatureAddress;
 
+  mapping(uint256 boxId => uint256 used) public boxUsed;
+
   event CreateTokenWrap(
     TokenInfo info,
     WrapInfo wrap,
@@ -142,22 +144,25 @@ contract DegenGate is Initializable, OwnableUpgradeable {
   ) external checkTimestamp(deadline) returns (uint256 nftTokenId, uint256 payTokenAmount) {
     _verifyMultiplySignature(tid, multiplyAmount, wrap, deadline, signature);
 
-    _TFDegenFromSender(vault, wrap.degenAmount);
-    IPoint(point()).mint(address(this), wrap.degenAmount + wrap.specialPointAmount);
+    (nftTokenId, payTokenAmount) = _multiply(tid, multiplyAmount, wrap);
+  }
 
-    _approvePointToMarket();
+  function multiplyWithBox(
+    string memory tid,
+    uint256 multiplyAmount,
+    WrapInfo memory wrap,
+    uint256 boxId,
+    uint256 boxTotalAmount,
+    uint256 deadline,
+    bytes memory signature
+  ) external checkTimestamp(deadline) returns (uint256 nftTokenId, uint256 payTokenAmount) {
+    _verifyMultiplyWithBoxSignature(tid, multiplyAmount, wrap, boxId, boxTotalAmount, deadline, signature);
 
-    (bool exists, uint256 tokenId) = _find_first_mortgage(tid);
-    if (exists) {
-      nftTokenId = tokenId;
-      payTokenAmount = IMarket(market).multiplyAddProxy(nftTokenId, multiplyAmount);
-    } else {
-      (nftTokenId, payTokenAmount) = IMarket(market).multiplyProxy(tid, multiplyAmount, msg.sender);
-    }
+    require(boxUsed[boxId] + wrap.specialPointAmount <= boxTotalAmount, "BE");
 
-    _refundWrap(wrap, payTokenAmount);
+    boxUsed[boxId] += wrap.specialPointAmount;
 
-    emit Multiply(nftTokenId, tid, multiplyAmount, payTokenAmount, wrap, msg.sender);
+    (nftTokenId, payTokenAmount) = _multiply(tid, multiplyAmount, wrap);
   }
 
   function cash(uint256 nftTokenId, uint256 tokenAmount) external returns (uint256 payTokenAmount) {
@@ -294,6 +299,29 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     return abi.encode(tName, cid, cName, followers, omf, block.timestamp);
   }
 
+  function _multiply(
+    string memory tid,
+    uint256 multiplyAmount,
+    WrapInfo memory wrap
+  ) private returns (uint256 nftTokenId, uint256 payTokenAmount) {
+    _TFDegenFromSender(vault, wrap.degenAmount);
+    IPoint(point()).mint(address(this), wrap.degenAmount + wrap.specialPointAmount);
+
+    _approvePointToMarket();
+
+    (bool exists, uint256 tokenId) = _find_first_mortgage(tid);
+    if (exists) {
+      nftTokenId = tokenId;
+      payTokenAmount = IMarket(market).multiplyAddProxy(nftTokenId, multiplyAmount);
+    } else {
+      (nftTokenId, payTokenAmount) = IMarket(market).multiplyProxy(tid, multiplyAmount, msg.sender);
+    }
+
+    _refundWrap(wrap, payTokenAmount);
+
+    emit Multiply(nftTokenId, tid, multiplyAmount, payTokenAmount, wrap, msg.sender);
+  }
+
   function _verifySignature(
     TokenInfo memory info,
     uint256 nftPrice,
@@ -330,6 +358,22 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     bytes memory signature
   ) private view {
     bytes32 raw = keccak256(abi.encode(tid, multiplyAmount, wrap, deadline, _msgSender()));
+    require(
+      SignatureChecker.isValidSignatureNow(signatureAddress, MessageHashUtils.toEthSignedMessageHash(raw), signature),
+      "VSE"
+    );
+  }
+
+  function _verifyMultiplyWithBoxSignature(
+    string memory tid,
+    uint256 multiplyAmount,
+    WrapInfo memory wrap,
+    uint256 boxId,
+    uint256 boxTotalAmount,
+    uint256 deadline,
+    bytes memory signature
+  ) private view {
+    bytes32 raw = keccak256(abi.encode(tid, multiplyAmount, wrap, boxId, boxTotalAmount, deadline, _msgSender()));
     require(
       SignatureChecker.isValidSignatureNow(signatureAddress, MessageHashUtils.toEthSignedMessageHash(raw), signature),
       "VSE"
