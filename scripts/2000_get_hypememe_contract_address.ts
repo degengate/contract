@@ -12,7 +12,10 @@ import {
     signatureWalletAddress
 } from "./params.json";
 
-let hypeMeme_appid = 2;
+let hypeMeme_appid: number = parseInt(process.env.HYPE_MEME_APPID || "0");
+if (hypeMeme_appid === 0) {
+    throw new Error("HYPE_MEME_APPID is empty");
+}
 
 async function main() {
     const wallets = await ethers.getSigners();
