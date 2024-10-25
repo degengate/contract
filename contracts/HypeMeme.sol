@@ -39,8 +39,6 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
   address public degen;
   address public degenGate;
 
-  uint256 public nextTid;
-
   uint256 public nftPrice;
   address public fundRecipient;
   address public signatureAddress;
@@ -125,7 +123,6 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     degen = _degen;
     degenGate = _degenGate;
 
-    nextTid = 1;
     nftPrice = _nftPrice;
     fundRecipient = _fundRecipient;
     signatureAddress = _signatureAddress;
@@ -354,8 +351,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
   function _createTokenWithoutPay(
     TokenInfo memory info
   ) private returns (string memory tid, uint256[] memory nftTokenIds) {
-    tid = Strings.toString(nextTid);
-    nextTid++;
+    tid = info.ticker;
 
     nftTokenIds = IFoundry(foundry).createToken(
       appId,

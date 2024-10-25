@@ -20,7 +20,7 @@ describe("HypeMeme.createToken", function () {
       }
     };
 
-    let tid = (await info.hypeMeme.nextTid()).toString()
+    let tid = params.info.ticker
 
     let deployWallet_Degen_1 = await info.mockDegen.balanceOf(info.deployWallet.address);
     let hypeMeme_Degen_1 = await info.mockDegen.balanceOf(await info.hypeMeme.getAddress());

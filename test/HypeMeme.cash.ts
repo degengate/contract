@@ -24,7 +24,7 @@ describe("HypeMeme.cash", function () {
                 website: "website_a"
             }
         };
-        let tid = (await info.hypeMeme.nextTid()).toString()
+        let tid = params.info.ticker
 
         await info.mockDegen.connect(info.deployWallet).approve(await info.hypeMeme.getAddress(), MAX_UINT256);
         // createToken

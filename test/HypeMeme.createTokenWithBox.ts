@@ -30,7 +30,7 @@ describe("HypeMeme.createTokenWithBox", function () {
       boxTotalAmount: 0,
       deadline: deadline,
     };
-    let tid = (await info.hypeMeme.nextTid()).toString()
+    let tid = params.info.ticker
 
     let signature = await info.signatureWallet.signMessage(
       ethers.toBeArray(
@@ -106,7 +106,7 @@ describe("HypeMeme.createTokenWithBox", function () {
       boxTotalAmount: info.hypeMemeNftPrice,
       deadline: deadline,
     };
-    let tid = (await info.hypeMeme.nextTid()).toString()
+    let tid = params.info.ticker
 
     let signature = await info.signatureWallet.signMessage(
       ethers.toBeArray(
