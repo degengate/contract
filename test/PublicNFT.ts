@@ -190,7 +190,7 @@ describe("PublicNFT", function () {
       info.sellFee,
     );
 
-    let appId_2 = info.appId + 1;
+    let appId_2 = 3;
     let publicNFT_2 = (await ethers.getContractAt("PublicNFT", (await info.foundry.apps(appId_2)).publicNFT)) as PublicNFT;
 
 

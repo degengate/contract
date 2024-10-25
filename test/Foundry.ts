@@ -4,6 +4,9 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { Curve, PublicNFT } from "../typechain-types";
 
+// degen gate + hype meme
+const initNextAppId = 3
+
 describe("Foundry", function () {
   it("deploy", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
@@ -18,7 +21,7 @@ describe("Foundry", function () {
     expect(await info.foundry.defaultMortgageFee()).eq(info.mortgageFee);
     expect(await info.foundry.defaultMortgageFeeRecipient()).eq(info.mortgageFeeWallet.address);
 
-    expect(await info.foundry.nextAppId()).eq(2);
+    expect(await info.foundry.nextAppId()).eq(initNextAppId);
 
     expect(await info.foundry.mortgageFee(info.appId)).eq(info.mortgageFee);
     expect(await info.foundry.mortgageFeeRecipient(info.appId)).eq(info.mortgageFeeWallet.address);
@@ -69,7 +72,7 @@ describe("Foundry", function () {
     expect(emptyInfo0.mortgageNFT).eq(ZERO_ADDRESS);
     expect(emptyInfo0.market).eq(ZERO_ADDRESS);
 
-    let emptyInfo2 = await info.foundry.apps(2);
+    let emptyInfo2 = await info.foundry.apps(initNextAppId);
     expect(emptyInfo2.name).eq("");
     expect(emptyInfo2.owner).eq(ZERO_ADDRESS);
     expect(emptyInfo2.operator).eq(ZERO_ADDRESS);
@@ -99,7 +102,7 @@ describe("Foundry", function () {
     await expect(tx)
       .to.emit(info.foundry, "CreateApp")
       .withArgs(
-        2,
+        initNextAppId,
         "app2",
         app2OwnerWallet.address,
         app2OperatorWallet.address,
@@ -107,9 +110,9 @@ describe("Foundry", function () {
         ZERO_ADDRESS,
         buyFee,
         sellFee,
-        "0xE451980132E65465d0a498c53f0b5227326Dd73F",
-        "0x6D544390Eb535d61e196c87d6B9c80dCD8628Acd",
-        "0xb0279Db6a2F1E01fbC8483FCCef0Be2bC6299cC3",
+        "0x5392A33F7F677f59e833FEBF4016cDDD88fF9E67",
+        "0xB1eDe3F5AC8654124Cb5124aDf0Fd3885CbDD1F7",
+        "0x3dE2Da43d4c1B137E385F36b400507c1A24401f8",
         info.deployWallet.address,
       );
 
@@ -137,7 +140,7 @@ describe("Foundry", function () {
     expect(emptyInfo0.mortgageNFT).eq(ZERO_ADDRESS);
     expect(emptyInfo0.market).eq(ZERO_ADDRESS);
 
-    let info2 = await info.foundry.apps(2);
+    let info2 = await info.foundry.apps(initNextAppId);
     expect(info2.name).eq("app2");
     expect(info2.owner).eq(app2OwnerWallet.address);
     expect(info2.operator).eq(app2OperatorWallet.address);
@@ -151,7 +154,7 @@ describe("Foundry", function () {
 
     expect(await info.foundry.mortgageFee(info.appId)).eq(info.mortgageFee);
     expect(await info.foundry.mortgageFee(0)).eq(0);
-    expect(await info.foundry.mortgageFee(2)).eq(0);
+    expect(await info.foundry.mortgageFee(initNextAppId)).eq(0);
 
     // deploy curve
     let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
@@ -199,7 +202,7 @@ describe("Foundry", function () {
 
     expect(await info.foundry.mortgageFeeRecipient(info.appId)).eq(info.mortgageFeeWallet.address);
     expect(await info.foundry.mortgageFeeRecipient(0)).eq(ZERO_ADDRESS);
-    expect(await info.foundry.mortgageFeeRecipient(2)).eq(ZERO_ADDRESS);
+    expect(await info.foundry.mortgageFeeRecipient(initNextAppId)).eq(ZERO_ADDRESS);
 
     // deploy curve
     let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
@@ -229,7 +232,7 @@ describe("Foundry", function () {
 
     expect(await info.foundry.mortgageFeeRecipient(info.appId)).eq(info.mortgageFeeWallet.address);
     expect(await info.foundry.mortgageFeeRecipient(0)).eq(ZERO_ADDRESS);
-    expect(await info.foundry.mortgageFeeRecipient(2)).eq(info.mortgageFeeWallet.address);
+    expect(await info.foundry.mortgageFeeRecipient(initNextAppId)).eq(info.mortgageFeeWallet.address);
 
     let newMortgageFeeRecipient = info.wallets[info.nextWalletIndex + 2];
     await expect(
@@ -241,13 +244,13 @@ describe("Foundry", function () {
     expect(newMortgageFeeRecipient).not.eq(info.mortgageFeeWallet.address);
     expect(await info.foundry.mortgageFeeRecipient(info.appId)).eq(newMortgageFeeRecipient.address);
     expect(await info.foundry.mortgageFeeRecipient(0)).eq(ZERO_ADDRESS);
-    expect(await info.foundry.mortgageFeeRecipient(2)).eq(info.mortgageFeeWallet.address);
+    expect(await info.foundry.mortgageFeeRecipient(initNextAppId)).eq(info.mortgageFeeWallet.address);
   });
 
   it("nextappid", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
-    expect(await info.foundry.nextAppId()).eq(2);
+    expect(await info.foundry.nextAppId()).eq(initNextAppId);
 
     // deploy curve
     let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
@@ -267,7 +270,7 @@ describe("Foundry", function () {
       sellFee,
     );
 
-    expect(await info.foundry.nextAppId()).eq(3);
+    expect(await info.foundry.nextAppId()).eq(initNextAppId + 1);
   });
 
   it("setAppOwner", async function () {
@@ -299,13 +302,13 @@ describe("Foundry", function () {
     let app2OwnerWallet = info.wallets[info.nextWalletIndex + 1];
     let app2OperatorWallet = info.wallets[info.nextWalletIndex + 2];
 
-    let firstAppId = 1
+    let newAppid_2 = initNextAppId;
 
     await expect(
       info.foundry
         .connect(app2OperatorWallet)
         .createToken(
-          firstAppId + 1,
+          newAppid_2,
           "t2",
           "0x",
           [5000, 95000],
@@ -327,7 +330,7 @@ describe("Foundry", function () {
     await info.foundry
       .connect(app2OperatorWallet)
       .createToken(
-        firstAppId + 1,
+        newAppid_2,
         "t2",
         "0x22",
         [5000, 95000],
@@ -335,11 +338,9 @@ describe("Foundry", function () {
         ["0x21", "0x22"],
       );
 
-    let appId_2 = 2;
-
     await expect(
       info.foundry.createToken(
-        appId_2,
+        newAppid_2,
         "t1",
         "0x",
         [5000, 95000],
@@ -365,7 +366,7 @@ describe("Foundry", function () {
       info.foundry
         .connect(app2OperatorWallet)
         .createToken(
-          appId_2 + 1,
+          newAppid_2 + 1,
           "t1",
           "0x",
           [5000, 95000],
@@ -378,7 +379,7 @@ describe("Foundry", function () {
       info.foundry
         .connect(app2OperatorWallet)
         .createToken(
-          appId_2,
+          newAppid_2,
           "t1",
           "0x",
           [5001, 95000],
@@ -390,20 +391,20 @@ describe("Foundry", function () {
     await expect(
       info.foundry
         .connect(app2OperatorWallet)
-        .createToken(appId_2, "t1", "0x", [5000, 95000], [ZERO_ADDRESS, info.deployWallet.address], ["0x", "0x"]),
+        .createToken(newAppid_2, "t1", "0x", [5000, 95000], [ZERO_ADDRESS, info.deployWallet.address], ["0x", "0x"]),
     ).revertedWith("ADDE");
 
     await expect(
       info.foundry
         .connect(app2OperatorWallet)
-        .createToken(appId_2, "t1", "0x", [5000, 95000], [info.deployWallet.address, ZERO_ADDRESS], ["0x", "0x"]),
+        .createToken(newAppid_2, "t1", "0x", [5000, 95000], [info.deployWallet.address, ZERO_ADDRESS], ["0x", "0x"]),
     ).revertedWith("ADDE");
 
     await expect(
       info.foundry
         .connect(app2OperatorWallet)
         .createToken(
-          appId_2,
+          newAppid_2,
           "t1",
           "0x",
           [5000, 95000],
@@ -415,14 +416,14 @@ describe("Foundry", function () {
     await expect(
       info.foundry
         .connect(app2OperatorWallet)
-        .createToken(appId_2, "t1", "0x", [5000, 95000], [info.deployWallet.address], ["0x", "0x"]),
+        .createToken(newAppid_2, "t1", "0x", [5000, 95000], [info.deployWallet.address], ["0x", "0x"]),
     ).revertedWith("LE1");
 
     await expect(
       info.foundry
         .connect(app2OperatorWallet)
         .createToken(
-          appId_2,
+          newAppid_2,
           "t1",
           "0x",
           [5000],
@@ -434,7 +435,7 @@ describe("Foundry", function () {
     let tx = await info.foundry
       .connect(app2OperatorWallet)
       .createToken(
-        appId_2,
+        newAppid_2,
         "t1",
         "0x11",
         [5000, 95000],
@@ -445,7 +446,7 @@ describe("Foundry", function () {
     await expect(tx)
       .to.emit(info.foundry, "CreateToken")
       .withArgs(
-        appId_2,
+        newAppid_2,
         "t1",
         "0x11",
         [3, 4],
@@ -459,7 +460,7 @@ describe("Foundry", function () {
       info.foundry
         .connect(app2OperatorWallet)
         .createToken(
-          appId_2,
+          newAppid_2,
           "t1",
           "0x",
           [5000, 95000],
@@ -471,7 +472,7 @@ describe("Foundry", function () {
     await info.foundry
       .connect(app2OperatorWallet)
       .createToken(
-        appId_2,
+        newAppid_2,
         "t3",
         "0x33",
         [5000, 95000],
@@ -479,12 +480,12 @@ describe("Foundry", function () {
         ["0x31", "0x32"],
       );
 
-    expect(await info.foundry.tokenData(appId_2, "t1")).eq("0x11");
-    expect(await info.foundry.tokenData(appId_2, "t2")).eq("0x22");
-    expect(await info.foundry.tokenData(appId_2, "t3")).eq("0x33");
+    expect(await info.foundry.tokenData(newAppid_2, "t1")).eq("0x11");
+    expect(await info.foundry.tokenData(newAppid_2, "t2")).eq("0x22");
+    expect(await info.foundry.tokenData(newAppid_2, "t3")).eq("0x33");
 
 
-    let publicNFT = (await ethers.getContractAt("PublicNFT", (await info.foundry.apps(appId_2)).publicNFT)) as PublicNFT;
+    let publicNFT = (await ethers.getContractAt("PublicNFT", (await info.foundry.apps(newAppid_2)).publicNFT)) as PublicNFT;
 
     const info1 = await publicNFT.tokenIdToInfo(1);
     const info2 = await publicNFT.tokenIdToInfo(2);
@@ -525,7 +526,7 @@ describe("Foundry", function () {
   it("createApp loop", async function () {
     const info = (await loadFixture(deployAllContracts)).degenGateInfo;
 
-    expect(await info.foundry.nextAppId()).eq(2);
+    expect(await info.foundry.nextAppId()).eq(initNextAppId);
 
     let address2Bool: any = {};
     let app1Info = await info.foundry.apps(1);
@@ -542,7 +543,7 @@ describe("Foundry", function () {
     let app2OwnerWallet = info.wallets[info.nextWalletIndex];
     let app2OperatorWallet = info.wallets[info.nextWalletIndex + 1];
 
-    for (let i = 2; i <= 100; i++) {
+    for (let i = initNextAppId; i <= 100; i++) {
       let appInfo = await info.foundry.apps(i);
       expect(appInfo.name).eq("");
       expect(appInfo.publicNFT).eq(ZERO_ADDRESS);
@@ -594,7 +595,7 @@ describe("Foundry", function () {
       info.sellFee,
     );
 
-    let appId_2 = info.appId + 1;
+    let appId_2 = initNextAppId;
     let publicNFT = (await ethers.getContractAt("PublicNFT", (await info.foundry.apps(appId_2)).publicNFT)) as PublicNFT;
 
     for (let i = 1; i <= 100; i++) {

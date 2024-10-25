@@ -42,6 +42,12 @@ contract DegenGate is Initializable, OwnableUpgradeable {
 
   mapping(uint256 boxId => uint256 used) public boxUsed;
 
+  mapping(address addr => bool isAuthorized) public vaultManagers;
+
+  uint256 public singleBoxMintPointLimit;
+  uint256 public oneDayBoxMintPointLimit;
+  mapping(uint256 dayIndex => uint256 mintBoxPointAmount) public dayBoxMintPointAmount;
+
   event CreateTokenWrap(
     TokenInfo info,
     WrapInfo wrap,
@@ -83,6 +89,7 @@ contract DegenGate is Initializable, OwnableUpgradeable {
 
   event SetFundRecipient(address _fundRecipient, address sender);
   event SetSignatureAddress(address _signatureAddress, address sender);
+  event SetVaultManager(address addr, bool isAuthorized);
 
   modifier checkTimestamp(uint256 deadline) {
     require(block.timestamp <= deadline, "CTE");
@@ -128,9 +135,15 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     require(wrap.degenAmount + wrap.specialPointAmount >= nftPrice, "PE");
 
     if (nftPrice > wrap.specialPointAmount) {
-      _TFDegenFromSender(vault, nftPrice - wrap.specialPointAmount);
+      _TFDegenFromSenderAndMintPoint(fundRecipient, nftPrice - wrap.specialPointAmount);
+      if (wrap.specialPointAmount > 0) {
+        _boxMintPoint(fundRecipient, wrap.specialPointAmount);
+      }
+    } else {
+      if (nftPrice > 0) {
+        _boxMintPoint(fundRecipient, nftPrice);
+      }
     }
-    IPoint(point()).mint(fundRecipient, nftPrice);
 
     emit CreateTokenWrap(info, wrap, nftTokenIds[0], nftTokenIds[1], nftPrice, deadline, msg.sender);
   }
@@ -170,8 +183,7 @@ contract DegenGate is Initializable, OwnableUpgradeable {
 
     payTokenAmount = IMarket(market).cashProxy(nftTokenId, tokenAmount);
 
-    IPoint(point()).burnSender(payTokenAmount);
-    _TFDegenFromVault(msg.sender, payTokenAmount);
+    _burnSelfPointAndTFDegenFromVault(msg.sender, payTokenAmount);
 
     emit Cash(nftTokenId, tokenAmount, payTokenAmount, msg.sender);
   }
@@ -244,8 +256,60 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     emit SetSignatureAddress(_signatureAddress, msg.sender);
   }
 
+  function pointToDegen(uint256 amount) external {
+    _TFPointFromSender(address(this), amount);
+    _burnSelfPointAndTFDegenFromVault(msg.sender, amount);
+  }
+
+  function degenToPoint(uint256 amount) external {
+    _TFDegenFromSenderAndMintPoint(msg.sender, amount);
+  }
+
+  function boxMintPoint(address account, uint256 amount) external {
+    require(vaultManagers[msg.sender], "SE");
+
+    _boxMintPoint(account, amount);
+  }
+
+  function setVaultManager(address addr, bool isAuthorized) external onlyOwner {
+    vaultManagers[addr] = isAuthorized;
+
+    emit SetVaultManager(addr, isAuthorized);
+  }
+
+  function setSingleBoxMintPointLimit(uint256 amount) external onlyOwner {
+    singleBoxMintPointLimit = amount;
+  }
+
+  function setOneDayBoxMintPointLimit(uint256 amount) external onlyOwner {
+    oneDayBoxMintPointLimit = amount;
+  }
+
   function point() public view returns (address) {
     return IMarket(market).payToken();
+  }
+
+  function _TFDegenFromSenderAndMintPoint(address pointToAddr, uint256 amount) private {
+    _TFDegenFromSender(vault, amount);
+    IPoint(point()).mint(pointToAddr, amount);
+  }
+
+  function _burnSelfPointAndTFDegenFromVault(address degenToAddr, uint256 amount) private {
+    IPoint(point()).burnSender(amount);
+    _TFDegenFromVault(degenToAddr, amount);
+  }
+
+  function _boxMintPoint(address account, uint256 amount) private {
+    if (singleBoxMintPointLimit > 0) {
+      require(amount <= singleBoxMintPointLimit, "SBMPLE");
+    }
+    if (oneDayBoxMintPointLimit > 0) {
+      uint256 dayIndex = block.timestamp / 86400;
+      dayBoxMintPointAmount[dayIndex] += amount;
+      require(dayBoxMintPointAmount[dayIndex] <= oneDayBoxMintPointLimit, "DBMPLE");
+    }
+
+    IPoint(point()).mint(account, amount);
   }
 
   function _find_first_mortgage(string memory tid) private view returns (bool exists, uint256 tokenId) {
@@ -304,8 +368,8 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     uint256 multiplyAmount,
     WrapInfo memory wrap
   ) private returns (uint256 nftTokenId, uint256 payTokenAmount) {
-    _TFDegenFromSender(vault, wrap.degenAmount);
-    IPoint(point()).mint(address(this), wrap.degenAmount + wrap.specialPointAmount);
+    _TFDegenFromSenderAndMintPoint(address(this), wrap.degenAmount);
+    _boxMintPoint(address(this), wrap.specialPointAmount);
 
     _approvePointToMarket();
 
@@ -388,12 +452,12 @@ contract DegenGate is Initializable, OwnableUpgradeable {
     }
 
     uint256 value = wrapMax - needPay;
-    IPoint(point()).burnSender(value);
 
     if (wrap.specialPointAmount >= needPay) {
-      _TFDegenFromVault(msg.sender, wrap.degenAmount);
+      _burnSelfPointAndTFDegenFromVault(msg.sender, wrap.degenAmount);
+      IPoint(point()).burnSender(value - wrap.degenAmount);
     } else {
-      _TFDegenFromVault(msg.sender, value);
+      _burnSelfPointAndTFDegenFromVault(msg.sender, value);
     }
   }
 
