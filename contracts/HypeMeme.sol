@@ -45,6 +45,8 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
 
   mapping(uint256 boxId => uint256 used) public boxUsed;
 
+  bool public isSystemReady;
+
   event CreateTokenWithBox(
     string tid,
     TokenInfo info,
@@ -105,6 +107,11 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     _;
   }
 
+  modifier onlyWhenSystemReady() {
+    require(isSystemReady, "SRE");
+    _;
+  }
+
   function initialize(
     address _foundry,
     uint256 _appId,
@@ -137,7 +144,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     uint256 boxTotalAmount,
     uint256 deadline,
     bytes memory signature
-  ) external checkTimestamp(deadline) {
+  ) external checkTimestamp(deadline) onlyWhenSystemReady {
     _verifyCreateTokenWithBoxSignature(info, wrap, boxId, boxTotalAmount, deadline, signature);
 
     require(boxUsed[boxId] + wrap.specialPointAmount <= boxTotalAmount, "BE");
@@ -174,7 +181,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     uint256 boxTotalAmount,
     uint256 deadline,
     bytes memory signature
-  ) external checkTimestamp(deadline) returns (uint256 mortgageNFTtokenId, uint256 payTokenAmount) {
+  ) external checkTimestamp(deadline) onlyWhenSystemReady returns (uint256 mortgageNFTtokenId, uint256 payTokenAmount) {
     _verifyMultiplyWithBoxSignature(tid, multiplyAmount, wrap, boxId, boxTotalAmount, deadline, signature);
 
     require(boxUsed[boxId] + wrap.specialPointAmount <= boxTotalAmount, "BE");
@@ -191,7 +198,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     uint256 boxTotalAmount,
     uint256 deadline,
     bytes memory signature
-  ) external checkTimestamp(deadline) returns (uint256 mortgageNFTtokenId, uint256 payTokenAmount) {
+  ) external checkTimestamp(deadline) onlyWhenSystemReady returns (uint256 mortgageNFTtokenId, uint256 payTokenAmount) {
     _verifyCreateTokenAndMultiplyWithBoxSignature(
       info,
       multiplyAmount,
@@ -242,7 +249,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     );
   }
 
-  function createToken(TokenInfo memory info) external {
+  function createToken(TokenInfo memory info) external onlyWhenSystemReady {
     (string memory tid, uint256[] memory nftTokenIds) = _createTokenWithoutPay(info);
 
     if (nftPrice > 0) {
@@ -259,7 +266,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     string memory tid,
     uint256 multiplyAmount,
     uint256 degenAmountMax
-  ) external returns (uint256 mortgageNFTtokenId, uint256 payTokenAmount) {
+  ) external onlyWhenSystemReady returns (uint256 mortgageNFTtokenId, uint256 payTokenAmount) {
     (mortgageNFTtokenId, payTokenAmount) = _multiply(tid, multiplyAmount, degenAmountMax);
   }
 
@@ -267,7 +274,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     TokenInfo memory info,
     uint256 multiplyAmount,
     uint256 payTokenAmountMax
-  ) external returns (uint256 mortgageNFTtokenId, uint256 payTokenAmount) {
+  ) external onlyWhenSystemReady returns (uint256 mortgageNFTtokenId, uint256 payTokenAmount) {
     SafeERC20.safeTransferFrom(IERC20(degen), msg.sender, address(this), payTokenAmountMax);
     _approveDegenToDegenGate();
     IDegenGate(degenGate).degenToPoint(payTokenAmountMax);
@@ -298,7 +305,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     );
   }
 
-  function cash(uint256 nftTokenId, uint256 tokenAmount) external returns (uint256 payTokenAmount) {
+  function cash(uint256 nftTokenId, uint256 tokenAmount) external onlyWhenSystemReady returns (uint256 payTokenAmount) {
     require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
 
     payTokenAmount = IMarket(market).cashProxy(nftTokenId, tokenAmount);
@@ -328,6 +335,10 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     emit SetSignatureAddress(_signatureAddress, msg.sender);
   }
 
+  function setSystemReady(bool _ready) external onlyOwner {
+    isSystemReady = _ready;
+  }
+
   function point() public view returns (address) {
     return IMarket(market).payToken();
   }
@@ -351,6 +362,11 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
   function _createTokenWithoutPay(
     TokenInfo memory info
   ) private returns (string memory tid, uint256[] memory nftTokenIds) {
+    require(bytes(info.name).length > 0, "INE");
+    require(bytes(info.ticker).length > 0, "ITE");
+    require(bytes(info.description).length > 0, "IDE");
+    require(bytes(info.image).length > 0, "IIE");
+
     tid = info.ticker;
 
     nftTokenIds = IFoundry(foundry).createToken(

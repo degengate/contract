@@ -6,6 +6,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 describe("HypeMeme.createToken", function () {
   it("createToken success", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
+    await info.hypeMeme.setSystemReady(true)
 
     let params = {
       info: {
@@ -49,5 +50,115 @@ describe("HypeMeme.createToken", function () {
     expect(hypeMemeFundRecipientWallet_Degen_2).eq(hypeMemeFundRecipientWallet_Degen_1).eq(0);
     expect(hypeMemeFundRecipientWallet_Point_2).eq(hypeMemeFundRecipientWallet_Point_1 + info.hypeMemeNftPrice);
 
+    let params2 = {
+      info: {
+        name: "name_b",
+        ticker: "ticker_a",
+        description: "description_a",
+        image: "image_a",
+        twitterLink: "twitter_link_a",
+        telegramLink: "telegram_link_a",
+        warpcastLink: "warpcast_link_a",
+        website: "website_a"
+      }
+    };
+
+    await expect(info.hypeMeme
+      .connect(info.deployWallet)
+      .createToken(params2.info)).revertedWith("TE")
   });
+
+  it("createToken fail, degen input < need", async function () {
+    const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
+    await info.hypeMeme.setSystemReady(true)
+
+    let params = {
+      info: {
+        name: "name_a",
+        ticker: "ticker_a",
+        description: "description_a",
+        image: "image_a",
+        twitterLink: "twitter_link_a",
+        telegramLink: "telegram_link_a",
+        warpcastLink: "warpcast_link_a",
+        website: "website_a"
+      }
+    };
+
+    await info.mockDegen.connect(info.deployWallet).approve(await info.hypeMeme.getAddress(), info.hypeMemeNftPrice - BigInt(1));
+
+    await expect(
+      info.hypeMeme
+        .connect(info.deployWallet)
+        .createToken(params.info)
+    ).revertedWithCustomError(info.mockDegen, "ERC20InsufficientAllowance")
+
+  });
+
+  it("createToken fail, input info have empty", async function () {
+    const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
+    await info.hypeMeme.setSystemReady(true)
+    await info.mockDegen.connect(info.deployWallet).approve(await info.hypeMeme.getAddress(), info.hypeMemeNftPrice);
+
+    await expect(
+      info.hypeMeme
+        .connect(info.deployWallet)
+        .createToken({
+          name: "",
+          ticker: "ticker_a",
+          description: "description_a",
+          image: "image_a",
+          twitterLink: "twitter_link_a",
+          telegramLink: "telegram_link_a",
+          warpcastLink: "warpcast_link_a",
+          website: "website_a"
+        })
+    ).revertedWith("INE")
+
+    await expect(
+      info.hypeMeme
+        .connect(info.deployWallet)
+        .createToken({
+          name: "name_a",
+          ticker: "",
+          description: "description_a",
+          image: "image_a",
+          twitterLink: "twitter_link_a",
+          telegramLink: "telegram_link_a",
+          warpcastLink: "warpcast_link_a",
+          website: "website_a"
+        })
+    ).revertedWith("ITE")
+
+    await expect(
+      info.hypeMeme
+        .connect(info.deployWallet)
+        .createToken({
+          name: "name_a",
+          ticker: "ticker_a",
+          description: "",
+          image: "image_a",
+          twitterLink: "twitter_link_a",
+          telegramLink: "telegram_link_a",
+          warpcastLink: "warpcast_link_a",
+          website: "website_a"
+        })
+    ).revertedWith("IDE")
+
+    await expect(
+      info.hypeMeme
+        .connect(info.deployWallet)
+        .createToken({
+          name: "name_a",
+          ticker: "ticker_a",
+          description: "description_a",
+          image: "",
+          twitterLink: "twitter_link_a",
+          telegramLink: "telegram_link_a",
+          warpcastLink: "warpcast_link_a",
+          website: "website_a"
+        })
+    ).revertedWith("IIE")
+
+  })
 });
