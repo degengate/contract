@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.20;
 
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "base64-sol/base64.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -46,7 +47,7 @@ contract HypeMemePublicNFTView is INFTView, Ownable {
   function tokenURI(uint256 tokenId) external view override returns (string memory) {
     Info memory info = _getInfo(tokenId);
 
-    string[7] memory parts;
+    string[9] memory parts;
 
     parts[
       0
@@ -54,15 +55,20 @@ contract HypeMemePublicNFTView is INFTView, Ownable {
     parts[1] = _getImageUrl(info.image);
     parts[
       2
-    ] = '" x="0" y="0" width="528" height="528" preserveAspectRatio="xMidYMid meet" /><rect x="15" y="404" width="500" height="108" rx="16" fill="#1F1F1F" fill-opacity="0.75"/><text fill="#DAFF7D" xml:space="preserve" style="white-space: pre" font-family="Courier Prime" font-size="20" font-weight="bold" letter-spacing="-0.011em"><tspan x="36" y="430.395">';
-    parts[3] = info.name;
+    ] = '" x="0" y="0" width="528" height="528" preserveAspectRatio="xMidYMid meet" /><rect x="15" y="364" width="500" height="148" rx="16" fill="#1F1F1F" fill-opacity="0.75"/><text fill="#DAFF7D" xml:space="preserve" style="white-space: pre" font-family="Courier Prime" font-size="20" font-weight="bold" letter-spacing="-0.011em"><tspan x="39" y="398.395">No.';
+    parts[3] = Strings.toString(tokenId);
     parts[
       4
-    ] = '</tspan></text><text fill="#9B9B9B" xml:space="preserve" style="white-space: pre" font-family="Courier Prime" font-size="20" font-weight="bold" letter-spacing="-0.011em"><tspan x="36" y="462.395">Ticker: ';
-    parts[5] = info.ticker;
+    ] = '</tspan></text><text fill="#9B9B9B" xml:space="preserve" style="white-space: pre" font-family="Courier Prime" font-size="20" font-weight="bold" letter-spacing="-0.011em"><tspan x="39" y="430.395">';
+    parts[5] = info.name;
     parts[
       6
-    ] = '</tspan></text><text fill="#9B9B9B" xml:space="preserve" style="white-space: pre" font-family="Courier Prime" font-size="20" font-weight="bold" letter-spacing="-0.011em"><tspan x="36" y="494.395">1% Trade Fee Ownership Certificate.</tspan></text></svg>';
+    ] = '</tspan></text><text fill="#9B9B9B" xml:space="preserve" style="white-space: pre" font-family="Courier Prime" font-size="20" font-weight="bold" letter-spacing="-0.011em"><tspan x="39" y="462.395">Ticker: ';
+
+    parts[7] = info.ticker;
+    parts[
+      8
+    ] = '</tspan></text><text fill="#9B9B9B" xml:space="preserve" style="white-space: pre" font-family="Courier Prime" font-size="20" font-weight="bold" letter-spacing="-0.011em"><tspan x="39" y="494.395">1% Trade Fee Ownership Certificate.</tspan></text></svg>';
 
     return _pack(tokenId, parts);
   }
@@ -92,9 +98,9 @@ contract HypeMemePublicNFTView is INFTView, Ownable {
     ) = abi.decode(data, (string, string, string, string, string, string, string, string, uint256));
   }
 
-  function _pack(uint256 tokenId, string[7] memory parts) private view returns (string memory output) {
+  function _pack(uint256 tokenId, string[9] memory parts) private view returns (string memory output) {
     string memory partsOutput = string(
-      abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6])
+      abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8])
     );
 
     string memory json = Base64.encode(

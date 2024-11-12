@@ -5,6 +5,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { parseTokenURI, saveSVG } from "./shared/utils";
 import { HypeMemePublicNFTView } from "../typechain-types";
+import { HypeMemeAllContractInfo } from "./shared/deploy_hype_meme";
 
 const nft_name = "HypeMeme Tax"
 const nft_symbol = "HMT"
@@ -17,38 +18,18 @@ function get_cnft_json_desc(ticker: string) {
     return `The coin creator will automatically receive this tradable NFT, which grants holders 1% ownership of trade fees from ${ticker} as a certificate.`
 }
 
-async function test(name: string, image: string) {
-
-    const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
-    await info.hypeMeme.setSystemReady(true)
-
-    let publicNFTView = (await (
-        await ethers.getContractFactory("HypeMemePublicNFTView")
-    ).deploy(
-        await info.foundry.getAddress(),
-        info.hypeMemeAppId,
-        await info.hypeMemePublicNFT.getAddress(),
-    )) as HypeMemePublicNFTView;
-
-    await info.hypeMemePublicNFT.connect(info.hypeMemeOwnerWallet).setPublicNFTView(await publicNFTView.getAddress());
-
-    await expect(
-        publicNFTView.connect(info.userWallet).setImageUrlPrefix("https://yellow-select-rat-115.mypinata.cloud/ipfs/")
-    ).revertedWithCustomError(publicNFTView, "OwnableUnauthorizedAccount")
-
-    await publicNFTView.connect(info.deployWallet).setImageUrlPrefix("https://yellow-select-rat-115.mypinata.cloud/ipfs/")
-
+async function test(info: HypeMemeAllContractInfo, number: string, image: string) {
     // create token
     let params = {
         info: {
-            name: "name_" + name,
-            ticker: "ticker_" + name,
-            description: "description_" + name,
+            name: "name_" + number,
+            ticker: "ticker_" + number,
+            description: "description_" + number,
             image: image,
-            twitterLink: "twitter_link_" + name,
-            telegramLink: "telegram_link_" + name,
-            warpcastLink: "warpcast_link_" + name,
-            website: "website_" + name
+            twitterLink: "twitter_link_" + number,
+            telegramLink: "telegram_link_" + number,
+            warpcastLink: "warpcast_link_" + number,
+            website: "website_" + number
         }
     };
 
@@ -68,7 +49,7 @@ async function test(name: string, image: string) {
     expect(json1.description).eq(
         get_cnft_json_desc(params.info.ticker),
     );
-    saveSVG(name, json1.image);
+    saveSVG("test" + number, json1.image);
 
 }
 
@@ -91,15 +72,28 @@ describe("PublicNFTView", function () {
         expect(await publicNFTView.symbol()).eq(nft_symbol);
     });
 
-    it("test1", async function () {
-        await test("test1", "Qma4nMJSsBLYho764ynwS6HUGHUMkAJ28GAo4jYwpAGbM8")
-    });
+    it("test", async function () {
+        const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
+        await info.hypeMeme.setSystemReady(true)
 
-    it("test2", async function () {
-        await test("test2", "QmbKutmm7yL2wXnmoAdzKzfgdj6yaCjujP3grEssoNvhDf")
-    });
+        let publicNFTView = (await (
+            await ethers.getContractFactory("HypeMemePublicNFTView")
+        ).deploy(
+            await info.foundry.getAddress(),
+            info.hypeMemeAppId,
+            await info.hypeMemePublicNFT.getAddress(),
+        )) as HypeMemePublicNFTView;
 
-    it("test3", async function () {
-        await test("test3", "QmdoKesTQZRyK5Zb9Nr2gTapHBqgudf5RcW7VS7M1nN8N9")
+        await info.hypeMemePublicNFT.connect(info.hypeMemeOwnerWallet).setPublicNFTView(await publicNFTView.getAddress());
+
+        await expect(
+            publicNFTView.connect(info.userWallet).setImageUrlPrefix("https://yellow-select-rat-115.mypinata.cloud/ipfs/")
+        ).revertedWithCustomError(publicNFTView, "OwnableUnauthorizedAccount")
+
+        await publicNFTView.connect(info.deployWallet).setImageUrlPrefix("https://yellow-select-rat-115.mypinata.cloud/ipfs/")
+
+        await test(info, "1", "Qma4nMJSsBLYho764ynwS6HUGHUMkAJ28GAo4jYwpAGbM8")
+        await test(info, "2", "QmbKutmm7yL2wXnmoAdzKzfgdj6yaCjujP3grEssoNvhDf")
+        await test(info, "3", "QmdoKesTQZRyK5Zb9Nr2gTapHBqgudf5RcW7VS7M1nN8N9")
     });
 });
