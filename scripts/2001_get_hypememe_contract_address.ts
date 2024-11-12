@@ -2,7 +2,6 @@ import { ethers } from "hardhat";
 import { getAllContractAddress } from "../test/shared/deploy_hype_meme";
 import {
     foundryAddress,
-    curveAddress,
     pointAddress,
     degenAddress,
     degenGateAddress,
@@ -15,6 +14,11 @@ import {
 let hypeMeme_appid: number = parseInt(process.env.HYPE_MEME_APPID || "0");
 if (hypeMeme_appid === 0) {
     throw new Error("HYPE_MEME_APPID is empty");
+}
+
+let hypeMemeCurveAddress = process.env.HYPE_MEME_CURVE_ADDRESS || "";
+if (hypeMemeCurveAddress.length == 0) {
+    throw new Error("HYPE_MEME_CURVE_ADDRESS is empty");
 }
 
 async function main() {
@@ -42,12 +46,12 @@ async function main() {
 
     const output = {
         foundryAddress: foundryAddress,
-        curveAddress: curveAddress,
         pointAddress: pointAddress,
         degenAddress: degenAddress,
         degenGateAddress: degenGateAddress,
         appid: hypeMeme_appid,
-        mortgageFee: 100,
+        hypeMemeCurveAddress: hypeMemeCurveAddress,
+        mortgageFee: 1000,
         buyFee: 1000,
         sellFee: 1000,
         nftPrice: "2000000000000000000000",

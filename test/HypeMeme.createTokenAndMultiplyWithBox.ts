@@ -2,11 +2,10 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 import { expect } from "chai";
 
-import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
+import { deployAllContracts } from "./shared/deploy";
 import { ethers } from "hardhat";
-import { bigint } from "hardhat/internal/core/params/argumentTypes";
 
-const multiply_1000_degenAmount = BigInt("11001100110011001100");
+const multiply_1000_degenAmount = BigInt("1100110011001100110");
 
 describe("HypeMeme.createTokenAndMultiplyWithBox.ts", function () {
     it("eq need | only degen", async function () {

@@ -29,7 +29,7 @@ async function createToken(info: HypeMemeAllContractInfo): Promise<string> {
     return tid;
 }
 
-const multiply_1000_degenAmount_max = BigInt("11001100110011001100");
+const multiply_1000_degenAmount_max = BigInt("1100110011001100110");
 
 describe("HypeMeme.multiplyWithBox", function () {
     it("eq need | only degen", async function () {

@@ -4,7 +4,7 @@ import { expect } from "chai";
 import {
     foundryAddress,
     pointAddress,
-    curveAddress,
+    hypeMemeCurveAddress,
     appid,
     buyFee,
     sellFee,
@@ -20,10 +20,9 @@ async function main() {
     const deployWallet = wallets[0];
 
     const foundry = await ethers.getContractAt("Foundry", foundryAddress);
-    const a = await foundry.createApp("hypeMeme", deployWallet.address, hypeMemeAddress, curveAddress, pointAddress, buyFee, sellFee, {
+    const a = await foundry.createApp("hypeMeme", deployWallet.address, hypeMemeAddress, hypeMemeCurveAddress, pointAddress, buyFee, sellFee, {
         maxFeePerGas: config.maxFeePerGas,
         maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-        nonce: config.nonce0,
     });
     const result = await a.wait();
 
@@ -57,7 +56,7 @@ async function main() {
     expect(await market.sellFee()).eq(sellFee);
 
     let curve = await market.curve();
-    expect(curve).eq(curveAddress);
+    expect(curve).eq(hypeMemeCurveAddress);
 }
 
 main().catch((error) => {

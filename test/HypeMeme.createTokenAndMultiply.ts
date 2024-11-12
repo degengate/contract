@@ -4,7 +4,7 @@ import { expect } from "chai";
 
 import { deployAllContracts } from "./shared/deploy";
 
-const multiply_1000_degenAmount = BigInt("11001100110011001100");
+const multiply_1000_degenAmount = BigInt("1100110011001100110");
 
 describe("HypeMeme.createTokenAndMultiply", function () {
     it("eq need", async function () {

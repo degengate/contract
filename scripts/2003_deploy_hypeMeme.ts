@@ -58,6 +58,7 @@ async function main() {
 
     expect(await hypeMemeCon.point()).eq(pointAddress);
     expect(await hypeMemeCon.owner()).eq(deployWallet.address);
+    expect(await hypeMemeCon.isSystemReady()).eq(false);
 }
 
 main().catch((error) => {

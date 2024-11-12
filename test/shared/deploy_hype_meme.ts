@@ -10,7 +10,7 @@ import {
     PublicNFT,
     MortgageNFT,
     Market,
-    Curve,
+    HypeMemeCurve,
     MockDegen,
     Point,
     HypeMeme
@@ -74,7 +74,7 @@ export type HypeMemeAllContractInfo = {
     publicNFTFactory: PublicNFTFactory;
     mortgageNFTFactory: MortgageNFTFactory;
     marketFactory: MarketFactory;
-    curve: Curve;
+    hypeMemeCurve: HypeMemeCurve;
     point: Point;
 
     hypeMemePublicNFT: PublicNFT;
@@ -107,7 +107,7 @@ export async function deployHypeMemeAllContract(degenGateAllContractInfo: DegenG
     let hypeMemeFundRecipientWallet: HardhatEthersSigner = wallets[hypeMemeFundRecipientWalletIndex];
 
     let nextWalletIndex = startIndex + 2;
-    let mortgageFee = degenGateAllContractInfo.mortgageFee;
+    let mortgageFee = 1000;
 
     let hypeMemeBuyFee = 1000;
     let hypeMemeSellFee = 1000;
@@ -119,7 +119,6 @@ export async function deployHypeMemeAllContract(degenGateAllContractInfo: DegenG
     let publicNFTFactory: PublicNFTFactory = degenGateAllContractInfo.publicNFTFactory;
     let mortgageNFTFactory: MortgageNFTFactory = degenGateAllContractInfo.mortgageNFTFactory;
     let marketFactory: MarketFactory = degenGateAllContractInfo.marketFactory;
-    let curve: Curve = degenGateAllContractInfo.curve;
     let point: Point = degenGateAllContractInfo.point;
 
     let hypeMemePublicNFT: PublicNFT;
@@ -131,10 +130,13 @@ export async function deployHypeMemeAllContract(degenGateAllContractInfo: DegenG
 
     let degenGateInfo: DegenGateAllContractInfo = degenGateAllContractInfo;
 
+    // deploy curve
+    let hypeMemeCurve = (await (await ethers.getContractFactory("HypeMemeCurve")).deploy()) as HypeMemeCurve;
+
     let addressInfo = await getAllContractAddress(deployWallet);
 
     // create hypeMeme app
-    await foundry.createApp(hypeMemeAppName, hypeMemeOwnerWallet.address, addressInfo.hypeMeme, await curve.getAddress(), await point.getAddress(), hypeMemeBuyFee, hypeMemeSellFee);
+    await foundry.createApp(hypeMemeAppName, hypeMemeOwnerWallet.address, addressInfo.hypeMeme, await hypeMemeCurve.getAddress(), await point.getAddress(), hypeMemeBuyFee, hypeMemeSellFee);
 
     let hypeMemeInfo = await foundry.apps(hypeMemeAppId);
     hypeMemePublicNFT = (await ethers.getContractAt("PublicNFT", hypeMemeInfo.publicNFT)) as PublicNFT;
@@ -196,7 +198,7 @@ export async function deployHypeMemeAllContract(degenGateAllContractInfo: DegenG
         publicNFTFactory,
         mortgageNFTFactory,
         marketFactory,
-        curve,
+        hypeMemeCurve,
         point,
 
         hypeMemePublicNFT,
