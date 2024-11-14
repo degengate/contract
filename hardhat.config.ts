@@ -10,18 +10,40 @@ import "@nomicfoundation/hardhat-ledger";
 
 dotenv.config();
 
+const DEFAULT_COMPILER_SETTINGS = {
+  version: "0.8.20",
+  settings: {
+    viaIR: false,
+    optimizer: {
+      enabled: true,
+      runs: 800,
+    },
+    metadata: {
+      bytecodeHash: "none",
+    },
+  },
+}
+
+const OTHER_COMPILER_SETTINGS = {
+  version: "0.8.20",
+  settings: {
+    viaIR: true,
+    optimizer: {
+      enabled: true,
+      runs: 800,
+    },
+    metadata: {
+      bytecodeHash: "none",
+    },
+  },
+}
+
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.20",
-    settings: {
-      viaIR: true,
-      optimizer: {
-        enabled: true,
-        runs: 800,
-      },
-      metadata: {
-        bytecodeHash: "none",
-      },
+    compilers: [DEFAULT_COMPILER_SETTINGS],
+    overrides: {
+      'contracts/HypeMemeMortgageNFTView.sol': OTHER_COMPILER_SETTINGS,
+      'contracts/HypeMemePublicNFTView.sol': OTHER_COMPILER_SETTINGS,
     },
   },
   networks: {
