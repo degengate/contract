@@ -1,8 +1,8 @@
 import { deployAllContracts } from "./shared/deploy";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { ethers } from "hardhat";
-import { getTokenAmountWei, getTokenAmountWeiFromDecimal } from "./shared/utils";
+
+import { getTokenAmountWei } from "./shared/utils";
 import Decimal from "decimal.js";
 
 describe("Market", function () {

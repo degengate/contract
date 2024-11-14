@@ -9,6 +9,7 @@ describe("HypeMeme.cash", function () {
         await info.degenGateInfo.degenGateVault.addApproveDegen();
         await info.degenGateInfo.degenGate.setVaultManager(await info.hypeMeme.getAddress(), true)
         await info.hypeMeme.setSystemReady(true)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.hypeMemeAppId)
 

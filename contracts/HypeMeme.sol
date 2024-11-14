@@ -364,7 +364,6 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
   ) private returns (string memory tid, uint256[] memory nftTokenIds) {
     require(bytes(info.name).length > 0, "INE");
     require(bytes(info.ticker).length > 0, "ITE");
-    require(bytes(info.description).length > 0, "IDE");
     require(bytes(info.image).length > 0, "IIE");
 
     tid = info.ticker;

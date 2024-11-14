@@ -75,6 +75,7 @@ describe("PublicNFTView", function () {
     it("test", async function () {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
         await info.hypeMeme.setSystemReady(true)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
         let publicNFTView = (await (
             await ethers.getContractFactory("HypeMemePublicNFTView")

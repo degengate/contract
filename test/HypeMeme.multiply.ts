@@ -27,13 +27,14 @@ async function createToken(info: HypeMemeAllContractInfo): Promise<string> {
     return tid;
 }
 
-const multiply_1000_degenAmount_max = BigInt("1100110011001100110");
+const multiply_1000_degenAmount_max = BigInt("2000200020002000200");
 
 describe("HypeMeme.multiply", function () {
     it("input eq need", async function () {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
         await info.degenGateInfo.degenGateVault.addApproveDegen();
         await info.hypeMeme.setSystemReady(true)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
         const tid = await createToken(info)
         const nftOwner = await info.hypeMemePublicNFT.ownerOf(1)
@@ -104,7 +105,7 @@ describe("HypeMeme.multiply", function () {
         expect(degenGateVault_point_2).eq(degenGateVault_point_1).eq(0)
 
         expect((nftOwner_point_2 - nftOwner_point_1) * BigInt(100) - curve_multiply).lt(50)
-        expect((mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) * BigInt(1000) - curve_multiply).lt(50)
+        expect((mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) * BigInt(100) - curve_multiply).lt(50)
 
         expect(multiplyResult.payTokenAmount).eq(
             (mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) + (nftOwner_point_2 - nftOwner_point_1)
@@ -122,6 +123,7 @@ describe("HypeMeme.multiply", function () {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
         await info.degenGateInfo.degenGateVault.addApproveDegen();
         await info.hypeMeme.setSystemReady(true)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
         const tid = await createToken(info)
         const nftOwner = await info.hypeMemePublicNFT.ownerOf(1)
@@ -194,7 +196,7 @@ describe("HypeMeme.multiply", function () {
         expect(degenGateVault_point_2).eq(degenGateVault_point_1).eq(0)
 
         expect((nftOwner_point_2 - nftOwner_point_1) * BigInt(100) - curve_multiply).lt(50)
-        expect((mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) * BigInt(1000) - curve_multiply).lt(50)
+        expect((mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) * BigInt(100) - curve_multiply).lt(50)
 
         expect(multiplyResult.payTokenAmount).eq(
             (mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) + (nftOwner_point_2 - nftOwner_point_1)
@@ -212,6 +214,7 @@ describe("HypeMeme.multiply", function () {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
         await info.degenGateInfo.degenGateVault.addApproveDegen();
         await info.hypeMeme.setSystemReady(true)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
         const tid = await createToken(info)
 
@@ -241,6 +244,7 @@ describe("HypeMeme.multiply", function () {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
         await info.degenGateInfo.degenGateVault.addApproveDegen();
         await info.hypeMeme.setSystemReady(true)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
         const tid = await createToken(info)
 

@@ -29,6 +29,8 @@ async function getContractAddress(sender: string, nonce: number) {
 
 export type AllContractAddressInfo = {
     hypeMeme: string;
+    hypeMemePublicNFTView: string;
+    hypeMemeMortgageNFTView: string;
 };
 
 export async function getAllContractAddress(deployWallet: HardhatEthersSigner): Promise<AllContractAddressInfo> {
@@ -36,10 +38,16 @@ export async function getAllContractAddress(deployWallet: HardhatEthersSigner): 
     console.log("nextNoice", nextNoice)
     // create hype meme app 0
     // deploy hype meme 2
+    // deploy hypeMemePublicNFTView 3
+    // deploy hypeMemeMortgageNFTView 4
     const hypeMeme = await getContractAddress(deployWallet.address, nextNoice + 2);
+    const hypeMemePublicNFTView = await getContractAddress(deployWallet.address, nextNoice + 3);
+    const hypeMemeMortgageNFTView = await getContractAddress(deployWallet.address, nextNoice + 4);
 
     return {
         hypeMeme: hypeMeme,
+        hypeMemePublicNFTView: hypeMemePublicNFTView,
+        hypeMemeMortgageNFTView: hypeMemeMortgageNFTView,
     };
 }
 

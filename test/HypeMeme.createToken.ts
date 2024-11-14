@@ -7,6 +7,7 @@ describe("HypeMeme.createToken", function () {
   it("createToken success", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     let params = {
       info: {
@@ -71,6 +72,7 @@ describe("HypeMeme.createToken", function () {
   it("createToken fail, degen input < need", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     let params = {
       info: {
@@ -98,6 +100,8 @@ describe("HypeMeme.createToken", function () {
   it("createToken fail, input info have empty", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+
     await info.mockDegen.connect(info.deployWallet).approve(await info.hypeMeme.getAddress(), info.hypeMemeNftPrice);
 
     await expect(
@@ -129,21 +133,6 @@ describe("HypeMeme.createToken", function () {
           website: "website_a"
         })
     ).revertedWith("ITE")
-
-    await expect(
-      info.hypeMeme
-        .connect(info.deployWallet)
-        .createToken({
-          name: "name_a",
-          ticker: "ticker_a",
-          description: "",
-          image: "image_a",
-          twitterLink: "twitter_link_a",
-          telegramLink: "telegram_link_a",
-          warpcastLink: "warpcast_link_a",
-          website: "website_a"
-        })
-    ).revertedWith("IDE")
 
     await expect(
       info.hypeMeme

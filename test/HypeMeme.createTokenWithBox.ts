@@ -8,6 +8,7 @@ describe("HypeMeme.createTokenWithBox", function () {
   it("createTokenWithBox | only degen | eq", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -86,6 +87,7 @@ describe("HypeMeme.createTokenWithBox", function () {
   it("createTokenWithBox | only degen | input > need", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -165,6 +167,7 @@ describe("HypeMeme.createTokenWithBox", function () {
   it("createTokenWithBox | only degen | input < need", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -225,6 +228,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -301,6 +305,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -377,6 +382,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -432,6 +438,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -514,6 +521,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -596,6 +604,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -678,6 +687,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -762,6 +772,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -822,6 +833,7 @@ describe("HypeMeme.createTokenWithBox", function () {
   it("createTokenWithBox | input info have empty", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     async function create(_info: any, error: string) {
       const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -889,17 +901,6 @@ describe("HypeMeme.createTokenWithBox", function () {
       warpcastLink: "warpcast_link_a",
       website: "website_a"
     }, "ITE")
-
-    await create({
-      name: "name_a",
-      ticker: "ticker_a",
-      description: "",
-      image: "image_a",
-      twitterLink: "twitter_link_a",
-      telegramLink: "telegram_link_a",
-      warpcastLink: "warpcast_link_a",
-      website: "website_a"
-    }, "IDE")
 
     await create({
       name: "name_a",

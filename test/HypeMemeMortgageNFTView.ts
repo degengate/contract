@@ -47,6 +47,7 @@ async function test(name: string, image: string) {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGateVault.addApproveDegen()
     await info.hypeMeme.setSystemReady(true)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
 
     let mortgageNFTView = (await (
         await ethers.getContractFactory("HypeMemeMortgageNFTView")

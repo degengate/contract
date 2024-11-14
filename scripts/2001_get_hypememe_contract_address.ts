@@ -59,6 +59,8 @@ async function main() {
         hypeMemeMortgageNFTAddress: hypeMemeMortgageNFT,
         hypeMemeMarketAddress: hypeMemeMarket,
         hypeMemeAddress: info.hypeMeme,
+        hypeMemePublicNFTViewAddress: info.hypeMemePublicNFTView,
+        hypeMemeMortgageNFTViewAddress: info.hypeMemeMortgageNFTView,
         hypeMemeFundRecipientWalletAddress: mw_address,
         signatureWalletAddress: signatureWalletAddress
     }
