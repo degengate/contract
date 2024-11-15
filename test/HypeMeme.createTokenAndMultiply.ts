@@ -3,6 +3,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 
 import { deployAllContracts } from "./shared/deploy";
+import Decimal from "decimal.js";
 
 const multiply_1000_degenAmount = BigInt("2000200020002000200");
 
@@ -11,7 +12,7 @@ describe("HypeMeme.createTokenAndMultiply", function () {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
         await info.degenGateInfo.degenGateVault.addApproveDegen();
         await info.hypeMeme.setSystemReady(true)
-        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.hypeMemeAppId)
 
@@ -94,14 +95,19 @@ describe("HypeMeme.createTokenAndMultiply", function () {
         expect(hypeMeme_point_2).eq(hypeMeme_point_1).eq(0)
         expect(market_point_2).eq(market_point_1).eq(0)
         expect(degenGateVault_point_2).eq(degenGateVault_point_1).eq(0)
-        expect(fund_point_2).eq(fund_point_1 + info.hypeMemeNftPrice)
+        let tnftFee = fund_point_2 - fund_point_1 - info.hypeMemeNftPrice
 
-        expect((nftOwner_point_2 - nftOwner_point_1) * BigInt(100) - curve_multiply).lt(50)
-        expect((mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) * BigInt(100) - curve_multiply).lt(50)
+        expect((nftOwner_point_2 - nftOwner_point_1) * BigInt(100) - curve_multiply).eq(-1)
+        expect((mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) * BigInt(250) - curve_multiply).eq(-1)
 
         expect(multiplyResult.payTokenAmount - info.hypeMemeNftPrice).eq(
-            (mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) + (nftOwner_point_2 - nftOwner_point_1)
+            (mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) + (nftOwner_point_2 - nftOwner_point_1) + tnftFee
         )
+        expect(
+            new Decimal((nftOwner_point_2 - nftOwner_point_1).toString()).dividedBy(new Decimal(tnftFee.toString())).toFixed(3).toString()
+        ).eq(
+            new Decimal(10).dividedBy(new Decimal(6)).toFixed(3).toString()
+        );
 
         expect(userWallet_degen_2).eq(userWallet_degen_1 - multiplyResult.payTokenAmount)
         expect(nftOwner_degen_2).eq(nftOwner_degen_1 - multiplyResult.payTokenAmount)
@@ -117,7 +123,7 @@ describe("HypeMeme.createTokenAndMultiply", function () {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
         await info.degenGateInfo.degenGateVault.addApproveDegen();
         await info.hypeMeme.setSystemReady(true)
-        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.hypeMemeAppId)
 
@@ -202,14 +208,19 @@ describe("HypeMeme.createTokenAndMultiply", function () {
         expect(hypeMeme_point_2).eq(hypeMeme_point_1).eq(0)
         expect(market_point_2).eq(market_point_1).eq(0)
         expect(degenGateVault_point_2).eq(degenGateVault_point_1).eq(0)
-        expect(fund_point_2).eq(fund_point_1 + info.hypeMemeNftPrice)
+        let tnftFee = fund_point_2 - fund_point_1 - info.hypeMemeNftPrice
 
-        expect((nftOwner_point_2 - nftOwner_point_1) * BigInt(100) - curve_multiply).lt(50)
-        expect((mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) * BigInt(100) - curve_multiply).lt(50)
+        expect((nftOwner_point_2 - nftOwner_point_1) * BigInt(100) - curve_multiply).eq(-1)
+        expect((mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) * BigInt(250) - curve_multiply).eq(-1)
 
         expect(multiplyResult.payTokenAmount - info.hypeMemeNftPrice).eq(
-            (mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) + (nftOwner_point_2 - nftOwner_point_1)
+            (mortgageFeeRecipient_point_2 - mortgageFeeRecipient_point_1) + (nftOwner_point_2 - nftOwner_point_1) + tnftFee
         )
+        expect(
+            new Decimal((nftOwner_point_2 - nftOwner_point_1).toString()).dividedBy(new Decimal(tnftFee.toString())).toFixed(3).toString()
+        ).eq(
+            new Decimal(10).dividedBy(new Decimal(6)).toFixed(3).toString()
+        );
 
         expect(userWallet_degen_2).eq(userWallet_degen_1 - multiplyResult.payTokenAmount)
         expect(nftOwner_degen_2).eq(nftOwner_degen_1 - multiplyResult.payTokenAmount)
@@ -225,7 +236,7 @@ describe("HypeMeme.createTokenAndMultiply", function () {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
         await info.degenGateInfo.degenGateVault.addApproveDegen();
         await info.hypeMeme.setSystemReady(true)
-        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
         const gt = BigInt(10) ** BigInt(18) * BigInt(200)
 
@@ -262,7 +273,7 @@ describe("HypeMeme.createTokenAndMultiply", function () {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
         await info.degenGateInfo.degenGateVault.addApproveDegen();
         await info.hypeMeme.setSystemReady(true)
-        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
         const gt = BigInt(10) ** BigInt(18) * BigInt(200)
 

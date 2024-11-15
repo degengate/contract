@@ -1,72 +1,73 @@
 import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import Decimal from "decimal.js";
 
 describe("HypeMeme.Market", function () {
   describe("buy", function () {
     let data = [
       {
-        expectNeedPayToken: BigInt("101000010100001010"), // 0.101
+        expectNeedPayToken: BigInt("101600010160001016"), // 0.101
         buyAmount: 1,
       },
       {
-        expectNeedPayToken: BigInt("1010001010001010001"), // 1.01
+        expectNeedPayToken: BigInt("1016001016001016001"), // 1.016
         buyAmount: 10,
       },
       {
-        expectNeedPayToken: BigInt("10100101001010010100"), // 10.1
+        expectNeedPayToken: BigInt("10160101601016010160"), // 10.16
         buyAmount: 100,
       },
       {
-        expectNeedPayToken: BigInt("101010101010101010101"), // 101.01
+        expectNeedPayToken: BigInt("101610161016101610161"), // 101.61
         buyAmount: 1000,
       },
       {
-        expectNeedPayToken: BigInt("1011011011011011011011"), // 1011.01
+        expectNeedPayToken: BigInt("1017017017017017017017"), // 1017.01
         buyAmount: 10000,
       },
       {
-        expectNeedPayToken: BigInt("10202020202020202020202"), // 10,202.020
+        expectNeedPayToken: BigInt("10262626262626262626262"), // 10,262.626
         buyAmount: 100000,
       },
       {
-        expectNeedPayToken: BigInt("53157894736842105263157"), // 53,157
+        expectNeedPayToken: BigInt("53473684210526315789472"), // 53,473
         buyAmount: 500000,
       },
       {
-        expectNeedPayToken: BigInt("112222222222222222222222"), // 112,222
+        expectNeedPayToken: BigInt("112888888888888888888888"), // 112,888
         buyAmount: 1000000,
       },
       {
-        expectNeedPayToken: BigInt("252500000000000000000000"), // 252,500
+        expectNeedPayToken: BigInt("254000000000000000000000"), // 254,000
         buyAmount: 2000000,
       },
       {
-        expectNeedPayToken: BigInt("432857142857142857142856"), // 432,857
+        expectNeedPayToken: BigInt("435428571428571428571427"), // 435,428
         buyAmount: 3000000,
       },
       {
-        expectNeedPayToken: BigInt("673333333333333333333332"), // 673,333
+        expectNeedPayToken: BigInt("677333333333333333333331"), // 677,333
         buyAmount: 4000000,
       },
       {
-        expectNeedPayToken: BigInt("1010000000000000000000000"), // 1,010,000
+        expectNeedPayToken: BigInt("1016000000000000000000000"), // 1,016,000
         buyAmount: 5000000,
       },
       {
-        expectNeedPayToken: BigInt("1515000000000000000000000"), // 1,515,000
+        expectNeedPayToken: BigInt("1524000000000000000000000"), // 1,524,000
         buyAmount: 6000000,
       },
       {
-        expectNeedPayToken: BigInt("2356666666666666666666666"), // 2,356,666
+        expectNeedPayToken: BigInt("2370666666666666666666665"), // 2,370,666
         buyAmount: 7000000,
       },
       {
-        expectNeedPayToken: BigInt("4040000000000000000000000"), // 4,040,000
+        expectNeedPayToken: BigInt("4064000000000000000000000"), // 4,064,000
         buyAmount: 8000000,
       },
       {
-        expectNeedPayToken: BigInt("9090000000000000000000000"), // 9,090,000
+        expectNeedPayToken: BigInt("9144000000000000000000000"), // 9,144,000
         buyAmount: 9000000,
       },
     ];
@@ -75,7 +76,7 @@ describe("HypeMeme.Market", function () {
       for (let i = 0; i < data.length; i++) {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
         await info.hypeMeme.setSystemReady(true)
-        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
         let nftOwner = info.wallets[info.nextWalletIndex + 1];
         let user1 = info.wallets[info.nextWalletIndex + 2];
@@ -120,6 +121,7 @@ describe("HypeMeme.Market", function () {
         let user1PayToken1 = await info.point.balanceOf(user1.address)
         let marketPayToken1 = await info.point.balanceOf(await info.hypeMemeMarket.getAddress())
         let nftOwnerPayToken1 = await info.point.balanceOf(nftOwner.address)
+        let tnftOwnerPayToken1 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address)
 
         await info.hypeMemeMarket.connect(user1).buy(tid, buyAmount);
 
@@ -128,8 +130,10 @@ describe("HypeMeme.Market", function () {
         let user1PayToken2 = await info.point.balanceOf(user1.address)
         let marketPayToken2 = await info.point.balanceOf(await info.hypeMemeMarket.getAddress())
         let nftOwnerPayToken2 = await info.point.balanceOf(nftOwner.address)
+        let tnftOwnerPayToken2 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address)
 
         let nftOwnerAddPayToken = nftOwnerPayToken2 - nftOwnerPayToken1;
+        let tnftOwnerAddPayToken = tnftOwnerPayToken2 - tnftOwnerPayToken1;
 
         expect(needPayToken).eq(expectNeedPayToken);
 
@@ -140,9 +144,16 @@ describe("HypeMeme.Market", function () {
 
         expect(user1PayToken2).eq(user1PayToken1 - needPayToken);
         expect(marketPayToken2 - marketPayToken1).eq(curvePayToken);
-        expect(curvePayToken + nftOwnerAddPayToken).eq(needPayToken);
+        expect(curvePayToken + nftOwnerAddPayToken + tnftOwnerAddPayToken).eq(needPayToken);
 
-        expect(curvePayToken / nftOwnerAddPayToken).eq(100);
+        expect(curvePayToken / (nftOwnerAddPayToken + tnftOwnerAddPayToken)).eq(62); // 100 / 1.6 == 62.5
+
+        expect(
+          new Decimal(nftOwnerAddPayToken.toString()).dividedBy(new Decimal(tnftOwnerAddPayToken.toString())).toFixed(3).toString()
+        ).eq(
+          new Decimal(10).dividedBy(new Decimal(6)).toFixed(3).toString()
+        );
+
       }
     });
 

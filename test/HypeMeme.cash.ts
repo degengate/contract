@@ -9,7 +9,7 @@ describe("HypeMeme.cash", function () {
         await info.degenGateInfo.degenGateVault.addApproveDegen();
         await info.degenGateInfo.degenGate.setVaultManager(await info.hypeMeme.getAddress(), true)
         await info.hypeMeme.setSystemReady(true)
-        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
         const mortgageFeeRecipient = await info.foundry.mortgageFeeRecipient(info.hypeMemeAppId)
 
@@ -84,6 +84,7 @@ describe("HypeMeme.cash", function () {
         let hypeMeme_degen_1 = await info.mockDegen.balanceOf(await info.hypeMeme.getAddress());
         let market_degen_1 = await info.mockDegen.balanceOf(await info.hypeMemeMarket.getAddress());
         let deployWallet_degen_1 = await info.mockDegen.balanceOf(info.deployWallet.address);
+        let tnftOwner_point_1 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address);
         let mortgageFeeRecipient_degen_1 = await info.mockDegen.balanceOf(mortgageFeeRecipient);
         let degenGateVault_degen_1 = await info.mockDegen.balanceOf(await info.degenGateInfo.degenGateVault.getAddress())
 
@@ -102,6 +103,7 @@ describe("HypeMeme.cash", function () {
         let hypeMeme_point_2 = await info.point.balanceOf(await info.hypeMeme.getAddress());
         let market_point_2 = await info.point.balanceOf(await info.hypeMemeMarket.getAddress());
         let deployWallet_point_2 = await info.point.balanceOf(info.deployWallet.address);
+        let tnftOwner_point_2 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address);
         let mortgageFeeRecipient_point_2 = await info.point.balanceOf(mortgageFeeRecipient);
         let degenGateVault_point_2 = await info.point.balanceOf(await info.degenGateInfo.degenGateVault.getAddress())
 
@@ -116,7 +118,7 @@ describe("HypeMeme.cash", function () {
         expect(hypeMeme_point_2).eq(hypeMeme_point_1).eq(0)
 
         expect(market_point_1 - market_point_2)
-            .eq(deployWallet_point_2 - deployWallet_point_1 + result3)
+            .eq((deployWallet_point_2 - deployWallet_point_1) + (tnftOwner_point_2 - tnftOwner_point_1) + result3)
 
         expect(mortgageFeeRecipient_point_2).eq(mortgageFeeRecipient_point_1)
         expect(degenGateVault_point_2).eq(degenGateVault_point_1).eq(0)

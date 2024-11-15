@@ -10,12 +10,16 @@ import { HypeMemeAllContractInfo } from "./shared/deploy_hype_meme";
 const nft_name = "HypeMeme Tax"
 const nft_symbol = "HMT"
 
-function get_cnft_json_name(ticker: string) {
+function get_nft_json_name(ticker: string) {
     return ticker
 }
 
 function get_cnft_json_desc(ticker: string) {
     return `The coin creator will automatically receive this tradable NFT, which grants holders 1% ownership of trade fees from ${ticker} as a certificate.`
+}
+
+function get_tnft_json_desc(ticker: string) {
+    return `The HypeMeme team will automatically receive this tradable NFT, which grants holders 0.6% ownership of trade fees from ${ticker} as a certificate.`
 }
 
 async function test(info: HypeMemeAllContractInfo, number: string, image: string) {
@@ -45,15 +49,23 @@ async function test(info: HypeMemeAllContractInfo, number: string, image: string
 
     const cnftUn = await info.hypeMemePublicNFT.tokenURI(tokenIDs[0]);
     const json1 = parseTokenURI(cnftUn);
-    expect(json1.name).eq(get_cnft_json_name(params.info.ticker));
+    expect(json1.name).eq(get_nft_json_name(params.info.ticker));
     expect(json1.description).eq(
         get_cnft_json_desc(params.info.ticker),
     );
-    saveSVG("test" + number, json1.image);
+    saveSVG("public_test_" + number + "_c", json1.image);
+
+    const tnftUn = await info.hypeMemePublicNFT.tokenURI(tokenIDs[1]);
+    const jsont = parseTokenURI(tnftUn);
+    expect(jsont.name).eq(get_nft_json_name(params.info.ticker));
+    expect(jsont.description).eq(
+        get_tnft_json_desc(params.info.ticker),
+    );
+    saveSVG("public_test_" + number + "_t", jsont.image);
 
 }
 
-describe("PublicNFTView", function () {
+describe("HypeMemePublicNFTView", function () {
     it("deploy", async function () {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
 
@@ -75,7 +87,7 @@ describe("PublicNFTView", function () {
     it("test", async function () {
         const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
         await info.hypeMeme.setSystemReady(true)
-        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+        await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
         let publicNFTView = (await (
             await ethers.getContractFactory("HypeMemePublicNFTView")
