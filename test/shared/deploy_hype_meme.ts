@@ -115,10 +115,10 @@ export async function deployHypeMemeAllContract(degenGateAllContractInfo: DegenG
     let hypeMemeFundRecipientWallet: HardhatEthersSigner = wallets[hypeMemeFundRecipientWalletIndex];
 
     let nextWalletIndex = startIndex + 2;
-    let mortgageFee = 1000;
+    let mortgageFee = 400;
 
-    let hypeMemeBuyFee = 1000;
-    let hypeMemeSellFee = 1000;
+    let hypeMemeBuyFee = 1600;
+    let hypeMemeSellFee = 1600;
     let hypeMemeAppId = 2;
     let hypeMemeAppName = "hypeMeme";
 
@@ -134,7 +134,7 @@ export async function deployHypeMemeAllContract(degenGateAllContractInfo: DegenG
     let hypeMemeMarket: Market;
 
     let hypeMeme: HypeMeme;
-    let hypeMemeNftPrice: bigint = BigInt(10) ** BigInt(18) * BigInt(2000);
+    let hypeMemeNftPrice: bigint = BigInt(10) ** BigInt(18) * BigInt(1000);
 
     let degenGateInfo: DegenGateAllContractInfo = degenGateAllContractInfo;
 

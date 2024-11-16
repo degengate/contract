@@ -8,7 +8,7 @@ describe("HypeMeme.createTokenWithBox", function () {
   it("createTokenWithBox | only degen | eq", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -69,11 +69,17 @@ describe("HypeMeme.createTokenWithBox", function () {
     let hypeMemeFundRecipientWallet_Degen_2 = await info.mockDegen.balanceOf(info.hypeMemeFundRecipientWallet.address);
     let hypeMemeFundRecipientWallet_Point_2 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address);
 
-    expect(await info.hypeMemePublicNFT.totalSupply()).eq(1)
+    expect(await info.hypeMemePublicNFT.totalSupply()).eq(2)
     expect(await info.hypeMemePublicNFT.ownerOf(1)).eq(info.deployWallet.address);
+    expect(await info.hypeMemePublicNFT.ownerOf(2)).eq(info.hypeMemeFundRecipientWallet.address);
+
     let info1 = await info.hypeMemePublicNFT.tokenIdToInfo(1)
     expect(info1.tid).eq(tid)
-    expect(info1.percent).eq(100000)
+    expect(info1.percent).eq(62500)
+
+    let info2 = await info.hypeMemePublicNFT.tokenIdToInfo(2)
+    expect(info2.tid).eq(tid)
+    expect(info2.percent).eq(37500)
 
     expect(deployWallet_Degen_2).eq(deployWallet_Degen_1 - info.hypeMemeNftPrice);
     expect(hypeMeme_Degen_2).eq(hypeMeme_Degen_1).eq(0);
@@ -87,7 +93,7 @@ describe("HypeMeme.createTokenWithBox", function () {
   it("createTokenWithBox | only degen | input > need", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -149,11 +155,17 @@ describe("HypeMeme.createTokenWithBox", function () {
     let hypeMemeFundRecipientWallet_Degen_2 = await info.mockDegen.balanceOf(info.hypeMemeFundRecipientWallet.address);
     let hypeMemeFundRecipientWallet_Point_2 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address);
 
-    expect(await info.hypeMemePublicNFT.totalSupply()).eq(1)
+    expect(await info.hypeMemePublicNFT.totalSupply()).eq(2)
     expect(await info.hypeMemePublicNFT.ownerOf(1)).eq(info.deployWallet.address);
+    expect(await info.hypeMemePublicNFT.ownerOf(2)).eq(info.hypeMemeFundRecipientWallet.address);
+
     let info1 = await info.hypeMemePublicNFT.tokenIdToInfo(1)
     expect(info1.tid).eq(tid)
-    expect(info1.percent).eq(100000)
+    expect(info1.percent).eq(62500)
+
+    let info2 = await info.hypeMemePublicNFT.tokenIdToInfo(2)
+    expect(info2.tid).eq(tid)
+    expect(info2.percent).eq(37500)
 
     expect(deployWallet_Degen_2).eq(deployWallet_Degen_1 - info.hypeMemeNftPrice);
     expect(hypeMeme_Degen_2).eq(hypeMeme_Degen_1).eq(0);
@@ -167,7 +179,7 @@ describe("HypeMeme.createTokenWithBox", function () {
   it("createTokenWithBox | only degen | input < need", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -228,7 +240,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -287,11 +299,17 @@ describe("HypeMeme.createTokenWithBox", function () {
     let hypeMemeFundRecipientWallet_Degen_2 = await info.mockDegen.balanceOf(info.hypeMemeFundRecipientWallet.address);
     let hypeMemeFundRecipientWallet_Point_2 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address);
 
-    expect(await info.hypeMemePublicNFT.totalSupply()).eq(1)
+    expect(await info.hypeMemePublicNFT.totalSupply()).eq(2)
     expect(await info.hypeMemePublicNFT.ownerOf(1)).eq(info.deployWallet.address);
+    expect(await info.hypeMemePublicNFT.ownerOf(2)).eq(info.hypeMemeFundRecipientWallet.address);
+
     let info1 = await info.hypeMemePublicNFT.tokenIdToInfo(1)
     expect(info1.tid).eq(tid)
-    expect(info1.percent).eq(100000)
+    expect(info1.percent).eq(62500)
+
+    let info2 = await info.hypeMemePublicNFT.tokenIdToInfo(2)
+    expect(info2.tid).eq(tid)
+    expect(info2.percent).eq(37500)
 
     expect(deployWallet_Degen_2 - deployWallet_Degen_1).eq(0)
     expect(hypeMeme_Degen_2).eq(hypeMeme_Degen_1).eq(0);
@@ -305,7 +323,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -364,11 +382,17 @@ describe("HypeMeme.createTokenWithBox", function () {
     let hypeMemeFundRecipientWallet_Degen_2 = await info.mockDegen.balanceOf(info.hypeMemeFundRecipientWallet.address);
     let hypeMemeFundRecipientWallet_Point_2 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address);
 
-    expect(await info.hypeMemePublicNFT.totalSupply()).eq(1)
+    expect(await info.hypeMemePublicNFT.totalSupply()).eq(2)
     expect(await info.hypeMemePublicNFT.ownerOf(1)).eq(info.deployWallet.address);
+    expect(await info.hypeMemePublicNFT.ownerOf(2)).eq(info.hypeMemeFundRecipientWallet.address);
+
     let info1 = await info.hypeMemePublicNFT.tokenIdToInfo(1)
     expect(info1.tid).eq(tid)
-    expect(info1.percent).eq(100000)
+    expect(info1.percent).eq(62500)
+
+    let info2 = await info.hypeMemePublicNFT.tokenIdToInfo(2)
+    expect(info2.tid).eq(tid)
+    expect(info2.percent).eq(37500)
 
     expect(deployWallet_Degen_2 - deployWallet_Degen_1).eq(0)
     expect(hypeMeme_Degen_2).eq(hypeMeme_Degen_1).eq(0);
@@ -382,7 +406,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -438,7 +462,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -502,11 +526,17 @@ describe("HypeMeme.createTokenWithBox", function () {
     let hypeMemeFundRecipientWallet_Degen_2 = await info.mockDegen.balanceOf(info.hypeMemeFundRecipientWallet.address);
     let hypeMemeFundRecipientWallet_Point_2 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address);
 
-    expect(await info.hypeMemePublicNFT.totalSupply()).eq(1)
+    expect(await info.hypeMemePublicNFT.totalSupply()).eq(2)
     expect(await info.hypeMemePublicNFT.ownerOf(1)).eq(info.deployWallet.address);
+    expect(await info.hypeMemePublicNFT.ownerOf(2)).eq(info.hypeMemeFundRecipientWallet.address);
+
     let info1 = await info.hypeMemePublicNFT.tokenIdToInfo(1)
     expect(info1.tid).eq(tid)
-    expect(info1.percent).eq(100000)
+    expect(info1.percent).eq(62500)
+
+    let info2 = await info.hypeMemePublicNFT.tokenIdToInfo(2)
+    expect(info2.tid).eq(tid)
+    expect(info2.percent).eq(37500)
 
     expect(deployWallet_Degen_2).eq(deployWallet_Degen_1 - degenAmount);
     expect(hypeMeme_Degen_2).eq(hypeMeme_Degen_1).eq(0);
@@ -521,7 +551,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -585,11 +615,17 @@ describe("HypeMeme.createTokenWithBox", function () {
     let hypeMemeFundRecipientWallet_Degen_2 = await info.mockDegen.balanceOf(info.hypeMemeFundRecipientWallet.address);
     let hypeMemeFundRecipientWallet_Point_2 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address);
 
-    expect(await info.hypeMemePublicNFT.totalSupply()).eq(1)
+    expect(await info.hypeMemePublicNFT.totalSupply()).eq(2)
     expect(await info.hypeMemePublicNFT.ownerOf(1)).eq(info.deployWallet.address);
+    expect(await info.hypeMemePublicNFT.ownerOf(2)).eq(info.hypeMemeFundRecipientWallet.address);
+
     let info1 = await info.hypeMemePublicNFT.tokenIdToInfo(1)
     expect(info1.tid).eq(tid)
-    expect(info1.percent).eq(100000)
+    expect(info1.percent).eq(62500)
+
+    let info2 = await info.hypeMemePublicNFT.tokenIdToInfo(2)
+    expect(info2.tid).eq(tid)
+    expect(info2.percent).eq(37500)
 
     expect(deployWallet_Degen_2).eq(deployWallet_Degen_1);
     expect(hypeMeme_Degen_2).eq(hypeMeme_Degen_1).eq(0);
@@ -604,7 +640,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -668,11 +704,17 @@ describe("HypeMeme.createTokenWithBox", function () {
     let hypeMemeFundRecipientWallet_Degen_2 = await info.mockDegen.balanceOf(info.hypeMemeFundRecipientWallet.address);
     let hypeMemeFundRecipientWallet_Point_2 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address);
 
-    expect(await info.hypeMemePublicNFT.totalSupply()).eq(1)
+    expect(await info.hypeMemePublicNFT.totalSupply()).eq(2)
     expect(await info.hypeMemePublicNFT.ownerOf(1)).eq(info.deployWallet.address);
+    expect(await info.hypeMemePublicNFT.ownerOf(2)).eq(info.hypeMemeFundRecipientWallet.address);
+
     let info1 = await info.hypeMemePublicNFT.tokenIdToInfo(1)
     expect(info1.tid).eq(tid)
-    expect(info1.percent).eq(100000)
+    expect(info1.percent).eq(62500)
+
+    let info2 = await info.hypeMemePublicNFT.tokenIdToInfo(2)
+    expect(info2.tid).eq(tid)
+    expect(info2.percent).eq(37500)
 
     expect(deployWallet_Degen_2).eq(deployWallet_Degen_1);
     expect(hypeMeme_Degen_2).eq(hypeMeme_Degen_1).eq(0);
@@ -687,7 +729,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -752,11 +794,17 @@ describe("HypeMeme.createTokenWithBox", function () {
     let hypeMemeFundRecipientWallet_Degen_2 = await info.mockDegen.balanceOf(info.hypeMemeFundRecipientWallet.address);
     let hypeMemeFundRecipientWallet_Point_2 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address);
 
-    expect(await info.hypeMemePublicNFT.totalSupply()).eq(1)
+    expect(await info.hypeMemePublicNFT.totalSupply()).eq(2)
     expect(await info.hypeMemePublicNFT.ownerOf(1)).eq(info.deployWallet.address);
+    expect(await info.hypeMemePublicNFT.ownerOf(2)).eq(info.hypeMemeFundRecipientWallet.address);
+
     let info1 = await info.hypeMemePublicNFT.tokenIdToInfo(1)
     expect(info1.tid).eq(tid)
-    expect(info1.percent).eq(100000)
+    expect(info1.percent).eq(62500)
+
+    let info2 = await info.hypeMemePublicNFT.tokenIdToInfo(2)
+    expect(info2.tid).eq(tid)
+    expect(info2.percent).eq(37500)
 
     expect(info.hypeMemeNftPrice - specialPointAmount).lt(degenAmount)
     expect(deployWallet_Degen_2).eq(deployWallet_Degen_1 - (info.hypeMemeNftPrice - specialPointAmount));
@@ -772,7 +820,7 @@ describe("HypeMeme.createTokenWithBox", function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGate.connect(info.deployWallet).setVaultManager(await info.hypeMeme.getAddress(), true)
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     const currentTimestamp = Math.floor(new Date().getTime() / 1000);
     const deadline = currentTimestamp + 60 * 60
@@ -833,7 +881,7 @@ describe("HypeMeme.createTokenWithBox", function () {
   it("createTokenWithBox | input info have empty", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     async function create(_info: any, error: string) {
       const currentTimestamp = Math.floor(new Date().getTime() / 1000);

@@ -52,7 +52,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     TokenInfo info,
     uint256 nftPrice,
     WrapInfo wrap,
-    uint256 nftTokenId,
+    uint256[] nftTokenIds,
     address sender
   );
   event MultiplyWithBox(
@@ -69,13 +69,13 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     uint256 nftPrice,
     uint256 multiplyAmount,
     WrapInfo wrap,
-    uint256 nftTokenId,
+    uint256[] nftTokenIds,
     uint256 mortgageNFTtokenId,
     uint256 payTokenAmount,
     address sender
   );
 
-  event CreateToken(string tid, TokenInfo info, uint256 nftPrice, uint256 nftTokenId, address sender);
+  event CreateToken(string tid, TokenInfo info, uint256 nftPrice, uint256[] nftTokenIds, address sender);
   event Multiply(
     string tid,
     uint256 multiplyAmount,
@@ -90,7 +90,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
     uint256 nftPrice,
     uint256 multiplyAmount,
     uint256 payTokenAmountMax,
-    uint256 nftTokenId,
+    uint256[] nftTokenIds,
     uint256 mortgageNFTtokenId,
     uint256 payTokenAmount,
     address sender
@@ -170,7 +170,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
       }
     }
 
-    emit CreateTokenWithBox(tid, info, nftPrice, wrap, nftTokenIds[0], msg.sender);
+    emit CreateTokenWithBox(tid, info, nftPrice, wrap, nftTokenIds, msg.sender);
   }
 
   function multiplyWithBox(
@@ -242,7 +242,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
       nftPrice,
       multiplyAmount,
       wrap,
-      nftTokenIds[0],
+      nftTokenIds,
       mortgageNFTtokenId,
       payTokenAmount,
       msg.sender
@@ -259,7 +259,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
       _transferPoint(fundRecipient, nftPrice);
     }
 
-    emit CreateToken(tid, info, nftPrice, nftTokenIds[0], msg.sender);
+    emit CreateToken(tid, info, nftPrice, nftTokenIds, msg.sender);
   }
 
   function multiply(
@@ -298,7 +298,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
       nftPrice,
       multiplyAmount,
       payTokenAmountMax,
-      nftTokenIds[0],
+      nftTokenIds,
       mortgageNFTtokenId,
       payTokenAmount,
       msg.sender
@@ -374,7 +374,7 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
       _encodeTdata(info),
       _nftPercents(),
       _nftOwners(),
-      new bytes[](1)
+      new bytes[](2)
     );
   }
 
@@ -394,14 +394,16 @@ contract HypeMeme is Initializable, OwnableUpgradeable {
   }
 
   function _nftPercents() private pure returns (uint256[] memory) {
-    uint256[] memory result = new uint256[](1);
-    result[0] = 100000;
+    uint256[] memory result = new uint256[](2);
+    result[0] = 62500;
+    result[1] = 37500;
     return result;
   }
 
   function _nftOwners() private view returns (address[] memory) {
-    address[] memory result = new address[](1);
+    address[] memory result = new address[](2);
     result[0] = _msgSender();
+    result[1] = fundRecipient;
     return result;
   }
 

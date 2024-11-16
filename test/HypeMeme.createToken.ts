@@ -7,7 +7,7 @@ describe("HypeMeme.createToken", function () {
   it("createToken success", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     let params = {
       info: {
@@ -40,11 +40,17 @@ describe("HypeMeme.createToken", function () {
     let hypeMemeFundRecipientWallet_Degen_2 = await info.mockDegen.balanceOf(info.hypeMemeFundRecipientWallet.address);
     let hypeMemeFundRecipientWallet_Point_2 = await info.point.balanceOf(info.hypeMemeFundRecipientWallet.address);
 
-    expect(await info.hypeMemePublicNFT.totalSupply()).eq(1)
+    expect(await info.hypeMemePublicNFT.totalSupply()).eq(2)
     expect(await info.hypeMemePublicNFT.ownerOf(1)).eq(info.deployWallet.address);
+    expect(await info.hypeMemePublicNFT.ownerOf(2)).eq(info.hypeMemeFundRecipientWallet.address);
+
     let info1 = await info.hypeMemePublicNFT.tokenIdToInfo(1)
     expect(info1.tid).eq(tid)
-    expect(info1.percent).eq(100000)
+    expect(info1.percent).eq(62500)
+
+    let info2 = await info.hypeMemePublicNFT.tokenIdToInfo(2)
+    expect(info2.tid).eq(tid)
+    expect(info2.percent).eq(37500)
 
     expect(deployWallet_Degen_2).eq(deployWallet_Degen_1 - info.hypeMemeNftPrice);
     expect(hypeMeme_Degen_2).eq(hypeMeme_Degen_1).eq(0);
@@ -72,7 +78,7 @@ describe("HypeMeme.createToken", function () {
   it("createToken fail, degen input < need", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     let params = {
       info: {
@@ -100,7 +106,7 @@ describe("HypeMeme.createToken", function () {
   it("createToken fail, input info have empty", async function () {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.hypeMeme.setSystemReady(true)
-    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, 1000)
+    await info.degenGateInfo.foundry.setMortgageFee(info.hypeMemeAppId, info.mortgageFee)
 
     await info.mockDegen.connect(info.deployWallet).approve(await info.hypeMeme.getAddress(), info.hypeMemeNftPrice);
 

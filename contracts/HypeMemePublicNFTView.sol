@@ -47,7 +47,7 @@ contract HypeMemePublicNFTView is INFTView, Ownable {
   function tokenURI(uint256 tokenId) external view override returns (string memory) {
     Info memory info = _getInfo(tokenId);
 
-    string[9] memory parts;
+    string[11] memory parts;
 
     parts[
       0
@@ -68,7 +68,15 @@ contract HypeMemePublicNFTView is INFTView, Ownable {
     parts[7] = info.ticker;
     parts[
       8
-    ] = '</tspan></text><text fill="#9B9B9B" xml:space="preserve" style="white-space: pre" font-family="Courier Prime" font-size="20" font-weight="bold" letter-spacing="-0.011em"><tspan x="39" y="494.395">1% Trade Fee Ownership Certificate.</tspan></text></svg>';
+    ] = '</tspan></text><text fill="#9B9B9B" xml:space="preserve" style="white-space: pre" font-family="Courier Prime" font-size="20" font-weight="bold" letter-spacing="-0.011em"><tspan x="39" y="494.395">';
+
+    if (info.percent == 37500) {
+      parts[9] = "0.6";
+    } else {
+      parts[9] = "1";
+    }
+
+    parts[10] = "% Trade Fee Ownership Certificate.</tspan></text></svg>";
 
     return _pack(tokenId, parts);
   }
@@ -98,9 +106,21 @@ contract HypeMemePublicNFTView is INFTView, Ownable {
     ) = abi.decode(data, (string, string, string, string, string, string, string, string, uint256));
   }
 
-  function _pack(uint256 tokenId, string[9] memory parts) private view returns (string memory output) {
+  function _pack(uint256 tokenId, string[11] memory parts) private view returns (string memory output) {
     string memory partsOutput = string(
-      abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8])
+      abi.encodePacked(
+        parts[0],
+        parts[1],
+        parts[2],
+        parts[3],
+        parts[4],
+        parts[5],
+        parts[6],
+        parts[7],
+        parts[8],
+        parts[9],
+        parts[10]
+      )
     );
 
     string memory json = Base64.encode(
@@ -128,10 +148,24 @@ contract HypeMemePublicNFTView is INFTView, Ownable {
 
   function _desc(uint256 tokenId) private view returns (string memory) {
     Info memory info = _getInfo(tokenId);
+
+    string memory part1;
+    string memory part2;
+    if (info.percent == 37500) {
+      part1 = "The HypeMeme team";
+      part2 = "0.6";
+    } else {
+      part1 = "The coin creator";
+      part2 = "1";
+    }
+
     return
       string(
         abi.encodePacked(
-          "The coin creator will automatically receive this tradable NFT, which grants holders 1% ownership of trade fees from ",
+          part1,
+          " will automatically receive this tradable NFT, which grants holders ",
+          part2,
+          "% ownership of trade fees from ",
           info.ticker,
           " as a certificate."
         )
