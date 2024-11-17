@@ -41,10 +41,6 @@ const OTHER_COMPILER_SETTINGS = {
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
-    overrides: {
-      'contracts/HypeMemeMortgageNFTView.sol': OTHER_COMPILER_SETTINGS,
-      'contracts/HypeMemePublicNFTView.sol': OTHER_COMPILER_SETTINGS,
-    },
   },
   networks: {
     "base-sepolia": {

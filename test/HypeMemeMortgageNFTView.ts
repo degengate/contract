@@ -1,9 +1,9 @@
 import { ethers } from "hardhat";
-import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
+import { deployAllContracts } from "./shared/deploy";
 import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { getTokenAmountWei, parseTokenURI, saveSVG } from "./shared/utils";
+import { getTokenAmountWei, parseHypeMemeTokenURI } from "./shared/utils";
 import { HypeMemeMortgageNFTView } from "../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { HypeMemeAllContractInfo } from "./shared/deploy_hype_meme";
@@ -43,7 +43,7 @@ async function multiply(tid: string, info: HypeMemeAllContractInfo, multiplyAmou
     return result
 }
 
-async function test(name: string, image: string) {
+async function test(name: string) {
     const info = (await loadFixture(deployAllContracts)).hypeMemeAllContractInfo;
     await info.degenGateInfo.degenGateVault.addApproveDegen()
     await info.hypeMeme.setSystemReady(true)
@@ -64,10 +64,10 @@ async function test(name: string, image: string) {
     let user3 = info.wallets[info.nextWalletIndex + 3];
 
     await expect(
-        mortgageNFTView.connect(info.userWallet).setImageUrlPrefix("https://yellow-select-rat-115.mypinata.cloud/ipfs/")
+        mortgageNFTView.connect(info.userWallet).setImageUrlPrefix("https://x.x/og/pnft/")
     ).revertedWithCustomError(mortgageNFTView, "OwnableUnauthorizedAccount")
 
-    await mortgageNFTView.connect(info.deployWallet).setImageUrlPrefix("https://yellow-select-rat-115.mypinata.cloud/ipfs/")
+    await mortgageNFTView.connect(info.deployWallet).setImageUrlPrefix("https://x.x/og/pnft/")
 
     // create token
     let params = {
@@ -75,7 +75,7 @@ async function test(name: string, image: string) {
             name: "name_" + name,
             ticker: "ticker_" + name,
             description: "description_" + name,
-            image: image,
+            image: "image_" + name,
             twitterLink: "twitter_link_" + name,
             telegramLink: "telegram_link_" + name,
             warpcastLink: "warpcast_link_" + name,
@@ -94,26 +94,26 @@ async function test(name: string, image: string) {
     expect(await info.hypeMemeMortgageNFT.symbol()).eq(nft_symbol);
 
     const mnft1 = await info.hypeMemeMortgageNFT.tokenURI(multiplyResult1.mortgageNFTtokenId);
-    const json1 = parseTokenURI(mnft1);
+    const json1 = parseHypeMemeTokenURI(mnft1);
     expect(json1.name).eq(params.info.ticker + " - #1 - 12345");
     expect(json1.description).eq(nft_json_desc);
-    saveSVG(name + "_mnft1", json1.image);
+    expect(json1.image).eq("https://x.x/og/pnft/1");
 
     let multiplyResult2 = await multiply(params.info.ticker, info, BigInt(10) ** BigInt(16) * BigInt(216789), user2)
 
     const mnft2 = await info.hypeMemeMortgageNFT.tokenURI(multiplyResult2.mortgageNFTtokenId);
-    const json2 = parseTokenURI(mnft2);
+    const json2 = parseHypeMemeTokenURI(mnft2);
     expect(json2.name).eq(params.info.ticker + " - #2 - 2167");
     expect(json2.description).eq(nft_json_desc);
-    saveSVG(name + "_mnft2", json2.image);
+    expect(json2.image).eq("https://x.x/og/pnft/2");
 
     let multiplyResult3 = await multiply(params.info.ticker, info, BigInt(10) ** BigInt(17) * BigInt(123), user3)
 
     const mnft3 = await info.hypeMemeMortgageNFT.tokenURI(multiplyResult3.mortgageNFTtokenId);
-    const json3 = parseTokenURI(mnft3);
+    const json3 = parseHypeMemeTokenURI(mnft3);
     expect(json3.name).eq(params.info.ticker + " - #3 - 12");
     expect(json3.description).eq(nft_json_desc);
-    saveSVG(name + "_mnft3", json3.image);
+    expect(json3.image).eq("https://x.x/og/pnft/3");
 }
 
 describe("MortgageNFTView", function () {
@@ -136,14 +136,6 @@ describe("MortgageNFTView", function () {
     });
 
     it("test1", async function () {
-        await test("test1", "Qma4nMJSsBLYho764ynwS6HUGHUMkAJ28GAo4jYwpAGbM8")
-    });
-
-    it("test2", async function () {
-        await test("test2", "QmbKutmm7yL2wXnmoAdzKzfgdj6yaCjujP3grEssoNvhDf")
-    });
-
-    it("test3", async function () {
-        await test("test3", "QmdoKesTQZRyK5Zb9Nr2gTapHBqgudf5RcW7VS7M1nN8N9")
+        await test("test1")
     });
 });

@@ -3,7 +3,7 @@ import { deployAllContracts } from "./shared/deploy";
 import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { parseTokenURI, saveSVG } from "./shared/utils";
+import { parseHypeMemeTokenURI } from "./shared/utils";
 import { HypeMemePublicNFTView } from "../typechain-types";
 import { HypeMemeAllContractInfo } from "./shared/deploy_hype_meme";
 
@@ -22,14 +22,14 @@ function get_tnft_json_desc(ticker: string) {
     return `The HypeMeme team will automatically receive this tradable NFT, which grants holders 0.6% ownership of trade fees from ${ticker} as a certificate.`
 }
 
-async function test(info: HypeMemeAllContractInfo, number: string, image: string) {
+async function test(info: HypeMemeAllContractInfo, number: number) {
     // create token
     let params = {
         info: {
             name: "name_" + number,
             ticker: "ticker_" + number,
             description: "description_" + number,
-            image: image,
+            image: "image_" + number,
             twitterLink: "twitter_link_" + number,
             telegramLink: "telegram_link_" + number,
             warpcastLink: "warpcast_link_" + number,
@@ -48,21 +48,21 @@ async function test(info: HypeMemeAllContractInfo, number: string, image: string
     expect(await info.hypeMemePublicNFT.symbol()).eq(nft_symbol);
 
     const cnftUn = await info.hypeMemePublicNFT.tokenURI(tokenIDs[0]);
-    const json1 = parseTokenURI(cnftUn);
+    console.log(cnftUn)
+    const json1 = parseHypeMemeTokenURI(cnftUn);
     expect(json1.name).eq(get_nft_json_name(params.info.ticker));
     expect(json1.description).eq(
         get_cnft_json_desc(params.info.ticker),
     );
-    saveSVG("public_test_" + number + "_c", json1.image);
+    expect(json1.image).eq(`https://x.x/og/nft/${number * 2 - 1}`)
 
     const tnftUn = await info.hypeMemePublicNFT.tokenURI(tokenIDs[1]);
-    const jsont = parseTokenURI(tnftUn);
+    const jsont = parseHypeMemeTokenURI(tnftUn);
     expect(jsont.name).eq(get_nft_json_name(params.info.ticker));
     expect(jsont.description).eq(
         get_tnft_json_desc(params.info.ticker),
     );
-    saveSVG("public_test_" + number + "_t", jsont.image);
-
+    expect(jsont.image).eq(`https://x.x/og/nft/${number * 2}`)
 }
 
 describe("HypeMemePublicNFTView", function () {
@@ -100,13 +100,13 @@ describe("HypeMemePublicNFTView", function () {
         await info.hypeMemePublicNFT.connect(info.hypeMemeOwnerWallet).setPublicNFTView(await publicNFTView.getAddress());
 
         await expect(
-            publicNFTView.connect(info.userWallet).setImageUrlPrefix("https://yellow-select-rat-115.mypinata.cloud/ipfs/")
+            publicNFTView.connect(info.userWallet).setImageUrlPrefix("https://x.x/og/nft/")
         ).revertedWithCustomError(publicNFTView, "OwnableUnauthorizedAccount")
 
-        await publicNFTView.connect(info.deployWallet).setImageUrlPrefix("https://yellow-select-rat-115.mypinata.cloud/ipfs/")
+        await publicNFTView.connect(info.deployWallet).setImageUrlPrefix("https://x.x/og/nft/")
 
-        await test(info, "1", "Qma4nMJSsBLYho764ynwS6HUGHUMkAJ28GAo4jYwpAGbM8")
-        await test(info, "2", "QmbKutmm7yL2wXnmoAdzKzfgdj6yaCjujP3grEssoNvhDf")
-        await test(info, "3", "QmdoKesTQZRyK5Zb9Nr2gTapHBqgudf5RcW7VS7M1nN8N9")
+        await test(info, 1)
+        await test(info, 2)
+        await test(info, 3)
     });
 });

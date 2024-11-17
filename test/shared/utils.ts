@@ -31,3 +31,17 @@ export const parseTokenURI = (content: any) => {
 export const saveSVG = (filename: any, svgStr: any) => {
   fs.writeFileSync("./tmp/" + filename + ".svg", svgStr);
 };
+
+
+export const parseHypeMemeTokenURI = (content: any) => {
+  let str: string = content.split(",")[1];
+  let buff = Buffer.from(str, "base64");
+  str = buff.toString("utf8");
+  const json = JSON.parse(str);
+
+  return {
+    name: json.name,
+    description: json.description,
+    image: json.image,
+  };
+};
