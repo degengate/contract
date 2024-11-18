@@ -33,7 +33,7 @@ export const saveSVG = (filename: any, svgStr: any) => {
 };
 
 
-export const parseHypeMemeTokenURI = (content: any) => {
+export const parseHypeMemePublicTokenURI = (content: any) => {
   let str: string = content.split(",")[1];
   let buff = Buffer.from(str, "base64");
   str = buff.toString("utf8");
@@ -43,5 +43,30 @@ export const parseHypeMemeTokenURI = (content: any) => {
     name: json.name,
     description: json.description,
     image: json.image,
+    metadata: {
+      name: json.metadata.name,
+      ticker: json.metadata.ticker,
+      image: json.metadata.image,
+      percent: json.metadata.percent,
+    }
+  };
+};
+
+export const parseHypeMemeMortgageTokenURI = (content: any) => {
+  let str: string = content.split(",")[1];
+  let buff = Buffer.from(str, "base64");
+  str = buff.toString("utf8");
+  const json = JSON.parse(str);
+
+  return {
+    name: json.name,
+    description: json.description,
+    image: json.image,
+    metadata: {
+      name: json.metadata.name,
+      ticker: json.metadata.ticker,
+      image: json.metadata.image,
+      amount: json.metadata.amount,
+    }
   };
 };

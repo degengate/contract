@@ -12,7 +12,9 @@ import "./interfaces/IMortgageNFT.sol";
 contract HypeMemeMortgageNFTView is INFTView, Ownable {
   struct Info {
     string tid;
+    string name;
     string ticker;
+    string image;
     uint256 amount;
   }
 
@@ -37,17 +39,27 @@ contract HypeMemeMortgageNFTView is INFTView, Ownable {
   }
 
   function tokenURI(uint256 tokenId) external view override returns (string memory) {
+    Info memory info = _getInfo(tokenId);
+
     string memory json = Base64.encode(
       bytes(
         string(
           abi.encodePacked(
             '{"name": "',
-            _name(tokenId),
+            _name(tokenId, info),
             '", "description": "',
             _desc(),
             '", "image": "',
             _image(tokenId),
-            '"}'
+            '", "metadata": {"name": "',
+            info.name,
+            '", "ticker": "',
+            info.ticker,
+            '", "amount": ',
+            _getShowAmount(info.amount),
+            ', "image": "',
+            info.image,
+            '"}}'
           )
         )
       )
@@ -67,14 +79,13 @@ contract HypeMemeMortgageNFTView is INFTView, Ownable {
   function _getInfo(uint256 tokenId) private view returns (Info memory info) {
     (info.tid, info.amount) = IMortgageNFT(mortgageNFT).info(tokenId);
     bytes memory data = IFoundry(foundry).tokenData(appId, info.tid);
-    (, info.ticker, , , , , , , ) = abi.decode(
+    (info.name, info.ticker, , info.image, , , , , ) = abi.decode(
       data,
       (string, string, string, string, string, string, string, string, uint256)
     );
   }
 
-  function _name(uint256 tokenId) private view returns (string memory) {
-    Info memory info = _getInfo(tokenId);
+  function _name(uint256 tokenId, Info memory info) private pure returns (string memory) {
     return string(abi.encodePacked(info.ticker, " - #", Strings.toString(tokenId), " - ", _getShowAmount(info.amount)));
   }
 

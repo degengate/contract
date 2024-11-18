@@ -3,7 +3,7 @@ import { deployAllContracts } from "./shared/deploy";
 import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { parseHypeMemeTokenURI } from "./shared/utils";
+import { parseHypeMemePublicTokenURI } from "./shared/utils";
 import { HypeMemePublicNFTView } from "../typechain-types";
 import { HypeMemeAllContractInfo } from "./shared/deploy_hype_meme";
 
@@ -49,20 +49,28 @@ async function test(info: HypeMemeAllContractInfo, number: number) {
 
     const cnftUn = await info.hypeMemePublicNFT.tokenURI(tokenIDs[0]);
     console.log(cnftUn)
-    const json1 = parseHypeMemeTokenURI(cnftUn);
+    const json1 = parseHypeMemePublicTokenURI(cnftUn);
     expect(json1.name).eq(get_nft_json_name(params.info.ticker));
     expect(json1.description).eq(
         get_cnft_json_desc(params.info.ticker),
     );
     expect(json1.image).eq(`https://x.x/og/nft/${number * 2 - 1}`)
+    expect(json1.metadata.name).eq(params.info.name)
+    expect(json1.metadata.ticker).eq(params.info.ticker)
+    expect(json1.metadata.image).eq(params.info.image)
+    expect(json1.metadata.percent).eq(62500)
 
     const tnftUn = await info.hypeMemePublicNFT.tokenURI(tokenIDs[1]);
-    const jsont = parseHypeMemeTokenURI(tnftUn);
+    const jsont = parseHypeMemePublicTokenURI(tnftUn);
     expect(jsont.name).eq(get_nft_json_name(params.info.ticker));
     expect(jsont.description).eq(
         get_tnft_json_desc(params.info.ticker),
     );
     expect(jsont.image).eq(`https://x.x/og/nft/${number * 2}`)
+    expect(jsont.metadata.name).eq(params.info.name)
+    expect(jsont.metadata.ticker).eq(params.info.ticker)
+    expect(jsont.metadata.image).eq(params.info.image)
+    expect(jsont.metadata.percent).eq(37500)
 }
 
 describe("HypeMemePublicNFTView", function () {

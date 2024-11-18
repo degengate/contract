@@ -12,7 +12,9 @@ import "./interfaces/IPublicNFT.sol";
 contract HypeMemePublicNFTView is INFTView, Ownable {
   struct Info {
     string tid;
+    string name;
     string ticker;
+    string image;
     uint256 percent;
   }
 
@@ -48,24 +50,34 @@ contract HypeMemePublicNFTView is INFTView, Ownable {
     (info.tid, info.percent, , ) = IPublicNFT(publicNFT).tokenIdToInfo(tokenId);
 
     bytes memory data = IFoundry(foundry).tokenData(appId, info.tid);
-    (, info.ticker, , , , , , , ) = abi.decode(
+    (info.name, info.ticker, , info.image, , , , , ) = abi.decode(
       data,
       (string, string, string, string, string, string, string, string, uint256)
     );
   }
 
   function _pack(uint256 tokenId) private view returns (string memory output) {
+    Info memory info = _getInfo(tokenId);
+
     string memory json = Base64.encode(
       bytes(
         string(
           abi.encodePacked(
             '{"name": "',
-            _name(tokenId),
+            info.ticker,
             '", "description": "',
-            _desc(tokenId),
+            _desc(info),
             '", "image": "',
             _image(tokenId),
-            '"}'
+            '", "metadata": {"name": "',
+            info.name,
+            '", "ticker": "',
+            info.ticker,
+            '", "percent": ',
+            Strings.toString(info.percent),
+            ', "image": "',
+            info.image,
+            '"}}'
           )
         )
       )
@@ -73,14 +85,7 @@ contract HypeMemePublicNFTView is INFTView, Ownable {
     output = string(abi.encodePacked("data:application/json;base64,", json));
   }
 
-  function _name(uint256 tokenId) private view returns (string memory) {
-    Info memory info = _getInfo(tokenId);
-    return info.ticker;
-  }
-
-  function _desc(uint256 tokenId) private view returns (string memory) {
-    Info memory info = _getInfo(tokenId);
-
+  function _desc(Info memory info) private pure returns (string memory) {
     string memory part1;
     string memory part2;
     if (info.percent == 37500) {

@@ -3,7 +3,7 @@ import { deployAllContracts } from "./shared/deploy";
 import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { getTokenAmountWei, parseHypeMemeTokenURI } from "./shared/utils";
+import { getTokenAmountWei, parseHypeMemeMortgageTokenURI } from "./shared/utils";
 import { HypeMemeMortgageNFTView } from "../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { HypeMemeAllContractInfo } from "./shared/deploy_hype_meme";
@@ -94,26 +94,39 @@ async function test(name: string) {
     expect(await info.hypeMemeMortgageNFT.symbol()).eq(nft_symbol);
 
     const mnft1 = await info.hypeMemeMortgageNFT.tokenURI(multiplyResult1.mortgageNFTtokenId);
-    const json1 = parseHypeMemeTokenURI(mnft1);
+    const json1 = parseHypeMemeMortgageTokenURI(mnft1);
     expect(json1.name).eq(params.info.ticker + " - #1 - 12345");
     expect(json1.description).eq(nft_json_desc);
     expect(json1.image).eq("https://x.x/og/pnft/1");
+    expect(json1.metadata.name).eq(params.info.name)
+    expect(json1.metadata.ticker).eq(params.info.ticker)
+    expect(json1.metadata.image).eq(params.info.image)
+    expect(json1.metadata.amount).eq(12345)
 
     let multiplyResult2 = await multiply(params.info.ticker, info, BigInt(10) ** BigInt(16) * BigInt(216789), user2)
 
     const mnft2 = await info.hypeMemeMortgageNFT.tokenURI(multiplyResult2.mortgageNFTtokenId);
-    const json2 = parseHypeMemeTokenURI(mnft2);
+    const json2 = parseHypeMemeMortgageTokenURI(mnft2);
     expect(json2.name).eq(params.info.ticker + " - #2 - 2167");
     expect(json2.description).eq(nft_json_desc);
     expect(json2.image).eq("https://x.x/og/pnft/2");
+    expect(json2.metadata.name).eq(params.info.name)
+    expect(json2.metadata.ticker).eq(params.info.ticker)
+    expect(json2.metadata.image).eq(params.info.image)
+    expect(json2.metadata.amount).eq(2167)
 
     let multiplyResult3 = await multiply(params.info.ticker, info, BigInt(10) ** BigInt(17) * BigInt(123), user3)
 
     const mnft3 = await info.hypeMemeMortgageNFT.tokenURI(multiplyResult3.mortgageNFTtokenId);
-    const json3 = parseHypeMemeTokenURI(mnft3);
+    const json3 = parseHypeMemeMortgageTokenURI(mnft3);
     expect(json3.name).eq(params.info.ticker + " - #3 - 12");
     expect(json3.description).eq(nft_json_desc);
     expect(json3.image).eq("https://x.x/og/pnft/3");
+    expect(json3.metadata.name).eq(params.info.name)
+    expect(json3.metadata.ticker).eq(params.info.ticker)
+    expect(json3.metadata.image).eq(params.info.image)
+    expect(json3.metadata.amount).eq(12)
+
 }
 
 describe("MortgageNFTView", function () {
