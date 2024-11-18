@@ -2,8 +2,9 @@
 pragma solidity >=0.8.20;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "base64-sol/base64.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+
+import "./utils/Base64.sol";
 
 import "./interfaces/INFTView.sol";
 import "./interfaces/IFoundry.sol";
@@ -50,16 +51,10 @@ contract HypeMemeMortgageNFTView is INFTView, Ownable {
             '", "description": "',
             _desc(),
             '", "image": "',
-            _image(tokenId),
-            '", "metadata": {"name": "',
-            info.name,
-            '", "ticker": "',
-            info.ticker,
-            '", "amount": ',
-            _getShowAmount(info.amount),
-            ', "image": "',
-            info.image,
-            '"}}'
+            _image(tokenId, info),
+            '", "metadata": ',
+            _metadata(info),
+            "}"
           )
         )
       )
@@ -99,7 +94,32 @@ contract HypeMemeMortgageNFTView is INFTView, Ownable {
       );
   }
 
-  function _image(uint256 tokenId) private view returns (string memory) {
-    return string(abi.encodePacked(imageUrlPrefix, Strings.toString(tokenId)));
+  function _image(uint256 tokenId, Info memory info) private view returns (string memory) {
+    return
+      string(
+        abi.encodePacked(
+          imageUrlPrefix,
+          Strings.toString(tokenId),
+          "?metadata=",
+          Base64.encodeURL(bytes(_metadata(info)))
+        )
+      );
+  }
+
+  function _metadata(Info memory info) private pure returns (string memory) {
+    return
+      string(
+        abi.encodePacked(
+          '{"name": "',
+          info.name,
+          '", "ticker": "',
+          info.ticker,
+          '", "amount": ',
+          _getShowAmount(info.amount),
+          ', "image": "',
+          info.image,
+          '"}'
+        )
+      );
   }
 }

@@ -97,7 +97,7 @@ async function test(name: string) {
     const json1 = parseHypeMemeMortgageTokenURI(mnft1);
     expect(json1.name).eq(params.info.ticker + " - #1 - 12345");
     expect(json1.description).eq(nft_json_desc);
-    expect(json1.image).eq("https://x.x/og/pnft/1");
+    expect(json1.image).eq("https://x.x/og/pnft/1?metadata=eyJuYW1lIjogIm5hbWVfdGVzdDEiLCAidGlja2VyIjogInRpY2tlcl90ZXN0MSIsICJhbW91bnQiOiAxMjM0NSwgImltYWdlIjogImltYWdlX3Rlc3QxIn0");
     expect(json1.metadata.name).eq(params.info.name)
     expect(json1.metadata.ticker).eq(params.info.ticker)
     expect(json1.metadata.image).eq(params.info.image)
@@ -109,7 +109,7 @@ async function test(name: string) {
     const json2 = parseHypeMemeMortgageTokenURI(mnft2);
     expect(json2.name).eq(params.info.ticker + " - #2 - 2167");
     expect(json2.description).eq(nft_json_desc);
-    expect(json2.image).eq("https://x.x/og/pnft/2");
+    expect(json2.image).eq("https://x.x/og/pnft/2?metadata=eyJuYW1lIjogIm5hbWVfdGVzdDEiLCAidGlja2VyIjogInRpY2tlcl90ZXN0MSIsICJhbW91bnQiOiAyMTY3LCAiaW1hZ2UiOiAiaW1hZ2VfdGVzdDEifQ");
     expect(json2.metadata.name).eq(params.info.name)
     expect(json2.metadata.ticker).eq(params.info.ticker)
     expect(json2.metadata.image).eq(params.info.image)
@@ -121,7 +121,7 @@ async function test(name: string) {
     const json3 = parseHypeMemeMortgageTokenURI(mnft3);
     expect(json3.name).eq(params.info.ticker + " - #3 - 12");
     expect(json3.description).eq(nft_json_desc);
-    expect(json3.image).eq("https://x.x/og/pnft/3");
+    expect(json3.image).eq("https://x.x/og/pnft/3?metadata=eyJuYW1lIjogIm5hbWVfdGVzdDEiLCAidGlja2VyIjogInRpY2tlcl90ZXN0MSIsICJhbW91bnQiOiAxMiwgImltYWdlIjogImltYWdlX3Rlc3QxIn0");
     expect(json3.metadata.name).eq(params.info.name)
     expect(json3.metadata.ticker).eq(params.info.ticker)
     expect(json3.metadata.image).eq(params.info.image)
