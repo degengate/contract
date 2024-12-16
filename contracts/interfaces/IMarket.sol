@@ -2,17 +2,33 @@
 pragma solidity >=0.8.20;
 
 interface IMarket {
-  event Initialize(address publicNFT, address mortgageNFT);
+  struct AppFee {
+    // app owner buy sell fee
+    uint256 appOwnerBuyFee;
+    uint256 appOwnerSellFee;
+    // app owner mortgage fee
+    uint256 appOwnerMortgageFee;
+    // app owner all fee recipient
+    address appOwnerFeeRecipient;
+    // nft owner buy sell fee
+    uint256 nftOwnerBuyFee;
+    uint256 nftOwnerSellFee;
+    // platform mortgage fee
+    uint256 platformMortgageFee;
+    address platformMortgageFeeRecipient;
+  }
+
+  event Initialize(address feeNFT, address mortgageNFT);
 
   event Buy(
     string tid,
     uint256 tokenAmount,
     uint256 payTokenAmount,
     address sender,
-    address user,
-    uint256[] feeTokenIds,
-    address[] feeOwners,
-    uint256[] feeAmounts
+    uint256[] nftFeeTokenIds,
+    address[] nftFeeOwners,
+    uint256[] nftFeeAmounts,
+    uint256 appOwnerFeeAmount
   );
 
   event Sell(
@@ -20,10 +36,10 @@ interface IMarket {
     uint256 tokenAmount,
     uint256 payTokenAmount,
     address sender,
-    address user,
-    uint256[] feeTokenIds,
-    address[] feeOwners,
-    uint256[] feeAmounts
+    uint256[] nftFeeTokenIds,
+    address[] nftFeeOwners,
+    uint256[] nftFeeAmounts,
+    uint256 appOwnerFeeAmount
   );
 
   event Mortgage(
@@ -31,7 +47,8 @@ interface IMarket {
     string tid,
     uint256 tokenAmount,
     uint256 payTokenAmount,
-    uint256 feeAmount,
+    uint256 platformMortgageFeeAmount,
+    uint256 appOwnerMortgageFeeAmount,
     address sender
   );
 
@@ -42,11 +59,13 @@ interface IMarket {
     string tid,
     uint256 multiplyAmount,
     uint256 payTokenAmount,
-    uint256 feeAmount,
     address sender,
-    uint256[] feeTokenIds,
-    address[] feeOwners,
-    uint256[] feeAmounts
+    uint256[] nftFeeTokenIds,
+    address[] nftFeeOwners,
+    uint256[] nftFeeAmounts,
+    uint256 appOwnerFeeAmount,
+    uint256 platformMortgageFeeAmount,
+    uint256 appOwnerMortgageFeeAmount
   );
 
   event Cash(
@@ -55,9 +74,10 @@ interface IMarket {
     uint256 tokenAmount,
     uint256 payTokenAmount,
     address sender,
-    uint256[] feeTokenIds,
-    address[] feeOwners,
-    uint256[] feeAmounts
+    uint256[] nftFeeTokenIds,
+    address[] nftFeeOwners,
+    uint256[] nftFeeAmounts,
+    uint256 appOwnerFeeAmount
   );
 
   event Merge(
@@ -65,8 +85,9 @@ interface IMarket {
     string tid,
     uint256 otherTokenId,
     uint256 payTokenAmount,
-    uint256 feeAmount,
-    address sender
+    address sender,
+    uint256 platformMortgageFeeAmount,
+    uint256 appOwnerMortgageFeeAmount
   );
 
   event Split(
@@ -90,15 +111,11 @@ interface IMarket {
 
   function payToken() external view returns (address);
 
-  function buyFee() external view returns (uint256);
-
-  function sellFee() external view returns (uint256);
-
-  function publicNFT() external view returns (address);
+  function feeNFT() external view returns (address);
 
   function mortgageNFT() external view returns (address);
 
-  function initialize(address publicNFT, address mortgageNFT) external;
+  function initialize(address feeNFT, address mortgageNFT) external;
 
   function totalSupply(string memory tid) external view returns (uint256);
 
@@ -110,59 +127,45 @@ interface IMarket {
 
   function getPayTokenAmount(uint256 base, uint256 add) external view returns (uint256 payTokenAmount);
 
+  function appFee() external view returns (AppFee memory appFee);
+
+  function token(string memory tid) external view returns (address);
+
   function buy(string memory tid, uint256 tokenAmount) external payable returns (uint256 payTokenAmount);
-  function buyProxy(
-    string memory tid,
-    uint256 tokenAmount,
-    address user
-  ) external payable returns (uint256 payTokenAmount);
 
   function sell(string memory tid, uint256 tokenAmount) external returns (uint256 payTokenAmount);
-  function sellProxy(string memory tid, uint256 tokenAmount, address user) external returns (uint256 payTokenAmount);
 
   function mortgage(
     string memory tid,
     uint256 tokenAmount
   ) external returns (uint256 nftTokenId, uint256 payTokenAmount);
-  function mortgageProxy(
+
+  function mortgageNew(
     string memory tid,
-    uint256 tokenAmount,
-    address user
+    uint256 tokenAmount
   ) external returns (uint256 nftTokenId, uint256 payTokenAmount);
 
   function mortgageAdd(uint256 nftTokenId, uint256 tokenAmount) external returns (uint256 payTokenAmount);
-  function mortgageAddProxy(uint256 nftTokenId, uint256 tokenAmount) external returns (uint256 payTokenAmount);
 
   function redeem(uint256 nftTokenId, uint256 tokenAmount) external payable returns (uint256 payTokenAmount);
-  function redeemProxy(uint256 nftTokenId, uint256 tokenAmount) external payable returns (uint256 payTokenAmount);
 
   function multiply(
     string memory tid,
     uint256 multiplyAmount
   ) external payable returns (uint256 nftTokenId, uint256 payTokenAmount);
-  function multiplyProxy(
+
+  function multiplyNew(
     string memory tid,
-    uint256 multiplyAmount,
-    address user
+    uint256 multiplyAmount
   ) external payable returns (uint256 nftTokenId, uint256 payTokenAmount);
 
   function multiplyAdd(uint256 nftTokenId, uint256 multiplyAmount) external payable returns (uint256 payTokenAmount);
-  function multiplyAddProxy(
-    uint256 nftTokenId,
-    uint256 multiplyAmount
-  ) external payable returns (uint256 payTokenAmount);
 
   function cash(uint256 nftTokenId, uint256 tokenAmount) external returns (uint256 payTokenAmount);
-  function cashProxy(uint256 nftTokenId, uint256 tokenAmount) external returns (uint256 payTokenAmount);
 
   function merge(uint256 nftTokenId, uint256 otherNFTTokenId) external returns (uint256 payTokenAmount);
-  function mergeProxy(uint256 nftTokenId, uint256 otherNFTTokenId) external returns (uint256 payTokenAmount);
 
   function split(
-    uint256 nftTokenId,
-    uint256 splitAmount
-  ) external payable returns (uint256 payTokenAmount, uint256 newNFTTokenId);
-  function splitProxy(
     uint256 nftTokenId,
     uint256 splitAmount
   ) external payable returns (uint256 payTokenAmount, uint256 newNFTTokenId);

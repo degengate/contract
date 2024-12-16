@@ -6,16 +6,16 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "base64-sol/base64.sol";
 
-import "./interfaces/IPublicNFT.sol";
+import "./interfaces/IFeeNFT.sol";
 import "./interfaces/INFTView.sol";
 
-contract PublicNFT is Ownable, IPublicNFT, ERC721Enumerable {
+contract FeeNFT is Ownable, IFeeNFT, ERC721Enumerable {
   address public immutable override foundry;
   uint256 public immutable override appId;
 
-  address public override publicNFTView;
+  address public override feeNFTView;
 
-  mapping(uint256 => IPublicNFT.Info) private _tokenIdToInfo;
+  mapping(uint256 => IFeeNFT.Info) private _tokenIdToInfo;
   mapping(string => uint256[]) private _tidToTokenIds;
 
   uint256 private _nextTokenId = 1;
@@ -38,7 +38,7 @@ contract PublicNFT is Ownable, IPublicNFT, ERC721Enumerable {
   function tokenIdToInfo(
     uint256 tokenId
   ) public view override returns (string memory tid, uint256 percent, bytes memory data, address _owner) {
-    IPublicNFT.Info memory info = _tokenIdToInfo[tokenId];
+    IFeeNFT.Info memory info = _tokenIdToInfo[tokenId];
     tid = info.tid;
     percent = info.percent;
     data = info.data;
@@ -90,29 +90,29 @@ contract PublicNFT is Ownable, IPublicNFT, ERC721Enumerable {
     emit Mint(tid, tokenIds, percents, owners, data);
   }
 
-  function setPublicNFTView(address newPublicNFTView) external override onlyOwner {
-    publicNFTView = newPublicNFTView;
+  function setFeeNFTView(address newFeeNFTView) external override onlyOwner {
+    feeNFTView = newFeeNFTView;
 
-    emit SetPublicNFTView(newPublicNFTView, msg.sender);
+    emit SetFeeNFTView(newFeeNFTView, msg.sender);
   }
 
   function name() public view override returns (string memory) {
-    if (publicNFTView != address(0)) {
-      return INFTView(publicNFTView).name();
+    if (feeNFTView != address(0)) {
+      return INFTView(feeNFTView).name();
     }
     return super.name();
   }
 
   function symbol() public view override returns (string memory) {
-    if (publicNFTView != address(0)) {
-      return INFTView(publicNFTView).symbol();
+    if (feeNFTView != address(0)) {
+      return INFTView(feeNFTView).symbol();
     }
     return super.symbol();
   }
 
   function tokenURI(uint256 tokenId) public view override returns (string memory output) {
-    if (publicNFTView != address(0)) {
-      output = INFTView(publicNFTView).tokenURI(tokenId);
+    if (feeNFTView != address(0)) {
+      output = INFTView(feeNFTView).tokenURI(tokenId);
     } else {
       string memory json = Base64.encode(
         bytes(
@@ -123,7 +123,7 @@ contract PublicNFT is Ownable, IPublicNFT, ERC721Enumerable {
               " ",
               Strings.toString(tokenId),
               '", "description": "',
-              "If you need to customize the display content, please use the setPublicNFTView function in the contract to set a custom display contract.",
+              "If you need to customize the display content, please use the setFeeNFTView function in the contract to set a custom display contract.",
               '"}'
             )
           )

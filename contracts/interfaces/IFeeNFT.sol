@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.8.20;
 
-interface IPublicNFT {
+interface IFeeNFT {
   struct Info {
     string tid;
     uint256 percent;
@@ -10,13 +10,13 @@ interface IPublicNFT {
 
   event Mint(string tid, uint256[] tokenIds, uint256[] percents, address[] owners, bytes[] data);
 
-  event SetPublicNFTView(address newPublicNFTView, address sender);
+  event SetFeeNFTView(address newFeeNFTView, address sender);
 
   function foundry() external view returns (address);
 
   function appId() external view returns (uint256);
 
-  function publicNFTView() external view returns (address);
+  function feeNFTView() external view returns (address);
 
   function tokenIdToInfo(
     uint256 tokenId
@@ -38,5 +38,5 @@ interface IPublicNFT {
     bytes[] memory data
   ) external returns (uint256[] memory tokenIds);
 
-  function setPublicNFTView(address newPublicNFTView) external;
+  function setFeeNFTView(address newFeeNFTView) external;
 }

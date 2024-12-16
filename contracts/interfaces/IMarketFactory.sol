@@ -11,8 +11,6 @@ interface IMarketFactory {
     uint256 feeDenominator,
     uint256 totalPercent,
     address curve,
-    address payToken,
-    uint256 buyFee,
-    uint256 sellFee
+    address payToken
   ) external returns (address addr);
 }

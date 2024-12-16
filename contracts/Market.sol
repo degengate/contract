@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.20;
 
-import "./interfaces/IPublicNFT.sol";
+import "./interfaces/IFeeNFT.sol";
 import "./interfaces/IMortgageNFT.sol";
 import "./interfaces/IMarket.sol";
 import "./interfaces/IFoundry.sol";
+import "./interfaces/IFoundryData.sol";
 import "./interfaces/ICurve.sol";
-import "./interfaces/IPublicNFTVault.sol";
+import "./interfaces/IToken.sol";
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -22,22 +24,9 @@ contract Market is IMarket, ReentrancyGuard {
 
   address public immutable override curve;
   address public immutable override payToken;
-  uint256 public immutable override buyFee;
-  uint256 public immutable override sellFee;
 
-  address public override publicNFT;
+  address public override feeNFT;
   address public override mortgageNFT;
-
-  // tid => totalSupply
-  mapping(string => uint256) private _totalSupply;
-
-  // tid => account => amount
-  mapping(string => mapping(address => uint256)) private _balanceOf;
-
-  modifier onlyAppOperator() {
-    require(msg.sender == IFoundry(foundry).apps(appId).operator, "onlyAppOperator");
-    _;
-  }
 
   constructor(
     address _foundry,
@@ -45,9 +34,7 @@ contract Market is IMarket, ReentrancyGuard {
     uint256 _feeDenominator,
     uint256 _totalPercent,
     address _curve,
-    address _payToken,
-    uint256 _buyFee,
-    uint256 _sellFee
+    address _payToken
   ) {
     foundry = _foundry;
     appId = _appId;
@@ -57,32 +44,30 @@ contract Market is IMarket, ReentrancyGuard {
 
     curve = _curve;
     payToken = _payToken;
-    buyFee = _buyFee;
-    sellFee = _sellFee;
   }
 
-  function initialize(address _publicNFT, address _mortgageNFT) external override {
+  function initialize(address _feeNFT, address _mortgageNFT) external override {
     require(msg.sender == foundry, "onlyFoundry");
 
-    publicNFT = _publicNFT;
+    feeNFT = _feeNFT;
     mortgageNFT = _mortgageNFT;
 
-    emit Initialize(_publicNFT, _mortgageNFT);
+    emit Initialize(_feeNFT, _mortgageNFT);
   }
 
-  function totalSupply(string memory tid) external view override returns (uint256) {
-    return _totalSupply[tid];
+  function totalSupply(string memory tid) public view override returns (uint256) {
+    return IERC20(token(tid)).totalSupply();
   }
 
-  function balanceOf(string memory tid, address account) external view override returns (uint256) {
-    return _balanceOf[tid][account];
+  function balanceOf(string memory tid, address account) public view override returns (uint256) {
+    return IERC20(token(tid)).balanceOf(account);
   }
 
   function getBuyPayTokenAmount(
     string memory tid,
     uint256 tokenAmount
   ) public view override returns (uint256 payTokenAmount) {
-    uint256 ts = _totalSupply[tid];
+    uint256 ts = totalSupply(tid);
     return getPayTokenAmount(ts, tokenAmount);
   }
 
@@ -90,7 +75,7 @@ contract Market is IMarket, ReentrancyGuard {
     string memory tid,
     uint256 tokenAmount
   ) public view override returns (uint256 payTokenAmount) {
-    uint256 ts = _totalSupply[tid];
+    uint256 ts = totalSupply(tid);
     return getPayTokenAmount(ts - tokenAmount, tokenAmount);
   }
 
@@ -98,63 +83,132 @@ contract Market is IMarket, ReentrancyGuard {
     return ICurve(curve).curveMath(base, add);
   }
 
+  function appFee() public view returns (AppFee memory) {
+    IFoundryData.AppFee memory _appFee = IFoundry(foundry).appFees(appId);
+    return
+      AppFee({
+        // app owner buy sell fee
+        appOwnerBuyFee: _appFee.appOwnerBuyFee,
+        appOwnerSellFee: _appFee.appOwnerSellFee,
+        // app owner mortgage fee
+        appOwnerMortgageFee: _appFee.appOwnerMortgageFee,
+        // app owner all fee recipient
+        appOwnerFeeRecipient: _appFee.appOwnerFeeRecipient,
+        // nft owner buy sell fee
+        nftOwnerBuyFee: _appFee.nftOwnerBuyFee,
+        nftOwnerSellFee: _appFee.nftOwnerSellFee,
+        // platform mortgage fee
+        platformMortgageFee: _appFee.platformMortgageFee,
+        platformMortgageFeeRecipient: _appFee.platformMortgageFeeRecipient
+      });
+  }
+
+  function token(string memory tid) public view override returns (address) {
+    return IFoundry(foundry).token(appId, tid);
+  }
+
   function buy(
     string memory tid,
     uint256 tokenAmount
   ) external payable override nonReentrant returns (uint256 payTokenAmount) {
-    payTokenAmount = _buy(tid, tokenAmount, msg.sender);
-  }
+    require(IFoundry(foundry).tokenExist(appId, tid), "TE");
 
-  function buyProxy(
-    string memory tid,
-    uint256 tokenAmount,
-    address user
-  ) external payable override onlyAppOperator nonReentrant returns (uint256 payTokenAmount) {
-    payTokenAmount = _buy(tid, tokenAmount, user);
+    require(tokenAmount > 0, "TAE");
+
+    uint256[] memory nftFeeTokenIds;
+    address[] memory nftFeeTos;
+    uint256[] memory nftFeeAmounts;
+    address appOwnerFeeTo;
+    uint256 appOwnerFeeAmount;
+
+    (payTokenAmount, nftFeeTokenIds, nftFeeTos, nftFeeAmounts, appOwnerFeeTo, appOwnerFeeAmount) = _buyWithoutPay(
+      msg.sender,
+      tid,
+      tokenAmount
+    );
+
+    if (_payTokenIsERC20()) {
+      _transferFromERC20PayTokenFromSender(payTokenAmount);
+      _batchTransferERC20PayTokenToNFTOwners(nftFeeTos, nftFeeAmounts);
+      _transferERC20PayToken(appOwnerFeeTo, appOwnerFeeAmount);
+    } else {
+      require(msg.value >= payTokenAmount, "VE");
+      _batchTransferEthToNFTOwners(nftFeeTos, nftFeeAmounts);
+      _transferEth(appOwnerFeeTo, appOwnerFeeAmount);
+      _refundETH(payTokenAmount);
+    }
+
+    emit Buy(tid, tokenAmount, payTokenAmount, msg.sender, nftFeeTokenIds, nftFeeTos, nftFeeAmounts, appOwnerFeeAmount);
   }
 
   function sell(
     string memory tid,
     uint256 tokenAmount
   ) external override nonReentrant returns (uint256 payTokenAmount) {
-    payTokenAmount = _sell(tid, tokenAmount, msg.sender);
-  }
+    require(IFoundry(foundry).tokenExist(appId, tid), "TE");
 
-  function sellProxy(
-    string memory tid,
-    uint256 tokenAmount,
-    address user
-  ) external override onlyAppOperator nonReentrant returns (uint256 payTokenAmount) {
-    payTokenAmount = _sell(tid, tokenAmount, user);
+    require(tokenAmount > 0, "TAE");
+    require(tokenAmount <= balanceOf(tid, msg.sender), "TAE");
+
+    uint256[] memory nftFeeTokenIds;
+    address[] memory nftFeeTos;
+    uint256[] memory nftFeeAmounts;
+    address appOwnerFeeTo;
+    uint256 appOwnerFeeAmount;
+
+    (payTokenAmount, nftFeeTokenIds, nftFeeTos, nftFeeAmounts, appOwnerFeeTo, appOwnerFeeAmount) = _sellWithoutPay(
+      msg.sender,
+      tid,
+      tokenAmount
+    );
+
+    if (_payTokenIsERC20()) {
+      _transferERC20PayToken(msg.sender, payTokenAmount);
+      _batchTransferERC20PayTokenToNFTOwners(nftFeeTos, nftFeeAmounts);
+      _transferERC20PayToken(appOwnerFeeTo, appOwnerFeeAmount);
+    } else {
+      _transferEth(msg.sender, payTokenAmount);
+      _batchTransferEthToNFTOwners(nftFeeTos, nftFeeAmounts);
+      _transferEth(appOwnerFeeTo, appOwnerFeeAmount);
+    }
+
+    emit Sell(
+      tid,
+      tokenAmount,
+      payTokenAmount,
+      msg.sender,
+      nftFeeTokenIds,
+      nftFeeTos,
+      nftFeeAmounts,
+      appOwnerFeeAmount
+    );
   }
 
   function mortgage(
     string memory tid,
     uint256 tokenAmount
   ) external override nonReentrant returns (uint256 nftTokenId, uint256 payTokenAmount) {
-    (nftTokenId, payTokenAmount) = _mortgage(tid, tokenAmount, msg.sender);
+    bool exists;
+    (exists, nftTokenId) = _findFirstMortgageNftTokenId(tid);
+
+    if (exists) {
+      payTokenAmount = _mortgageAdd(nftTokenId, tokenAmount);
+    } else {
+      (nftTokenId, payTokenAmount) = _mortgageNew(tid, tokenAmount);
+    }
   }
 
-  function mortgageProxy(
+  function mortgageNew(
     string memory tid,
-    uint256 tokenAmount,
-    address user
-  ) external override onlyAppOperator nonReentrant returns (uint256 nftTokenId, uint256 payTokenAmount) {
-    (nftTokenId, payTokenAmount) = _mortgage(tid, tokenAmount, user);
+    uint256 tokenAmount
+  ) external override nonReentrant returns (uint256 nftTokenId, uint256 payTokenAmount) {
+    (nftTokenId, payTokenAmount) = _mortgageNew(tid, tokenAmount);
   }
 
   function mortgageAdd(
     uint256 nftTokenId,
     uint256 tokenAmount
   ) external override nonReentrant returns (uint256 payTokenAmount) {
-    require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
-    payTokenAmount = _mortgageAdd(nftTokenId, tokenAmount);
-  }
-
-  function mortgageAddProxy(
-    uint256 nftTokenId,
-    uint256 tokenAmount
-  ) external override onlyAppOperator nonReentrant returns (uint256 payTokenAmount) {
     payTokenAmount = _mortgageAdd(nftTokenId, tokenAmount);
   }
 
@@ -163,170 +217,8 @@ contract Market is IMarket, ReentrancyGuard {
     uint256 tokenAmount
   ) external payable override nonReentrant returns (uint256 payTokenAmount) {
     require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
-    payTokenAmount = _redeem(nftTokenId, tokenAmount);
-  }
 
-  function redeemProxy(
-    uint256 nftTokenId,
-    uint256 tokenAmount
-  ) external payable override onlyAppOperator nonReentrant returns (uint256 payTokenAmount) {
-    payTokenAmount = _redeem(nftTokenId, tokenAmount);
-  }
-
-  function multiply(
-    string memory tid,
-    uint256 multiplyAmount
-  ) external payable override nonReentrant returns (uint256 nftTokenId, uint256 payTokenAmount) {
-    (nftTokenId, payTokenAmount) = _multiply(tid, multiplyAmount, msg.sender);
-  }
-
-  function multiplyProxy(
-    string memory tid,
-    uint256 multiplyAmount,
-    address user
-  ) external payable override onlyAppOperator nonReentrant returns (uint256 nftTokenId, uint256 payTokenAmount) {
-    (nftTokenId, payTokenAmount) = _multiply(tid, multiplyAmount, user);
-  }
-
-  function multiplyAdd(
-    uint256 nftTokenId,
-    uint256 multiplyAmount
-  ) external payable override nonReentrant returns (uint256 payTokenAmount) {
-    require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
-
-    payTokenAmount = _multiplyAdd(nftTokenId, multiplyAmount);
-  }
-
-  function multiplyAddProxy(
-    uint256 nftTokenId,
-    uint256 multiplyAmount
-  ) external payable override onlyAppOperator nonReentrant returns (uint256 payTokenAmount) {
-    payTokenAmount = _multiplyAdd(nftTokenId, multiplyAmount);
-  }
-
-  function cash(
-    uint256 nftTokenId,
-    uint256 tokenAmount
-  ) external override nonReentrant returns (uint256 payTokenAmount) {
-    require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
-    payTokenAmount = _cash(nftTokenId, tokenAmount);
-  }
-
-  function cashProxy(
-    uint256 nftTokenId,
-    uint256 tokenAmount
-  ) external override onlyAppOperator nonReentrant returns (uint256 payTokenAmount) {
-    payTokenAmount = _cash(nftTokenId, tokenAmount);
-  }
-
-  function merge(
-    uint256 nftTokenId,
-    uint256 otherNFTTokenId
-  ) external override nonReentrant returns (uint256 payTokenAmount) {
-    require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE1");
-    require(IERC721(mortgageNFT).ownerOf(otherNFTTokenId) == msg.sender, "AOE2");
-
-    payTokenAmount = _merge(nftTokenId, otherNFTTokenId);
-  }
-
-  function mergeProxy(
-    uint256 nftTokenId,
-    uint256 otherNFTTokenId
-  ) external override onlyAppOperator nonReentrant returns (uint256 payTokenAmount) {
-    payTokenAmount = _merge(nftTokenId, otherNFTTokenId);
-  }
-
-  function split(
-    uint256 nftTokenId,
-    uint256 splitAmount
-  ) external payable override nonReentrant returns (uint256 payTokenAmount, uint256 newNFTTokenId) {
-    require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
-
-    (payTokenAmount, newNFTTokenId) = _split(nftTokenId, splitAmount);
-  }
-
-  function splitProxy(
-    uint256 nftTokenId,
-    uint256 splitAmount
-  ) external payable override onlyAppOperator nonReentrant returns (uint256 payTokenAmount, uint256 newNFTTokenId) {
-    (payTokenAmount, newNFTTokenId) = _split(nftTokenId, splitAmount);
-  }
-
-  function _buy(string memory tid, uint256 tokenAmount, address user) private returns (uint256 payTokenAmount) {
-    require(IFoundry(foundry).tokenExist(appId, tid), "TE");
-
-    require(tokenAmount > 0, "TAE");
-
-    uint256[] memory feeTokenIds;
-    address[] memory feeTos;
-    uint256[] memory feeAmounts;
-
-    (payTokenAmount, feeTokenIds, feeTos, feeAmounts) = _buyWithoutPay(user, tid, tokenAmount);
-
-    if (_payTokenIsERC20()) {
-      _transferFromERC20PayTokenFromSender(payTokenAmount);
-      _batchTransferERC20PayTokenToNFTOwners(feeTokenIds, feeTos, feeAmounts);
-    } else {
-      require(msg.value >= payTokenAmount, "VE");
-      _batchTransferEthToNFTOwners(feeTokenIds, feeTos, feeAmounts);
-      _refundETH(payTokenAmount);
-    }
-
-    emit Buy(tid, tokenAmount, payTokenAmount, msg.sender, user, feeTokenIds, feeTos, feeAmounts);
-  }
-
-  function _sell(string memory tid, uint256 tokenAmount, address user) private returns (uint256 payTokenAmount) {
-    require(IFoundry(foundry).tokenExist(appId, tid), "TE");
-
-    require(tokenAmount > 0, "TAE");
-    require(tokenAmount <= _balanceOf[tid][user], "TAE");
-
-    uint256[] memory feeTokenIds;
-    address[] memory feeTos;
-    uint256[] memory feeAmounts;
-
-    (payTokenAmount, feeTokenIds, feeTos, feeAmounts) = _sellWithoutPay(user, tid, tokenAmount);
-
-    if (_payTokenIsERC20()) {
-      _transferERC20PayToken(msg.sender, payTokenAmount);
-      _batchTransferERC20PayTokenToNFTOwners(feeTokenIds, feeTos, feeAmounts);
-    } else {
-      _transferEth(msg.sender, payTokenAmount);
-      _batchTransferEthToNFTOwners(feeTokenIds, feeTos, feeAmounts);
-    }
-
-    emit Sell(tid, tokenAmount, payTokenAmount, msg.sender, user, feeTokenIds, feeTos, feeAmounts);
-  }
-
-  function _mortgage(
-    string memory tid,
-    uint256 tokenAmount,
-    address user
-  ) private returns (uint256 nftTokenId, uint256 payTokenAmount) {
-    require(IFoundry(foundry).tokenExist(appId, tid), "TE");
-    require(tokenAmount > 0, "TAE");
-    require(tokenAmount <= _balanceOf[tid][user], "TAE");
-
-    nftTokenId = IMortgageNFT(mortgageNFT).mint(user, tid, tokenAmount);
-
-    payTokenAmount = _mortgageAddBase(nftTokenId, tid, 0, tokenAmount, user);
-  }
-
-  function _mortgageAdd(uint256 nftTokenId, uint256 tokenAmount) private returns (uint256 payTokenAmount) {
     (string memory tid, uint256 oldAmount) = IMortgageNFT(mortgageNFT).info(nftTokenId);
-    address user = IERC721(mortgageNFT).ownerOf(nftTokenId);
-
-    require(tokenAmount > 0, "TAE");
-    require(tokenAmount <= _balanceOf[tid][user], "TAE");
-
-    IMortgageNFT(mortgageNFT).add(nftTokenId, tokenAmount);
-
-    payTokenAmount = _mortgageAddBase(nftTokenId, tid, oldAmount, tokenAmount, user);
-  }
-
-  function _redeem(uint256 nftTokenId, uint256 tokenAmount) private returns (uint256 payTokenAmount) {
-    (string memory tid, uint256 oldAmount) = IMortgageNFT(mortgageNFT).info(nftTokenId);
-    address user = IERC721(mortgageNFT).ownerOf(nftTokenId);
 
     require(tokenAmount > 0, "TAE");
     require(tokenAmount <= oldAmount, "TAE");
@@ -335,8 +227,7 @@ contract Market is IMarket, ReentrancyGuard {
 
     IMortgageNFT(mortgageNFT).remove(nftTokenId, tokenAmount);
 
-    _balanceOf[tid][address(this)] -= tokenAmount;
-    _balanceOf[tid][user] += tokenAmount;
+    SafeERC20.safeTransfer(IERC20(token(tid)), msg.sender, tokenAmount);
 
     if (_payTokenIsERC20()) {
       _transferFromERC20PayTokenFromSender(payTokenAmount);
@@ -348,29 +239,39 @@ contract Market is IMarket, ReentrancyGuard {
     emit Redeem(nftTokenId, tid, tokenAmount, payTokenAmount, msg.sender);
   }
 
-  function _multiply(
+  function multiply(
     string memory tid,
-    uint256 multiplyAmount,
-    address user
-  ) private returns (uint256 nftTokenId, uint256 payTokenAmount) {
-    require(IFoundry(foundry).tokenExist(appId, tid), "TE");
-    require(multiplyAmount > 0, "TAE");
+    uint256 multiplyAmount
+  ) public payable override nonReentrant returns (uint256 nftTokenId, uint256 payTokenAmount) {
+    bool exists;
+    (exists, nftTokenId) = _findFirstMortgageNftTokenId(tid);
 
-    nftTokenId = IMortgageNFT(mortgageNFT).mint(user, tid, multiplyAmount);
-
-    payTokenAmount = _multiplyAddBase(nftTokenId, tid, 0, multiplyAmount);
+    if (exists) {
+      payTokenAmount = _multiplyAdd(nftTokenId, multiplyAmount);
+    } else {
+      (nftTokenId, payTokenAmount) = _multiplyNew(tid, multiplyAmount);
+    }
   }
 
-  function _multiplyAdd(uint256 nftTokenId, uint256 multiplyAmount) private returns (uint256 payTokenAmount) {
-    require(multiplyAmount > 0, "TAE");
-
-    (string memory tid, uint256 oldAmount) = IMortgageNFT(mortgageNFT).info(nftTokenId);
-    IMortgageNFT(mortgageNFT).add(nftTokenId, multiplyAmount);
-
-    payTokenAmount = _multiplyAddBase(nftTokenId, tid, oldAmount, multiplyAmount);
+  function multiplyNew(
+    string memory tid,
+    uint256 multiplyAmount
+  ) external payable override nonReentrant returns (uint256 nftTokenId, uint256 payTokenAmount) {
+    (nftTokenId, payTokenAmount) = _multiplyNew(tid, multiplyAmount);
   }
 
-  function _cash(uint256 nftTokenId, uint256 tokenAmount) private returns (uint256 payTokenAmount) {
+  function multiplyAdd(
+    uint256 nftTokenId,
+    uint256 multiplyAmount
+  ) external payable override nonReentrant returns (uint256 payTokenAmount) {
+    payTokenAmount = _multiplyAdd(nftTokenId, multiplyAmount);
+  }
+
+  function cash(
+    uint256 nftTokenId,
+    uint256 tokenAmount
+  ) external override nonReentrant returns (uint256 payTokenAmount) {
+    require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
     (string memory tid, uint256 oldAmount) = IMortgageNFT(mortgageNFT).info(nftTokenId);
     require(tokenAmount > 0, "TAE");
     require(tokenAmount <= oldAmount, "TAE");
@@ -379,9 +280,11 @@ contract Market is IMarket, ReentrancyGuard {
 
     (
       uint256 sellAmount,
-      uint256[] memory feeTokenIds,
-      address[] memory feeTos,
-      uint256[] memory feeAmounts
+      uint256[] memory nftFeeTokenIds,
+      address[] memory nftFeeTos,
+      uint256[] memory nftFeeAmounts,
+      address appOwnerFeeTo,
+      uint256 appOwnerFeeAmount
     ) = _sellWithoutPay(address(this), tid, tokenAmount);
 
     uint256 redeemPayTokenAmount = getPayTokenAmount(oldAmount - tokenAmount, tokenAmount);
@@ -391,122 +294,34 @@ contract Market is IMarket, ReentrancyGuard {
 
     if (_payTokenIsERC20()) {
       _transferERC20PayToken(msg.sender, payTokenAmount);
-      _batchTransferERC20PayTokenToNFTOwners(feeTokenIds, feeTos, feeAmounts);
+      _batchTransferERC20PayTokenToNFTOwners(nftFeeTos, nftFeeAmounts);
+      _transferERC20PayToken(appOwnerFeeTo, appOwnerFeeAmount);
     } else {
       _transferEth(msg.sender, payTokenAmount);
-      _batchTransferEthToNFTOwners(feeTokenIds, feeTos, feeAmounts);
+      _batchTransferEthToNFTOwners(nftFeeTos, nftFeeAmounts);
+      _transferEth(appOwnerFeeTo, appOwnerFeeAmount);
     }
 
-    emit Cash(nftTokenId, tid, tokenAmount, payTokenAmount, msg.sender, feeTokenIds, feeTos, feeAmounts);
-  }
-
-  function _buyWithoutPay(
-    address to,
-    string memory tid,
-    uint256 tokenAmount
-  )
-    private
-    returns (uint256 payTokenAmount, uint256[] memory feeTokenIds, address[] memory feeTos, uint256[] memory feeAmounts)
-  {
-    uint256 amount = getBuyPayTokenAmount(tid, tokenAmount);
-
-    uint256 totalFee;
-    (totalFee, feeTokenIds, feeTos, feeAmounts) = _getFee(tid, amount, buyFee);
-    payTokenAmount = amount + totalFee;
-
-    _totalSupply[tid] += tokenAmount;
-    _balanceOf[tid][to] += tokenAmount;
-  }
-
-  function _sellWithoutPay(
-    address from,
-    string memory tid,
-    uint256 tokenAmount
-  )
-    private
-    returns (uint256 payTokenAmount, uint256[] memory feeTokenIds, address[] memory feeTos, uint256[] memory feeAmounts)
-  {
-    uint256 amount = getSellPayTokenAmount(tid, tokenAmount);
-
-    uint256 totalFee;
-    (totalFee, feeTokenIds, feeTos, feeAmounts) = _getFee(tid, amount, sellFee);
-    payTokenAmount = amount - totalFee;
-
-    _totalSupply[tid] -= tokenAmount;
-    _balanceOf[tid][from] -= tokenAmount;
-  }
-
-  function _mortgageAddBase(
-    uint256 tokenId,
-    string memory tid,
-    uint256 oldAmount,
-    uint256 addAmount,
-    address user
-  ) private returns (uint256 payTokenAmount) {
-    uint256 curveAmount = getPayTokenAmount(oldAmount, addAmount);
-    uint256 feeAmount = _mortgageFee(curveAmount);
-
-    _balanceOf[tid][user] -= addAmount;
-    _balanceOf[tid][address(this)] += addAmount;
-
-    payTokenAmount = curveAmount - feeAmount;
-
-    if (_payTokenIsERC20()) {
-      _transferERC20PayToken(msg.sender, payTokenAmount);
-      _transferERC20PayTokenToMortgageFeeRecipient(feeAmount);
-    } else {
-      _transferEth(msg.sender, payTokenAmount);
-      _transferEthToMortgageFeeRecipient(feeAmount);
-    }
-
-    emit Mortgage(tokenId, tid, addAmount, payTokenAmount, feeAmount, msg.sender);
-  }
-
-  function _multiplyAddBase(
-    uint256 nftTokenId,
-    string memory tid,
-    uint256 oldAmount,
-    uint256 multiplyAmount
-  ) private returns (uint256 payTokenAmount) {
-    (
-      uint256 multiplyPayTokenAmount,
-      uint256[] memory feeTokenIds,
-      address[] memory feeTos,
-      uint256[] memory feeAmounts
-    ) = _buyWithoutPay(address(this), tid, multiplyAmount);
-
-    uint256 curveAmount = getPayTokenAmount(oldAmount, multiplyAmount);
-    uint256 feeAmount = _mortgageFee(curveAmount);
-    uint256 mortAmount = curveAmount - feeAmount;
-    payTokenAmount = multiplyPayTokenAmount - mortAmount;
-
-    if (_payTokenIsERC20()) {
-      _transferFromERC20PayTokenFromSender(payTokenAmount);
-
-      _transferERC20PayTokenToMortgageFeeRecipient(feeAmount);
-      _batchTransferERC20PayTokenToNFTOwners(feeTokenIds, feeTos, feeAmounts);
-    } else {
-      require(msg.value >= payTokenAmount, "VE");
-
-      _transferEthToMortgageFeeRecipient(feeAmount);
-      _batchTransferEthToNFTOwners(feeTokenIds, feeTos, feeAmounts);
-      _refundETH(payTokenAmount);
-    }
-
-    emit Multiply(
+    emit Cash(
       nftTokenId,
       tid,
-      multiplyAmount,
+      tokenAmount,
       payTokenAmount,
-      feeAmount,
       msg.sender,
-      feeTokenIds,
-      feeTos,
-      feeAmounts
+      nftFeeTokenIds,
+      nftFeeTos,
+      nftFeeAmounts,
+      appOwnerFeeAmount
     );
   }
 
-  function _merge(uint256 nftTokenId, uint256 otherNFTTokenId) private returns (uint256 payTokenAmount) {
+  function merge(
+    uint256 nftTokenId,
+    uint256 otherNFTTokenId
+  ) external override nonReentrant returns (uint256 payTokenAmount) {
+    require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE1");
+    require(IERC721(mortgageNFT).ownerOf(otherNFTTokenId) == msg.sender, "AOE2");
+
     (string memory tid, uint256 oldAmount) = IMortgageNFT(mortgageNFT).info(nftTokenId);
     (string memory otherTid, uint256 otherOldAmount) = IMortgageNFT(mortgageNFT).info(otherNFTTokenId);
 
@@ -516,32 +331,46 @@ contract Market is IMarket, ReentrancyGuard {
     IMortgageNFT(mortgageNFT).add(nftTokenId, otherOldAmount);
 
     uint256 curveAmount = getPayTokenAmount(oldAmount, otherOldAmount) - getPayTokenAmount(0, otherOldAmount);
-    uint256 feeAmount = _mortgageFee(curveAmount);
-    payTokenAmount = curveAmount - feeAmount;
+
+    AppFee memory _appFee = appFee();
+    uint256 platformMortgageFeeAmount = (_appFee.platformMortgageFee * curveAmount) / feeDenominator;
+    uint256 appOwnerMortgageFeeAmount = (_appFee.appOwnerMortgageFee * curveAmount) / feeDenominator;
+
+    payTokenAmount = curveAmount - platformMortgageFeeAmount - appOwnerMortgageFeeAmount;
 
     if (_payTokenIsERC20()) {
       _transferERC20PayToken(msg.sender, payTokenAmount);
-      _transferERC20PayTokenToMortgageFeeRecipient(feeAmount);
+      _transferERC20PayToken(_appFee.platformMortgageFeeRecipient, platformMortgageFeeAmount);
+      _transferERC20PayToken(_appFee.appOwnerFeeRecipient, appOwnerMortgageFeeAmount);
     } else {
       _transferEth(msg.sender, payTokenAmount);
-      _transferEthToMortgageFeeRecipient(feeAmount);
+      _transferEth(_appFee.platformMortgageFeeRecipient, platformMortgageFeeAmount);
+      _transferEth(_appFee.appOwnerFeeRecipient, appOwnerMortgageFeeAmount);
     }
 
-    emit Merge(nftTokenId, tid, otherNFTTokenId, payTokenAmount, feeAmount, msg.sender);
+    emit Merge(
+      nftTokenId,
+      tid,
+      otherNFTTokenId,
+      payTokenAmount,
+      msg.sender,
+      platformMortgageFeeAmount,
+      appOwnerMortgageFeeAmount
+    );
   }
 
-  function _split(
+  function split(
     uint256 nftTokenId,
     uint256 splitAmount
-  ) private returns (uint256 payTokenAmount, uint256 newNFTTokenId) {
+  ) external payable override nonReentrant returns (uint256 payTokenAmount, uint256 newNFTTokenId) {
+    require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
+
     (string memory tid, uint256 oldAmount) = IMortgageNFT(mortgageNFT).info(nftTokenId);
     require(splitAmount > 0, "SAE");
     require(splitAmount < oldAmount, "SAE");
 
-    address user = IERC721(mortgageNFT).ownerOf(nftTokenId);
-
     IMortgageNFT(mortgageNFT).remove(nftTokenId, splitAmount);
-    newNFTTokenId = IMortgageNFT(mortgageNFT).mint(user, tid, splitAmount);
+    newNFTTokenId = IMortgageNFT(mortgageNFT).mint(msg.sender, tid, splitAmount);
 
     payTokenAmount = getPayTokenAmount(oldAmount - splitAmount, splitAmount) - getPayTokenAmount(0, splitAmount);
 
@@ -555,7 +384,221 @@ contract Market is IMarket, ReentrancyGuard {
     emit Split(nftTokenId, newNFTTokenId, tid, splitAmount, payTokenAmount, msg.sender);
   }
 
-  function _getFee(
+  function _buyWithoutPay(
+    address to,
+    string memory tid,
+    uint256 tokenAmount
+  )
+    private
+    returns (
+      uint256 payTokenAmount,
+      uint256[] memory nftFeeTokenIds,
+      address[] memory nftFeeTos,
+      uint256[] memory nftFeeAmounts,
+      address appOwnerFeeTo,
+      uint256 appOwnerFeeAmount
+    )
+  {
+    uint256 amount = getBuyPayTokenAmount(tid, tokenAmount);
+
+    AppFee memory _appFee = appFee();
+    uint256 totalNFTFee;
+    (totalNFTFee, nftFeeTokenIds, nftFeeTos, nftFeeAmounts) = _getNFTOwnerbuyOrSellFee(
+      tid,
+      amount,
+      _appFee.nftOwnerBuyFee
+    );
+
+    appOwnerFeeTo = _appFee.appOwnerFeeRecipient;
+    appOwnerFeeAmount = (amount * _appFee.appOwnerBuyFee) / feeDenominator;
+
+    payTokenAmount = amount + totalNFTFee + appOwnerFeeAmount;
+
+    IToken(token(tid)).marketMint(tokenAmount);
+    SafeERC20.safeTransfer(IERC20(token(tid)), to, tokenAmount);
+  }
+
+  function _sellWithoutPay(
+    address from,
+    string memory tid,
+    uint256 tokenAmount
+  )
+    private
+    returns (
+      uint256 payTokenAmount,
+      uint256[] memory nftFeeTokenIds,
+      address[] memory nftFeeTos,
+      uint256[] memory nftFeeAmounts,
+      address appOwnerFeeTo,
+      uint256 appOwnerFeeAmount
+    )
+  {
+    uint256 amount = getSellPayTokenAmount(tid, tokenAmount);
+
+    AppFee memory _appFee = appFee();
+
+    uint256 totalNFTFee;
+    (totalNFTFee, nftFeeTokenIds, nftFeeTos, nftFeeAmounts) = _getNFTOwnerbuyOrSellFee(
+      tid,
+      amount,
+      _appFee.nftOwnerSellFee
+    );
+
+    appOwnerFeeTo = _appFee.appOwnerFeeRecipient;
+    appOwnerFeeAmount = (amount * _appFee.appOwnerSellFee) / feeDenominator;
+
+    payTokenAmount = amount - totalNFTFee - appOwnerFeeAmount;
+
+    if (from != address(this)) {
+      SafeERC20.safeTransferFrom(IERC20(token(tid)), from, address(this), tokenAmount);
+    }
+    IToken(token(tid)).marketBurn(tokenAmount);
+  }
+
+  function _mortgageNew(
+    string memory tid,
+    uint256 tokenAmount
+  ) private returns (uint256 nftTokenId, uint256 payTokenAmount) {
+    require(IFoundry(foundry).tokenExist(appId, tid), "TE");
+    require(tokenAmount > 0, "TAE");
+    require(tokenAmount <= balanceOf(tid, msg.sender), "TAE");
+
+    nftTokenId = IMortgageNFT(mortgageNFT).mint(msg.sender, tid, tokenAmount);
+
+    payTokenAmount = _mortgageAddBase(nftTokenId, tid, 0, tokenAmount, msg.sender);
+  }
+
+  function _mortgageAdd(uint256 nftTokenId, uint256 tokenAmount) private returns (uint256 payTokenAmount) {
+    require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
+
+    (string memory tid, uint256 oldAmount) = IMortgageNFT(mortgageNFT).info(nftTokenId);
+
+    require(tokenAmount > 0, "TAE");
+    require(tokenAmount <= balanceOf(tid, msg.sender), "TAE");
+
+    IMortgageNFT(mortgageNFT).add(nftTokenId, tokenAmount);
+
+    payTokenAmount = _mortgageAddBase(nftTokenId, tid, oldAmount, tokenAmount, msg.sender);
+  }
+
+  function _mortgageAddBase(
+    uint256 tokenId,
+    string memory tid,
+    uint256 oldAmount,
+    uint256 addAmount,
+    address user
+  ) private returns (uint256 payTokenAmount) {
+    uint256 curveAmount = getPayTokenAmount(oldAmount, addAmount);
+
+    AppFee memory _appFee = appFee();
+    uint256 platformMortgageFeeAmount = (_appFee.platformMortgageFee * curveAmount) / feeDenominator;
+    uint256 appOwnerMortgageFeeAmount = (_appFee.appOwnerMortgageFee * curveAmount) / feeDenominator;
+
+    payTokenAmount = curveAmount - platformMortgageFeeAmount - appOwnerMortgageFeeAmount;
+
+    SafeERC20.safeTransferFrom(IERC20(token(tid)), user, address(this), addAmount);
+
+    if (_payTokenIsERC20()) {
+      _transferERC20PayToken(msg.sender, payTokenAmount);
+      _transferERC20PayToken(_appFee.platformMortgageFeeRecipient, platformMortgageFeeAmount);
+      _transferERC20PayToken(_appFee.appOwnerFeeRecipient, appOwnerMortgageFeeAmount);
+    } else {
+      _transferEth(msg.sender, payTokenAmount);
+      _transferEth(_appFee.platformMortgageFeeRecipient, platformMortgageFeeAmount);
+      _transferEth(_appFee.appOwnerFeeRecipient, appOwnerMortgageFeeAmount);
+    }
+
+    emit Mortgage(
+      tokenId,
+      tid,
+      addAmount,
+      payTokenAmount,
+      platformMortgageFeeAmount,
+      appOwnerMortgageFeeAmount,
+      msg.sender
+    );
+  }
+
+  function _multiplyNew(
+    string memory tid,
+    uint256 multiplyAmount
+  ) private returns (uint256 nftTokenId, uint256 payTokenAmount) {
+    require(IFoundry(foundry).tokenExist(appId, tid), "TE");
+    require(multiplyAmount > 0, "TAE");
+
+    nftTokenId = IMortgageNFT(mortgageNFT).mint(msg.sender, tid, multiplyAmount);
+
+    payTokenAmount = _multiplyAddBase(nftTokenId, tid, 0, multiplyAmount);
+  }
+
+  function _multiplyAdd(uint256 nftTokenId, uint256 multiplyAmount) private returns (uint256 payTokenAmount) {
+    require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
+    require(multiplyAmount > 0, "TAE");
+
+    (string memory tid, uint256 oldAmount) = IMortgageNFT(mortgageNFT).info(nftTokenId);
+    IMortgageNFT(mortgageNFT).add(nftTokenId, multiplyAmount);
+
+    payTokenAmount = _multiplyAddBase(nftTokenId, tid, oldAmount, multiplyAmount);
+  }
+
+  function _multiplyAddBase(
+    uint256 nftTokenId,
+    string memory tid,
+    uint256 oldAmount,
+    uint256 multiplyAmount
+  ) private returns (uint256 payTokenAmount) {
+    (
+      uint256 multiplyPayTokenAmount,
+      uint256[] memory nftFeeTokenIds,
+      address[] memory nftFeeTos,
+      uint256[] memory nftFeeAmounts,
+      address appOwnerFeeTo,
+      uint256 appOwnerFeeAmount
+    ) = _buyWithoutPay(address(this), tid, multiplyAmount);
+
+    uint256 curveAmount = getPayTokenAmount(oldAmount, multiplyAmount);
+
+    uint256 platformMortgageFeeAmount;
+    uint256 appOwnerMortgageFeeAmount;
+    AppFee memory _appFee = appFee();
+    {
+      platformMortgageFeeAmount = (_appFee.platformMortgageFee * curveAmount) / feeDenominator;
+      appOwnerMortgageFeeAmount = (_appFee.appOwnerMortgageFee * curveAmount) / feeDenominator;
+      uint256 mortAmount = curveAmount - platformMortgageFeeAmount - appOwnerMortgageFeeAmount;
+      payTokenAmount = multiplyPayTokenAmount - mortAmount;
+    }
+
+    if (_payTokenIsERC20()) {
+      _transferFromERC20PayTokenFromSender(payTokenAmount);
+      _transferERC20PayToken(_appFee.platformMortgageFeeRecipient, platformMortgageFeeAmount);
+      _transferERC20PayToken(_appFee.appOwnerFeeRecipient, appOwnerMortgageFeeAmount);
+      _batchTransferERC20PayTokenToNFTOwners(nftFeeTos, nftFeeAmounts);
+      _transferERC20PayToken(appOwnerFeeTo, appOwnerFeeAmount);
+    } else {
+      require(msg.value >= payTokenAmount, "VE");
+      _transferEth(_appFee.platformMortgageFeeRecipient, platformMortgageFeeAmount);
+      _transferEth(_appFee.appOwnerFeeRecipient, appOwnerMortgageFeeAmount);
+      _batchTransferEthToNFTOwners(nftFeeTos, nftFeeAmounts);
+      _transferEth(appOwnerFeeTo, appOwnerFeeAmount);
+      _refundETH(payTokenAmount);
+    }
+
+    emit Multiply(
+      nftTokenId,
+      tid,
+      multiplyAmount,
+      payTokenAmount,
+      msg.sender,
+      nftFeeTokenIds,
+      nftFeeTos,
+      nftFeeAmounts,
+      appOwnerFeeAmount,
+      platformMortgageFeeAmount,
+      appOwnerMortgageFeeAmount
+    );
+  }
+
+  function _getNFTOwnerbuyOrSellFee(
     string memory tid,
     uint256 amount,
     uint256 buyOrSellFee
@@ -565,7 +608,7 @@ contract Market is IMarket, ReentrancyGuard {
     returns (uint256 totalFee, uint256[] memory tokenIds, address[] memory owners, uint256[] memory feeAmounts)
   {
     uint256[] memory percents;
-    (tokenIds, percents, , owners) = IPublicNFT(publicNFT).tidToInfos(tid);
+    (tokenIds, percents, , owners) = IFeeNFT(feeNFT).tidToInfos(tid);
 
     feeAmounts = new uint256[](percents.length);
 
@@ -580,54 +623,38 @@ contract Market is IMarket, ReentrancyGuard {
     return payToken != address(0);
   }
 
+  function _findFirstMortgageNftTokenId(string memory tid) private view returns (bool exists, uint256 tokenId) {
+    IMortgageNFT.Info[] memory infos = IMortgageNFT(mortgageNFT).tokenInfosOfOwnerByTid(msg.sender, tid);
+    if (infos.length == 0) {
+      exists = false;
+    } else {
+      exists = true;
+      tokenId = infos[0].tokenId;
+    }
+  }
+
   function _transferFromERC20PayTokenFromSender(uint256 value) private {
-    SafeERC20.safeTransferFrom(IERC20(payToken), msg.sender, address(this), value);
-  }
-
-  function _batchTransferEthToNFTOwners(
-    uint256[] memory tokenIds,
-    address[] memory tos,
-    uint256[] memory amounts
-  ) private {
-    for (uint256 i = 0; i < amounts.length; i++) {
-      bool sup = ERC165Checker.supportsInterface(tos[i], type(IPublicNFTVault).interfaceId);
-
-      if (sup) {
-        _transferEthWithData(tokenIds[i], tos[i], amounts[i]);
-      } else {
-        _transferEth(tos[i], amounts[i]);
-      }
+    if (value > 0) {
+      SafeERC20.safeTransferFrom(IERC20(payToken), msg.sender, address(this), value);
     }
-  }
-
-  function _batchTransferERC20PayTokenToNFTOwners(
-    uint256[] memory tokenIds,
-    address[] memory tos,
-    uint256[] memory amounts
-  ) private {
-    for (uint256 i = 0; i < amounts.length; i++) {
-      bool sup = ERC165Checker.supportsInterface(tos[i], type(IPublicNFTVault).interfaceId);
-
-      if (sup) {
-        _transferERC20PayTokenWithData(tokenIds[i], tos[i], amounts[i]);
-      } else {
-        _transferERC20PayToken(tos[i], amounts[i]);
-      }
-    }
-  }
-
-  function _transferEthToMortgageFeeRecipient(uint256 feeAmount) private {
-    _transferEth(IFoundry(foundry).mortgageFeeRecipient(appId), feeAmount);
-  }
-
-  function _transferERC20PayTokenToMortgageFeeRecipient(uint256 feeAmount) private {
-    _transferERC20PayToken(IFoundry(foundry).mortgageFeeRecipient(appId), feeAmount);
   }
 
   function _refundETH(uint256 needPay) private {
     uint256 refund = msg.value - needPay;
     if (refund > 0) {
       _transferEth(msg.sender, refund);
+    }
+  }
+
+  function _batchTransferEthToNFTOwners(address[] memory tos, uint256[] memory amounts) private {
+    for (uint256 i = 0; i < amounts.length; i++) {
+      _transferEth(tos[i], amounts[i]);
+    }
+  }
+
+  function _batchTransferERC20PayTokenToNFTOwners(address[] memory tos, uint256[] memory amounts) private {
+    for (uint256 i = 0; i < amounts.length; i++) {
+      _transferERC20PayToken(tos[i], amounts[i]);
     }
   }
 
@@ -638,25 +665,9 @@ contract Market is IMarket, ReentrancyGuard {
     }
   }
 
-  function _transferEthWithData(uint256 tokenId, address to, uint256 value) private {
-    _transferEth(to, value);
-    bool success = IPublicNFTVault(to).recordReceiveBuySellFee(tokenId, value);
-    require(success, "TEWDE");
-  }
-
   function _transferERC20PayToken(address to, uint256 value) private {
     if (value > 0) {
       SafeERC20.safeTransfer(IERC20(payToken), to, value);
     }
-  }
-
-  function _transferERC20PayTokenWithData(uint256 tokenId, address to, uint256 value) private {
-    _transferERC20PayToken(to, value);
-    bool success = IPublicNFTVault(to).recordReceiveBuySellFee(tokenId, value);
-    require(success, "TE2WDE");
-  }
-
-  function _mortgageFee(uint256 amount) private view returns (uint256) {
-    return (IFoundry(foundry).mortgageFee(appId) * amount) / feeDenominator;
   }
 }

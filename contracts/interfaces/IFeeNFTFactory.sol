@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.8.20;
 
-interface IPublicNFTFactory {
-  event Create(uint256 appId, string name, address publicNFT);
+interface IFeeNFTFactory {
+  event Create(uint256 appId, string name, address feeNFT);
 
   function foundry() external view returns (address);
 

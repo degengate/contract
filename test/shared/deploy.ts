@@ -1,30 +1,23 @@
 
-import { DegenGateAllContractInfo, deployDegenGateAllContract } from "./deploy_degen_gate";
-import { AppOperatorAllContractInfo, deployAppOperatorAllContract } from "./deploy_app_operator";
-import { HypeMemeAllContractInfo, deployHypeMemeAllContract } from "./deploy_hype_meme";
+
+import { deployCoreContract, CoreContractInfo } from "./deploy_foundry";
+import { deployXMemeAllContract, XMemeAllContractInfo } from "./deploy_xmeme";
 
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 export const MAX_UINT256 = BigInt(2) ** BigInt(256) - BigInt(1);
 
 export type AllContractInfo = {
-    degenGateInfo: DegenGateAllContractInfo
-    appOperatorAllContractInfo: AppOperatorAllContractInfo
-    sellFeeZeroappOperatorAllContractInfo: AppOperatorAllContractInfo
-    hypeMemeAllContractInfo: HypeMemeAllContractInfo
+    coreContractInfo: CoreContractInfo
+    xMemeAllContractInfo: XMemeAllContractInfo
 }
 
 export async function deployAllContracts(): Promise<AllContractInfo> {
-    let degenGateInfo = await deployDegenGateAllContract();
-
-    let hypeMemeAllContractInfo = await deployHypeMemeAllContract(degenGateInfo);
-
-    let appOperatorAllContractInfo = await deployAppOperatorAllContract(1000);
-    let sellFeeZeroappOperatorAllContractInfo = await deployAppOperatorAllContract(0);
+    let coreContractInfo = await deployCoreContract();
+    let xMemeAllContractInfo = await deployXMemeAllContract(coreContractInfo);
+    coreContractInfo.nextWalletIndex = xMemeAllContractInfo.nextWalletIndex
 
     return {
-        degenGateInfo: degenGateInfo,
-        appOperatorAllContractInfo: appOperatorAllContractInfo,
-        sellFeeZeroappOperatorAllContractInfo: sellFeeZeroappOperatorAllContractInfo,
-        hypeMemeAllContractInfo: hypeMemeAllContractInfo,
+        coreContractInfo: coreContractInfo,
+        xMemeAllContractInfo: xMemeAllContractInfo,
     }
 }

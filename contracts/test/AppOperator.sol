@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/IMarket.sol";
 import "../interfaces/IFoundry.sol";
-import "../interfaces/INFTClaim.sol";
 
 contract AppOperator {
   address public immutable foundry;
@@ -33,13 +32,13 @@ contract AppOperator {
   ) external returns (uint256 payTokenAmount) {
     _transferFromERC20PayTokenFromSender(address(this), payTokenAmountMax);
     _approvePayTokenToMarket();
-    payTokenAmount = IMarket(market).buyProxy(tid, tokenAmount, msg.sender);
+    // payTokenAmount = IMarket(market).buy(tid, tokenAmount, msg.sender);
 
     _refund(payTokenAmount, payTokenAmountMax);
   }
 
   function sell(string memory tid, uint256 tokenAmount) external returns (uint256 payTokenAmount) {
-    payTokenAmount = IMarket(market).sellProxy(tid, tokenAmount, msg.sender);
+    // payTokenAmount = IMarket(market).sell(tid, tokenAmount, msg.sender);
 
     _transferToSender(payTokenAmount);
   }
@@ -48,7 +47,7 @@ contract AppOperator {
     string memory tid,
     uint256 tokenAmount
   ) external returns (uint256 nftTokenId, uint256 payTokenAmount) {
-    (nftTokenId, payTokenAmount) = IMarket(market).mortgageProxy(tid, tokenAmount, msg.sender);
+    // (nftTokenId, payTokenAmount) = IMarket(market).mortgageProxy(tid, tokenAmount, msg.sender);
 
     _transferToSender(payTokenAmount);
   }
@@ -56,7 +55,7 @@ contract AppOperator {
   function mortgageAdd(uint256 nftTokenId, uint256 tokenAmount) external returns (uint256 payTokenAmount) {
     require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
 
-    payTokenAmount = IMarket(market).mortgageAddProxy(nftTokenId, tokenAmount);
+    // payTokenAmount = IMarket(market).mortgageAddProxy(nftTokenId, tokenAmount);
 
     _transferToSender(payTokenAmount);
   }
@@ -70,7 +69,7 @@ contract AppOperator {
 
     _transferFromERC20PayTokenFromSender(address(this), payTokenAmountMax);
     _approvePayTokenToMarket();
-    payTokenAmount = IMarket(market).redeemProxy(nftTokenId, tokenAmount);
+    // payTokenAmount = IMarket(market).redeemProxy(nftTokenId, tokenAmount);
 
     _refund(payTokenAmount, payTokenAmountMax);
   }
@@ -82,7 +81,7 @@ contract AppOperator {
   ) external returns (uint256 nftTokenId, uint256 payTokenAmount) {
     _transferFromERC20PayTokenFromSender(address(this), payTokenAmountMax);
     _approvePayTokenToMarket();
-    (nftTokenId, payTokenAmount) = IMarket(market).multiplyProxy(tid, multiplyAmount, msg.sender);
+    // (nftTokenId, payTokenAmount) = IMarket(market).multiplyProxy(tid, multiplyAmount, msg.sender);
 
     _refund(payTokenAmount, payTokenAmountMax);
   }
@@ -96,7 +95,7 @@ contract AppOperator {
 
     _transferFromERC20PayTokenFromSender(address(this), payTokenAmountMax);
     _approvePayTokenToMarket();
-    payTokenAmount = IMarket(market).multiplyAddProxy(nftTokenId, multiplyAmount);
+    // payTokenAmount = IMarket(market).multiplyAddProxy(nftTokenId, multiplyAmount);
 
     _refund(payTokenAmount, payTokenAmountMax);
   }
@@ -104,7 +103,7 @@ contract AppOperator {
   function cash(uint256 nftTokenId, uint256 tokenAmount) external returns (uint256 payTokenAmount) {
     require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE");
 
-    payTokenAmount = IMarket(market).cashProxy(nftTokenId, tokenAmount);
+    // payTokenAmount = IMarket(market).cashProxy(nftTokenId, tokenAmount);
 
     _transferToSender(payTokenAmount);
   }
@@ -113,7 +112,7 @@ contract AppOperator {
     require(IERC721(mortgageNFT).ownerOf(nftTokenId) == msg.sender, "AOE1");
     require(IERC721(mortgageNFT).ownerOf(otherNFTTokenId) == msg.sender, "AOE2");
 
-    payTokenAmount = IMarket(market).mergeProxy(nftTokenId, otherNFTTokenId);
+    // payTokenAmount = IMarket(market).mergeProxy(nftTokenId, otherNFTTokenId);
 
     _transferToSender(payTokenAmount);
   }
@@ -127,7 +126,7 @@ contract AppOperator {
 
     _transferFromERC20PayTokenFromSender(address(this), payTokenAmountMax);
     _approvePayTokenToMarket();
-    (payTokenAmount, newNFTTokenId) = IMarket(market).splitProxy(nftTokenId, splitAmount);
+    // (payTokenAmount, newNFTTokenId) = IMarket(market).splitProxy(nftTokenId, splitAmount);
 
     _refund(payTokenAmount, payTokenAmountMax);
   }

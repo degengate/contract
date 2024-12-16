@@ -8,7 +8,6 @@ import "base64-sol/base64.sol";
 
 import "./interfaces/IMortgageNFT.sol";
 import "./interfaces/INFTView.sol";
-import "./interfaces/IFoundry.sol";
 
 contract MortgageNFT is Ownable, IMortgageNFT, ERC721Enumerable {
   address public immutable override foundry;

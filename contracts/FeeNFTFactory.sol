@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.20;
 
-import "./PublicNFT.sol";
-import "./interfaces/IPublicNFTFactory.sol";
+import "./FeeNFT.sol";
+import "./interfaces/IFeeNFTFactory.sol";
 
-contract PublicNFTFactory is IPublicNFTFactory {
+contract FeeNFTFactory is IFeeNFTFactory {
   address public immutable override foundry;
 
   constructor(address _foundry) {
@@ -14,7 +14,7 @@ contract PublicNFTFactory is IPublicNFTFactory {
   function create(uint256 appId, string memory name, address owner) external override returns (address addr) {
     require(msg.sender == foundry, "onlyFoundry");
 
-    addr = address(new PublicNFT(foundry, appId, owner, string(abi.encodePacked(name, " Tax"))));
+    addr = address(new FeeNFT(foundry, appId, owner, string(abi.encodePacked(name, " Tax"))));
 
     emit Create(appId, name, addr);
   }

@@ -1,35 +1,28 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.8.20;
 
+import "./IFoundryData.sol";
+
 interface IFoundry {
-  struct App {
-    string name;
-    address owner;
-    address operator;
-    address publicNFT;
-    address mortgageNFT;
-    address market;
-    address payToken;
+  struct AppFeeParams {
+    // app owner buy sell fee
+    uint256 appOwnerBuyFee;
+    uint256 appOwnerSellFee;
+    // app owner mortgage fee
+    uint256 appOwnerMortgageFee;
+    // app owner all fee recipient
+    address appOwnerFeeRecipient;
+    // nft owner buy sell fee
+    uint256 nftOwnerBuyFee;
+    uint256 nftOwnerSellFee;
   }
 
-  event CreateApp(
-    uint256 appId,
-    string name,
-    address owner,
-    address operator,
-    address curve,
-    address payToken,
-    uint256 buyFee,
-    uint256 sellFee,
-    address publicNFT,
-    address mortgageNFT,
-    address market,
-    address sender
-  );
+  event CreateApp(uint256 appId, IFoundryData.App app, IFoundryData.AppFee appFee, address sender);
 
   event CreateToken(
     uint256 appId,
     string tid,
+    address token,
     bytes tData,
     uint256[] nftTokenIds,
     uint256[] nftPercents,
@@ -38,33 +31,45 @@ interface IFoundry {
     address sender
   );
 
+  event SetAppOperator(uint256 appId, address operator, address sender);
+
   event SetAppOwner(uint256 appId, address newOwner, address sender);
 
-  event SetMortgageFee(uint256 appId, uint256 newMortgageFee, address sender);
+  event SetAppOwnerFeeRecipient(uint256 appId, address newAppOwnerFeeRecipient, address sender);
 
-  event SetMortgageFeeRecipient(uint256 appId, address newMortgageFeeOwner, address sender);
+  event UpdateCurveFactoryWhitelist(address factory, bool enabled, address sender);
+
+  event SetPlatformMortgageFee(uint256 appId, uint256 newMortgageFee, address sender);
+
+  event SetPlatformMortgageFeeRecipient(uint256 appId, address newMortgageFeeOwner, address sender);
 
   function FEE_DENOMINATOR() external view returns (uint256);
 
   function TOTAL_PERCENT() external view returns (uint256);
 
-  function publicNFTFactory() external view returns (address);
+  function foundryData() external view returns (address);
+
+  function feeNFTFactory() external view returns (address);
 
   function mortgageNFTFactory() external view returns (address);
 
   function marketFactory() external view returns (address);
 
-  function nextAppId() external view returns (uint256);
+  function tokenFactory() external view returns (address);
 
   function defaultMortgageFee() external view returns (uint256);
 
   function defaultMortgageFeeRecipient() external view returns (address);
 
-  function mortgageFee(uint256 appId) external view returns (uint256);
+  function curveFactoryWhitelist(address addr) external view returns (bool);
 
-  function mortgageFeeRecipient(uint256 appId) external view returns (address);
+  function nextAppId() external view returns (uint256);
 
-  function apps(uint256 appId) external view returns (App memory app);
+  function apps(uint256 appId) external view returns (IFoundryData.App memory app);
+
+  function appFees(uint256 appId) external view returns (IFoundryData.AppFee memory appFee);
+
+  function token(uint256 appId, string memory tid) external view returns (address);
 
   function tokenExist(uint256 appId, string memory tid) external view returns (bool);
 
@@ -73,11 +78,10 @@ interface IFoundry {
   function createApp(
     string memory name,
     address owner,
-    address operator,
-    address curve,
+    address _curveFactory,
+    bytes memory _curveParams,
     address payToken,
-    uint256 buyFee,
-    uint256 sellFee
+    AppFeeParams memory appFeeParams
   ) external;
 
   function createToken(
@@ -87,11 +91,17 @@ interface IFoundry {
     uint256[] memory nftPercents,
     address[] memory nftOwners,
     bytes[] memory nftData
-  ) external returns (uint256[] memory tokenIds);
+  ) external returns (address tokenAddr, uint256[] memory tokenIds);
+
+  function setAppOperator(uint256 appId, address operator) external;
 
   function setAppOwner(uint256 appId, address newOwner) external;
 
-  function setMortgageFee(uint256 appId, uint256 newMortgageFee) external;
+  function setAppOwnerFeeRecipient(uint256 appId, address newAppOwnerFeeRecipient) external;
 
-  function setMortgageFeeRecipient(uint256 appId, address newMortgageFeeRecipient) external;
+  function updateCurveFactoryWhitelist(address factory, bool enabled) external;
+
+  function setPlatformMortgageFee(uint256 appId, uint256 newMortgageFee) external;
+
+  function setPlatformMortgageFeeRecipient(uint256 appId, address newMortgageFeeRecipient) external;
 }
