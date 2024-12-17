@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "./interfaces/IToken.sol";
 
-contract Token is ERC20, IToken {
+contract Token is IToken, ERC20 {
   address public immutable override market;
   string public override tid;
 

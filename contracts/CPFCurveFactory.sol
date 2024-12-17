@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.20;
 
-import "./interfaces/ICurve.sol";
-import "./interfaces/ICurveFactory.sol";
-
 import "./CPFCurve.sol";
+import "./interfaces/ICurveFactory.sol";
 
 contract CPFCurveFactory is ICurveFactory {
   address public immutable override foundry;

@@ -9,7 +9,7 @@ import "base64-sol/base64.sol";
 import "./interfaces/IFeeNFT.sol";
 import "./interfaces/INFTView.sol";
 
-contract FeeNFT is Ownable, IFeeNFT, ERC721Enumerable {
+contract FeeNFT is IFeeNFT, Ownable, ERC721Enumerable {
   address public immutable override foundry;
   uint256 public immutable override appId;
 
