@@ -4,23 +4,21 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 describe("MarketFactory", function () {
   it("deploy", async function () {
-    const info = (await loadFixture(deployAllContracts)).appOperatorAllContractInfo;
+    const info = (await loadFixture(deployAllContracts)).coreContractInfo;
 
     expect(await info.marketFactory.foundry()).eq(await info.foundry.getAddress());
   });
 
   it("create", async function () {
-    const info = (await loadFixture(deployAllContracts)).appOperatorAllContractInfo;
+    const info = (await loadFixture(deployAllContracts));
 
     await expect(
-      info.marketFactory.create(
-        info.appId,
-        await info.foundry.FEE_DENOMINATOR(),
-        await info.foundry.TOTAL_PERCENT(),
-        await info.curve.getAddress(),
-        ZERO_ADDRESS,
-        info.buyFee,
-        info.sellFee,
+      info.coreContractInfo.marketFactory.create(
+        info.xMemeAllContractInfo.appId,
+        await info.coreContractInfo.foundry.FEE_DENOMINATOR(),
+        await info.coreContractInfo.foundry.TOTAL_PERCENT(),
+        await info.xMemeAllContractInfo.curve.getAddress(),
+        ZERO_ADDRESS
       ),
     ).revertedWith("onlyFoundry");
   });

@@ -32,8 +32,6 @@ interface IMortgageNFT {
 
   function initialize(address market) external;
 
-  function isApprovedOrOwner(address addr, uint256 tokenId) external view returns (bool);
-
   function mint(address to, string memory tid, uint256 amount) external returns (uint256 tokenId);
 
   function burn(uint256 tokenId) external;

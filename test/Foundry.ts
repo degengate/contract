@@ -1,696 +1,989 @@
-import { ethers } from "hardhat";
 import { deployAllContracts, ZERO_ADDRESS } from "./shared/deploy";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { Curve, PublicNFT } from "../typechain-types";
-
-// degen gate + hype meme
-const initNextAppId = 3
+import { ethers } from "hardhat";
+import { ZeroAddress } from "ethers";
+import { FeeNFT, SimpleToken } from "../typechain-types";
 
 describe("Foundry", function () {
   it("deploy", async function () {
-    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
+    const info = (await loadFixture(deployAllContracts));
+    let foundry = info.coreContractInfo.foundry;
 
-    expect(await info.foundry.FEE_DENOMINATOR()).eq(100000);
-    expect(await info.foundry.TOTAL_PERCENT()).eq(100000);
+    expect(await foundry.FEE_DENOMINATOR()).eq(100000);
+    expect(await foundry.TOTAL_PERCENT()).eq(100000);
 
-    expect(await info.foundry.publicNFTFactory()).eq(await info.publicNFTFactory.getAddress());
-    expect(await info.foundry.mortgageNFTFactory()).eq(await info.mortgageNFTFactory.getAddress());
-    expect(await info.foundry.marketFactory()).eq(await info.marketFactory.getAddress());
+    expect(await foundry.foundryData()).eq(await info.coreContractInfo.foundryData.getAddress());
 
-    expect(await info.foundry.defaultMortgageFee()).eq(info.mortgageFee);
-    expect(await info.foundry.defaultMortgageFeeRecipient()).eq(info.mortgageFeeWallet.address);
+    expect(await foundry.isInitialized()).eq(true);
 
-    expect(await info.foundry.nextAppId()).eq(initNextAppId);
+    expect(await foundry.feeNFTFactory()).eq(await info.coreContractInfo.feeNFTFactory.getAddress());
+    expect(await foundry.mortgageNFTFactory()).eq(await info.coreContractInfo.mortgageNFTFactory.getAddress());
+    expect(await foundry.marketFactory()).eq(await info.coreContractInfo.marketFactory.getAddress());
+    expect(await foundry.tokenFactory()).eq(await info.coreContractInfo.tokenFactory.getAddress());
 
-    expect(await info.foundry.mortgageFee(info.appId)).eq(info.mortgageFee);
-    expect(await info.foundry.mortgageFeeRecipient(info.appId)).eq(info.mortgageFeeWallet.address);
+    expect(await foundry.defaultMortgageFee()).eq(info.coreContractInfo.defaultMortgageFee);
+    expect(await foundry.defaultMortgageFeeRecipient()).eq(info.coreContractInfo.defaultMortgageFeeWallet.address);
 
-    expect(await info.foundry.owner()).eq(await info.deployWallet.getAddress());
+    expect(await foundry.curveFactoryWhitelist(await info.coreContractInfo.cpfCurveFactory.getAddress())).eq(true);
+    expect(await foundry.curveFactoryWhitelist(ZERO_ADDRESS)).eq(false);
 
-    let degenGateInfo = await info.foundry.apps(info.appId);
-    expect(degenGateInfo.name).eq(info.appName);
-    expect(degenGateInfo.owner).eq(info.degenGateOwnerWallet.address).not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.operator)
-      .eq(await info.degenGate.getAddress())
-      .not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.publicNFT)
-      .eq(await info.publicNFT.getAddress())
-      .not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.mortgageNFT)
-      .eq(await info.mortgageNFT.getAddress())
-      .not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.market)
-      .eq(await info.market.getAddress())
-      .not.eq(ZERO_ADDRESS);
+    expect(await foundry.nextAppId()).eq(2);
+
+    expect(await foundry.owner()).eq(await info.coreContractInfo.deployWallet.getAddress());
+
+    let xmemeInfo = await foundry.apps(1);
+    expect(xmemeInfo.name).eq(info.xMemeAllContractInfo.appName);
+
+    await expect(foundry.apps(0)).revertedWith("AE");
+    await expect(foundry.apps(2)).revertedWith("AE");
   });
 
-  it("apps", async function () {
-    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
+  it("createApp curveFactoryWhitelist", async function () {
+    const info = (await loadFixture(deployAllContracts));
+    let foundry = info.coreContractInfo.foundry;
 
-    let degenGateInfo = await info.foundry.apps(info.appId);
-    expect(degenGateInfo.name).eq(info.appName);
-    expect(degenGateInfo.owner).eq(info.degenGateOwnerWallet.address).not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.operator)
-      .eq(await info.degenGate.getAddress())
-      .not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.publicNFT)
-      .eq(await info.publicNFT.getAddress())
-      .not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.mortgageNFT)
-      .eq(await info.mortgageNFT.getAddress())
-      .not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.market)
-      .eq(await info.market.getAddress())
-      .not.eq(ZERO_ADDRESS);
+    let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex];
 
-    let emptyInfo0 = await info.foundry.apps(0);
-    expect(emptyInfo0.name).eq("");
-    expect(emptyInfo0.owner).eq(ZERO_ADDRESS);
-    expect(emptyInfo0.operator).eq(ZERO_ADDRESS);
-    expect(emptyInfo0.publicNFT).eq(ZERO_ADDRESS);
-    expect(emptyInfo0.mortgageNFT).eq(ZERO_ADDRESS);
-    expect(emptyInfo0.market).eq(ZERO_ADDRESS);
+    expect(await foundry.curveFactoryWhitelist(await info.coreContractInfo.cpfCurveFactory.getAddress())).eq(true);
+    expect(await foundry.curveFactoryWhitelist(ZERO_ADDRESS)).eq(false);
 
-    let emptyInfo2 = await info.foundry.apps(initNextAppId);
-    expect(emptyInfo2.name).eq("");
-    expect(emptyInfo2.owner).eq(ZERO_ADDRESS);
-    expect(emptyInfo2.operator).eq(ZERO_ADDRESS);
-    expect(emptyInfo2.publicNFT).eq(ZERO_ADDRESS);
-    expect(emptyInfo2.mortgageNFT).eq(ZERO_ADDRESS);
-    expect(emptyInfo2.market).eq(ZERO_ADDRESS);
+    await expect(
+      foundry.connect(user1).updateCurveFactoryWhitelist(await info.coreContractInfo.cpfCurveFactory.getAddress(), false)
+    ).revertedWithCustomError(foundry, "OwnableUnauthorizedAccount");
 
-    // deploy curve
-    let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
+    await foundry.connect(info.coreContractInfo.deployWallet).updateCurveFactoryWhitelist(await info.coreContractInfo.cpfCurveFactory.getAddress(), false)
 
-    let buyFee = info.buyFee + 11;
-    let sellFee = info.sellFee + 12;
-    // create app
-    let app2OwnerWallet = info.wallets[info.nextWalletIndex];
-    let app2OperatorWallet = info.wallets[info.nextWalletIndex + 1];
-    let tx = await info.foundry.createApp(
-      "app2",
-      app2OwnerWallet.address,
-      app2OperatorWallet.address,
-      await curve.getAddress(),
-      ZERO_ADDRESS,
-      buyFee,
-      sellFee
-    );
-    console.log("publicNFTFactory ", await info.publicNFTFactory.getAddress())
+    expect(await foundry.curveFactoryWhitelist(await info.coreContractInfo.cpfCurveFactory.getAddress())).eq(false);
+    expect(await foundry.curveFactoryWhitelist(ZERO_ADDRESS)).eq(false);
 
-    await expect(tx)
-      .to.emit(info.foundry, "CreateApp")
-      .withArgs(
-        initNextAppId,
+    let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+      ["uint256", "uint256"],
+      [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+    )
+
+    await expect(
+      foundry.createApp(
         "app2",
-        app2OwnerWallet.address,
-        app2OperatorWallet.address,
-        await curve.getAddress(),
+        info.coreContractInfo.deployWallet.address,
+        await info.coreContractInfo.cpfCurveFactory.getAddress(),
+        curveParams,
         ZERO_ADDRESS,
-        buyFee,
-        sellFee,
-        "0x5392A33F7F677f59e833FEBF4016cDDD88fF9E67",
-        "0xB1eDe3F5AC8654124Cb5124aDf0Fd3885CbDD1F7",
-        "0x3dE2Da43d4c1B137E385F36b400507c1A24401f8",
-        info.deployWallet.address,
-      );
+        {
+          appOwnerBuyFee: 100,
+          appOwnerSellFee: 200,
+          appOwnerMortgageFee: 300,
+          appOwnerFeeRecipient: info.coreContractInfo.deployWallet.address,
+          nftOwnerBuyFee: 400,
+          nftOwnerSellFee: 500,
+        })
+    ).revertedWith("CFWE");
 
-    degenGateInfo = await info.foundry.apps(info.appId);
-    expect(degenGateInfo.name).eq(info.appName);
-    expect(degenGateInfo.owner).eq(info.degenGateOwnerWallet.address).not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.operator)
-      .eq(await info.degenGate.getAddress())
-      .not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.publicNFT)
-      .eq(await info.publicNFT.getAddress())
-      .not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.mortgageNFT)
-      .eq(await info.mortgageNFT.getAddress())
-      .not.eq(ZERO_ADDRESS);
-    expect(degenGateInfo.market)
-      .eq(await info.market.getAddress())
-      .not.eq(ZERO_ADDRESS);
+    await foundry.connect(info.coreContractInfo.deployWallet).updateCurveFactoryWhitelist(await info.coreContractInfo.cpfCurveFactory.getAddress(), true)
 
-    emptyInfo0 = await info.foundry.apps(0);
-    expect(emptyInfo0.name).eq("");
-    expect(emptyInfo0.owner).eq(ZERO_ADDRESS);
-    expect(emptyInfo0.operator).eq(ZERO_ADDRESS);
-    expect(emptyInfo0.publicNFT).eq(ZERO_ADDRESS);
-    expect(emptyInfo0.mortgageNFT).eq(ZERO_ADDRESS);
-    expect(emptyInfo0.market).eq(ZERO_ADDRESS);
+    await foundry.createApp(
+      "app2",
+      info.coreContractInfo.deployWallet.address,
+      await info.coreContractInfo.cpfCurveFactory.getAddress(),
+      curveParams,
+      ZERO_ADDRESS,
+      {
+        appOwnerBuyFee: 100,
+        appOwnerSellFee: 200,
+        appOwnerMortgageFee: 300,
+        appOwnerFeeRecipient: info.coreContractInfo.deployWallet.address,
+        nftOwnerBuyFee: 400,
+        nftOwnerSellFee: 500,
+      });
+    expect((await foundry.apps(2)).name).eq("app2");
 
-    let info2 = await info.foundry.apps(initNextAppId);
-    expect(info2.name).eq("app2");
-    expect(info2.owner).eq(app2OwnerWallet.address);
-    expect(info2.operator).eq(app2OperatorWallet.address);
-    expect(info2.publicNFT).not.eq(ZERO_ADDRESS);
-    expect(info2.mortgageNFT).not.eq(ZERO_ADDRESS);
-    expect(info2.market).not.eq(ZERO_ADDRESS);
+    await foundry.connect(info.coreContractInfo.deployWallet).updateCurveFactoryWhitelist(await info.coreContractInfo.cpfCurveFactory.getAddress(), false)
+
+    await expect(
+      foundry.createApp(
+        "app2",
+        info.coreContractInfo.deployWallet.address,
+        await info.coreContractInfo.cpfCurveFactory.getAddress(),
+        curveParams,
+        ZERO_ADDRESS,
+        {
+          appOwnerBuyFee: 100,
+          appOwnerSellFee: 200,
+          appOwnerMortgageFee: 300,
+          appOwnerFeeRecipient: info.coreContractInfo.deployWallet.address,
+          nftOwnerBuyFee: 400,
+          nftOwnerSellFee: 500,
+        })
+    ).revertedWith("CFWE");
+
+    await foundry.connect(info.coreContractInfo.deployWallet).updateCurveFactoryWhitelist(ZeroAddress, true)
+
+    await foundry.createApp(
+      "app3",
+      info.coreContractInfo.deployWallet.address,
+      await info.coreContractInfo.cpfCurveFactory.getAddress(),
+      curveParams,
+      ZERO_ADDRESS,
+      {
+        appOwnerBuyFee: 100,
+        appOwnerSellFee: 200,
+        appOwnerMortgageFee: 300,
+        appOwnerFeeRecipient: info.coreContractInfo.deployWallet.address,
+        nftOwnerBuyFee: 400,
+        nftOwnerSellFee: 500,
+      });
+    expect((await foundry.apps(3)).name).eq("app3");
+
   });
 
-  it("setMortgageFee mortgageFee", async function () {
-    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
+  it("nextAppId apps appFees", async function () {
+    const info = (await loadFixture(deployAllContracts));
+    let foundry = info.coreContractInfo.foundry;
+    let foundryData = info.coreContractInfo.foundryData;
 
-    expect(await info.foundry.mortgageFee(info.appId)).eq(info.mortgageFee);
-    expect(await info.foundry.mortgageFee(0)).eq(0);
-    expect(await info.foundry.mortgageFee(initNextAppId)).eq(0);
+    let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex];
 
-    // deploy curve
-    let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
+    await foundryData.connect(info.xMemeAllContractInfo.deployWallet).updateFoundryWhitelist(user1.address, true)
+    expect(await foundryData.foundryWhitelist(user1.address)).eq(true);
 
-    let buyFee = info.buyFee + 11;
-    let sellFee = info.sellFee + 12;
-    // create app
-    let app2OwnerWallet = info.wallets[info.nextWalletIndex];
-    let app2OperatorWallet = info.wallets[info.nextWalletIndex + 1];
-    await info.foundry.createApp(
-      "app2",
-      app2OwnerWallet.address,
-      app2OperatorWallet.address,
-      await curve.getAddress(),
-      ZERO_ADDRESS,
-      buyFee,
-      sellFee,
-    );
+    let app2_name = "app2";
+    let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2].address;
+    let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3].address;
+    let app2_curve = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4].address;
+    let app2_feeNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5].address;
+    let app2_mortgageNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6].address;
+    let app2_market = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7].address;
+    let app2_payToken = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 8].address;
 
-    let newOwner = info.wallets[info.nextWalletIndex + 2];
-    expect(await info.foundry.owner()).eq(info.deployWallet.address);
-    await info.foundry.connect(info.deployWallet).transferOwnership(newOwner.address);
-    expect(await info.foundry.owner()).eq(newOwner.address);
-    await expect(
-      info.foundry.connect(info.deployWallet).transferOwnership(newOwner.address)
-    ).revertedWithCustomError(info.foundry, "OwnableUnauthorizedAccount")
+    let app2_appOwnerBuyFee = 100;
+    let app2_appOwnerSellFee = 200;
+    let app2_appOwnerMortgageFee = 300;
+    let app2_appOwnerFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 10].address;;
+    let app2_nftOwnerBuyFee = 400;
+    let app2_nftOwnerSellFee = 500;
+    let app2_platformMortgageFee = 600;
+    let app2_platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 11].address;
 
-    expect(await info.foundry.mortgageFee(info.appId)).eq(info.mortgageFee);
-    expect(await info.foundry.mortgageFee(0)).eq(0);
-    expect(await info.foundry.mortgageFee(2)).eq(info.mortgageFee);
+    await foundryData.connect(user1).createApp({
+      name: app2_name,
+      owner: app2_owner,
+      operator: app2_operator,
+      curve: app2_curve,
+      feeNFT: app2_feeNFT,
+      mortgageNFT: app2_mortgageNFT,
+      market: app2_market,
+      payToken: app2_payToken,
+      foundry: user1.address,
+    }, {
+      appOwnerBuyFee: app2_appOwnerBuyFee,
+      appOwnerSellFee: app2_appOwnerSellFee,
+      appOwnerMortgageFee: app2_appOwnerMortgageFee,
+      appOwnerFeeRecipient: app2_appOwnerFeeRecipient,
+      nftOwnerBuyFee: app2_nftOwnerBuyFee,
+      nftOwnerSellFee: app2_nftOwnerSellFee,
+      platformMortgageFee: app2_platformMortgageFee,
+      platformMortgageFeeRecipient: app2_platformMortgageFeeRecipient,
+    });
 
-    let newMortgageFee = info.mortgageFee + 1;
-    await expect(
-      info.foundry.connect(info.deployWallet).setMortgageFee(info.appId, newMortgageFee)
-    ).revertedWithCustomError(info.foundry, "OwnableUnauthorizedAccount")
+    expect(await foundry.nextAppId()).eq(3);
+    expect(await foundryData.nextAppId()).eq(3);
 
-    await info.foundry.connect(newOwner).setMortgageFee(info.appId, newMortgageFee);
-    expect(await info.foundry.mortgageFee(info.appId)).eq(newMortgageFee);
-    expect(await info.foundry.mortgageFee(0)).eq(0);
-    expect(await info.foundry.mortgageFee(2)).eq(info.mortgageFee);
+    await expect(foundry.apps(2)).revertedWith("AE");
+    expect((await foundryData.apps(2)).name).eq(app2_name);
+
+    await expect(foundry.appFees(2)).revertedWith("AE");
+    expect((await foundryData.appFees(2)).appOwnerBuyFee).eq(app2_appOwnerBuyFee);
   });
 
-  it("mortgageFeeRecipient", async function () {
-    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
+  it("setAppOperator", async function () {
+    const info = (await loadFixture(deployAllContracts));
+    let foundry = info.coreContractInfo.foundry;
+    let foundryData = info.coreContractInfo.foundryData;
 
-    expect(await info.foundry.mortgageFeeRecipient(info.appId)).eq(info.mortgageFeeWallet.address);
-    expect(await info.foundry.mortgageFeeRecipient(0)).eq(ZERO_ADDRESS);
-    expect(await info.foundry.mortgageFeeRecipient(initNextAppId)).eq(ZERO_ADDRESS);
+    let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex];
 
-    // deploy curve
-    let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
+    await foundryData.connect(info.xMemeAllContractInfo.deployWallet).updateFoundryWhitelist(user1.address, true)
+    expect(await foundryData.foundryWhitelist(user1.address)).eq(true);
 
-    let buyFee = info.buyFee + 11;
-    let sellFee = info.sellFee + 12;
-    // create app
-    let app2OwnerWallet = info.wallets[info.nextWalletIndex];
-    let app2OperatorWallet = info.wallets[info.nextWalletIndex + 1];
-    await info.foundry.createApp(
-      "app2",
-      app2OwnerWallet.address,
-      app2OperatorWallet.address,
-      await curve.getAddress(),
-      ZERO_ADDRESS,
-      buyFee,
-      sellFee,
-    );
+    let app2_name = "app2";
+    let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+    let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3];
+    let app2_curve = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4];
+    let app2_feeNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5];
+    let app2_mortgageNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6];
+    let app2_market = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7];
+    let app2_payToken = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 8];
 
-    let newOwner = info.wallets[info.nextWalletIndex + 2];
-    expect(await info.foundry.owner()).eq(info.deployWallet.address);
-    await info.foundry.connect(info.deployWallet).transferOwnership(newOwner.address);
-    expect(await info.foundry.owner()).eq(newOwner.address);
-    await expect(
-      info.foundry.connect(info.deployWallet).transferOwnership(newOwner.address)
-    ).revertedWithCustomError(info.foundry, "OwnableUnauthorizedAccount")
+    let app2_appOwnerBuyFee = 100;
+    let app2_appOwnerSellFee = 200;
+    let app2_appOwnerMortgageFee = 300;
+    let app2_appOwnerFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 10];;
+    let app2_nftOwnerBuyFee = 400;
+    let app2_nftOwnerSellFee = 500;
+    let app2_platformMortgageFee = 600;
+    let app2_platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 11];
 
-    expect(await info.foundry.mortgageFeeRecipient(info.appId)).eq(info.mortgageFeeWallet.address);
-    expect(await info.foundry.mortgageFeeRecipient(0)).eq(ZERO_ADDRESS);
-    expect(await info.foundry.mortgageFeeRecipient(initNextAppId)).eq(info.mortgageFeeWallet.address);
+    await foundryData.connect(user1).createApp({
+      name: app2_name,
+      owner: app2_owner,
+      operator: ZeroAddress,
+      curve: app2_curve,
+      feeNFT: app2_feeNFT,
+      mortgageNFT: app2_mortgageNFT,
+      market: app2_market,
+      payToken: app2_payToken,
+      foundry: user1.address,
+    }, {
+      appOwnerBuyFee: app2_appOwnerBuyFee,
+      appOwnerSellFee: app2_appOwnerSellFee,
+      appOwnerMortgageFee: app2_appOwnerMortgageFee,
+      appOwnerFeeRecipient: app2_appOwnerFeeRecipient,
+      nftOwnerBuyFee: app2_nftOwnerBuyFee,
+      nftOwnerSellFee: app2_nftOwnerSellFee,
+      platformMortgageFee: app2_platformMortgageFee,
+      platformMortgageFeeRecipient: app2_platformMortgageFeeRecipient,
+    });
 
-    let newMortgageFeeRecipient = info.wallets[info.nextWalletIndex + 2];
-    await expect(
-      info.foundry.connect(info.deployWallet).setMortgageFeeRecipient(info.appId, newMortgageFeeRecipient.address),
-    ).revertedWithCustomError(info.foundry, "OwnableUnauthorizedAccount")
+    expect(await foundry.nextAppId()).eq(3);
+    expect(await foundryData.nextAppId()).eq(3);
 
-    await info.foundry.connect(newOwner).setMortgageFeeRecipient(info.appId, newMortgageFeeRecipient.address);
+    let app3_name = "app3";
+    let app3_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 12];
+    let app3_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 13];
 
-    expect(newMortgageFeeRecipient).not.eq(info.mortgageFeeWallet.address);
-    expect(await info.foundry.mortgageFeeRecipient(info.appId)).eq(newMortgageFeeRecipient.address);
-    expect(await info.foundry.mortgageFeeRecipient(0)).eq(ZERO_ADDRESS);
-    expect(await info.foundry.mortgageFeeRecipient(initNextAppId)).eq(info.mortgageFeeWallet.address);
-  });
+    let app3_payToken = (await (
+      await ethers.getContractFactory("SimpleToken")
+    ).deploy(BigInt(10) ** BigInt(27))) as SimpleToken;
 
-  it("nextappid", async function () {
-    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
+    let app3_fees = {
+      appOwnerBuyFee: 200,
+      appOwnerSellFee: 300,
+      appOwnerMortgageFee: 400,
+      appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 14],
+      nftOwnerBuyFee: 500,
+      nftOwnerSellFee: 600,
+    }
 
-    expect(await info.foundry.nextAppId()).eq(initNextAppId);
+    let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+      ["uint256", "uint256"],
+      [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+    )
 
-    // deploy curve
-    let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
+    await foundry.createApp(
+      app3_name,
+      app3_owner,
+      await info.coreContractInfo.cpfCurveFactory.getAddress(),
+      curveParams,
+      app3_payToken,
+      app3_fees);
+    expect((await foundry.apps(3)).name).eq(app3_name);
 
-    let buyFee = info.buyFee + 11;
-    let sellFee = info.sellFee + 12;
-    // create app
-    let app2OwnerWallet = info.wallets[info.nextWalletIndex];
-    let app2OperatorWallet = info.wallets[info.nextWalletIndex + 1];
-    await info.foundry.createApp(
-      "app2",
-      app2OwnerWallet.address,
-      app2OperatorWallet.address,
-      await curve.getAddress(),
-      ZERO_ADDRESS,
-      buyFee,
-      sellFee,
-    );
+    expect(await foundry.nextAppId()).eq(4);
+    expect(await foundryData.nextAppId()).eq(4);
 
-    expect(await info.foundry.nextAppId()).eq(initNextAppId + 1);
+    await expect(foundry.setAppOperator(2, app2_operator)).revertedWith("AE");
+    await expect(foundry.setAppOperator(3, app3_operator)).revertedWith("AOE");
+
+    await expect(foundry.connect(app2_owner).setAppOperator(2, app2_operator)).revertedWith("AE");
+    await foundry.connect(app3_owner).setAppOperator(3, app3_operator)
+    await expect(foundry.connect(app3_owner).setAppOperator(3, app2_operator)).revertedWith("AOPE");
+
+    expect((await foundry.apps(3)).operator).eq(app3_operator);
+
   });
 
   it("setAppOwner", async function () {
-    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
+    const info = (await loadFixture(deployAllContracts));
+    let foundry = info.coreContractInfo.foundry;
+    let foundryData = info.coreContractInfo.foundryData;
 
-    expect((await info.foundry.apps(info.appId)).owner).eq(info.degenGateOwnerWallet.address);
+    let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex];
 
-    let newAppOwnerWallet = info.wallets[info.nextWalletIndex];
-    await expect(info.foundry.setAppOwner(info.appId, newAppOwnerWallet.address)).revertedWith("AOE");
+    await foundryData.connect(info.xMemeAllContractInfo.deployWallet).updateFoundryWhitelist(user1.address, true)
+    expect(await foundryData.foundryWhitelist(user1.address)).eq(true);
 
-    await info.foundry.connect(info.degenGateOwnerWallet).setAppOwner(info.appId, newAppOwnerWallet.address);
+    let app2_name = "app2";
+    let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+    let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3];
+    let app2_curve = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4];
+    let app2_feeNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5];
+    let app2_mortgageNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6];
+    let app2_market = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7];
+    let app2_payToken = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 8];
 
-    expect((await info.foundry.apps(info.appId)).owner).eq(newAppOwnerWallet.address);
-    expect(info.degenGateOwnerWallet.address).not.eq(newAppOwnerWallet.address);
+    let app2_appOwnerBuyFee = 100;
+    let app2_appOwnerSellFee = 200;
+    let app2_appOwnerMortgageFee = 300;
+    let app2_appOwnerFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 10];;
+    let app2_nftOwnerBuyFee = 400;
+    let app2_nftOwnerSellFee = 500;
+    let app2_platformMortgageFee = 600;
+    let app2_platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 11];
 
-    await expect(
-      info.foundry.connect(info.degenGateOwnerWallet).setAppOwner(info.appId, newAppOwnerWallet.address),
-    ).revertedWith("AOE");
+    await foundryData.connect(user1).createApp({
+      name: app2_name,
+      owner: app2_owner,
+      operator: ZeroAddress,
+      curve: app2_curve,
+      feeNFT: app2_feeNFT,
+      mortgageNFT: app2_mortgageNFT,
+      market: app2_market,
+      payToken: app2_payToken,
+      foundry: user1.address,
+    }, {
+      appOwnerBuyFee: app2_appOwnerBuyFee,
+      appOwnerSellFee: app2_appOwnerSellFee,
+      appOwnerMortgageFee: app2_appOwnerMortgageFee,
+      appOwnerFeeRecipient: app2_appOwnerFeeRecipient,
+      nftOwnerBuyFee: app2_nftOwnerBuyFee,
+      nftOwnerSellFee: app2_nftOwnerSellFee,
+      platformMortgageFee: app2_platformMortgageFee,
+      platformMortgageFeeRecipient: app2_platformMortgageFeeRecipient,
+    });
 
-    await info.foundry.connect(newAppOwnerWallet).setAppOwner(info.appId, newAppOwnerWallet.address);
+    expect(await foundry.nextAppId()).eq(3);
+    expect(await foundryData.nextAppId()).eq(3);
+
+    let app3_name = "app3";
+    let app3_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 12];
+    let app3_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 13];
+
+    let app3_payToken = (await (
+      await ethers.getContractFactory("SimpleToken")
+    ).deploy(BigInt(10) ** BigInt(27))) as SimpleToken;
+
+    let app3_fees = {
+      appOwnerBuyFee: 200,
+      appOwnerSellFee: 300,
+      appOwnerMortgageFee: 400,
+      appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 14],
+      nftOwnerBuyFee: 500,
+      nftOwnerSellFee: 600,
+    }
+
+    let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+      ["uint256", "uint256"],
+      [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+    )
+
+    await foundry.createApp(
+      app3_name,
+      app3_owner,
+      await info.coreContractInfo.cpfCurveFactory.getAddress(),
+      curveParams,
+      app3_payToken,
+      app3_fees);
+    expect((await foundry.apps(3)).name).eq(app3_name);
+
+    expect(await foundry.nextAppId()).eq(4);
+    expect(await foundryData.nextAppId()).eq(4);
+
+    await expect(foundry.setAppOwner(2, app2_operator)).revertedWith("AE");
+    await expect(foundry.setAppOwner(3, app3_operator)).revertedWith("AOE");
+
+    await expect(foundry.connect(app2_owner).setAppOwner(2, app2_operator)).revertedWith("AE");
+    await foundry.connect(app3_owner).setAppOwner(3, app2_owner)
+    expect((await foundry.apps(3)).owner).eq(app2_owner);
+    await expect(foundry.connect(app3_owner).setAppOwner(3, app3_owner)).revertedWith("AOE");
+    await foundry.connect(app2_owner).setAppOwner(3, app3_owner)
+    expect((await foundry.apps(3)).owner).eq(app3_owner);
   });
 
-  it("createToken", async function () {
-    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
+  it("setAppOwnerFeeRecipient", async function () {
+    const info = (await loadFixture(deployAllContracts));
+    let foundry = info.coreContractInfo.foundry;
+    let foundryData = info.coreContractInfo.foundryData;
 
-    expect((await info.foundry.apps(info.appId)).operator).eq(await info.degenGate.getAddress());
+    let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex];
 
-    // create app
-    let app2OwnerWallet = info.wallets[info.nextWalletIndex + 1];
-    let app2OperatorWallet = info.wallets[info.nextWalletIndex + 2];
+    await foundryData.connect(info.xMemeAllContractInfo.deployWallet).updateFoundryWhitelist(user1.address, true)
+    expect(await foundryData.foundryWhitelist(user1.address)).eq(true);
 
-    let newAppid_2 = initNextAppId;
+    let app2_name = "app2";
+    let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+    let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3];
+    let app2_curve = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4];
+    let app2_feeNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5];
+    let app2_mortgageNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6];
+    let app2_market = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7];
+    let app2_payToken = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 8];
+
+    let app2_appOwnerBuyFee = 100;
+    let app2_appOwnerSellFee = 200;
+    let app2_appOwnerMortgageFee = 300;
+    let app2_appOwnerFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 10];;
+    let app2_nftOwnerBuyFee = 400;
+    let app2_nftOwnerSellFee = 500;
+    let app2_platformMortgageFee = 600;
+    let app2_platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 11];
+
+    await foundryData.connect(user1).createApp({
+      name: app2_name,
+      owner: app2_owner,
+      operator: ZeroAddress,
+      curve: app2_curve,
+      feeNFT: app2_feeNFT,
+      mortgageNFT: app2_mortgageNFT,
+      market: app2_market,
+      payToken: app2_payToken,
+      foundry: user1.address,
+    }, {
+      appOwnerBuyFee: app2_appOwnerBuyFee,
+      appOwnerSellFee: app2_appOwnerSellFee,
+      appOwnerMortgageFee: app2_appOwnerMortgageFee,
+      appOwnerFeeRecipient: app2_appOwnerFeeRecipient,
+      nftOwnerBuyFee: app2_nftOwnerBuyFee,
+      nftOwnerSellFee: app2_nftOwnerSellFee,
+      platformMortgageFee: app2_platformMortgageFee,
+      platformMortgageFeeRecipient: app2_platformMortgageFeeRecipient,
+    });
+
+    expect(await foundry.nextAppId()).eq(3);
+    expect(await foundryData.nextAppId()).eq(3);
+
+    let app3_name = "app3";
+    let app3_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 12];
+    let app3_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 13];
+
+    let app3_payToken = (await (
+      await ethers.getContractFactory("SimpleToken")
+    ).deploy(BigInt(10) ** BigInt(27))) as SimpleToken;
+
+    let app3_fees = {
+      appOwnerBuyFee: 200,
+      appOwnerSellFee: 300,
+      appOwnerMortgageFee: 400,
+      appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 14],
+      nftOwnerBuyFee: 500,
+      nftOwnerSellFee: 600,
+    }
+
+    let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+      ["uint256", "uint256"],
+      [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+    )
+
+    await foundry.createApp(
+      app3_name,
+      app3_owner,
+      await info.coreContractInfo.cpfCurveFactory.getAddress(),
+      curveParams,
+      app3_payToken,
+      app3_fees);
+    expect((await foundry.apps(3)).name).eq(app3_name);
+
+    expect(await foundry.nextAppId()).eq(4);
+    expect(await foundryData.nextAppId()).eq(4);
+
+    await expect(foundry.setAppOwnerFeeRecipient(2, app2_appOwnerFeeRecipient)).revertedWith("AE");
+    await expect(foundry.setAppOwnerFeeRecipient(3, app3_fees.appOwnerFeeRecipient)).revertedWith("AOE");
+
+    await expect(foundry.connect(app2_owner).setAppOwnerFeeRecipient(2, app2_appOwnerFeeRecipient)).revertedWith("AE");
+    await foundry.connect(app3_owner).setAppOwnerFeeRecipient(3, app2_appOwnerFeeRecipient)
+
+    expect(app2_appOwnerFeeRecipient).not.eq(app3_fees.appOwnerFeeRecipient)
+
+    let app3_fees_result = await foundry.appFees(3)
+    expect(app3_fees_result.appOwnerBuyFee).eq(app3_fees.appOwnerBuyFee)
+    expect(app3_fees_result.appOwnerSellFee).eq(app3_fees.appOwnerSellFee)
+    expect(app3_fees_result.appOwnerMortgageFee).eq(app3_fees.appOwnerMortgageFee)
+    expect(app3_fees_result.appOwnerFeeRecipient).eq(app2_appOwnerFeeRecipient)
+    expect(app3_fees_result.nftOwnerBuyFee).eq(app3_fees.nftOwnerBuyFee)
+    expect(app3_fees_result.nftOwnerSellFee).eq(app3_fees.nftOwnerSellFee)
+    expect(app3_fees_result.platformMortgageFee).eq(info.coreContractInfo.defaultMortgageFee)
+    expect(app3_fees_result.platformMortgageFeeRecipient).eq(info.coreContractInfo.defaultMortgageFeeWallet.address)
+
+
+    await foundry.connect(app3_owner).setAppOwnerFeeRecipient(3, app3_fees.appOwnerFeeRecipient)
+
+    app3_fees_result = await foundry.appFees(3)
+    expect(app3_fees_result.appOwnerBuyFee).eq(app3_fees.appOwnerBuyFee)
+    expect(app3_fees_result.appOwnerSellFee).eq(app3_fees.appOwnerSellFee)
+    expect(app3_fees_result.appOwnerMortgageFee).eq(app3_fees.appOwnerMortgageFee)
+    expect(app3_fees_result.appOwnerFeeRecipient).eq(app3_fees.appOwnerFeeRecipient)
+    expect(app3_fees_result.nftOwnerBuyFee).eq(app3_fees.nftOwnerBuyFee)
+    expect(app3_fees_result.nftOwnerSellFee).eq(app3_fees.nftOwnerSellFee)
+    expect(app3_fees_result.platformMortgageFee).eq(info.coreContractInfo.defaultMortgageFee)
+    expect(app3_fees_result.platformMortgageFeeRecipient).eq(info.coreContractInfo.defaultMortgageFeeWallet.address)
+
+  });
+
+  it("setPlatformMortgageFee", async function () {
+    const info = (await loadFixture(deployAllContracts));
+    let foundry = info.coreContractInfo.foundry;
+    let foundryData = info.coreContractInfo.foundryData;
+
+    let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex];
+
+    await foundryData.connect(info.xMemeAllContractInfo.deployWallet).updateFoundryWhitelist(user1.address, true)
+    expect(await foundryData.foundryWhitelist(user1.address)).eq(true);
+
+    let app2_name = "app2";
+    let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+    let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3];
+    let app2_curve = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4];
+    let app2_feeNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5];
+    let app2_mortgageNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6];
+    let app2_market = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7];
+    let app2_payToken = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 8];
+
+    let app2_appOwnerBuyFee = 100;
+    let app2_appOwnerSellFee = 200;
+    let app2_appOwnerMortgageFee = 300;
+    let app2_appOwnerFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 10];;
+    let app2_nftOwnerBuyFee = 400;
+    let app2_nftOwnerSellFee = 500;
+    let app2_platformMortgageFee = 600;
+    let app2_platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 11];
+
+    await foundryData.connect(user1).createApp({
+      name: app2_name,
+      owner: app2_owner,
+      operator: ZeroAddress,
+      curve: app2_curve,
+      feeNFT: app2_feeNFT,
+      mortgageNFT: app2_mortgageNFT,
+      market: app2_market,
+      payToken: app2_payToken,
+      foundry: user1.address,
+    }, {
+      appOwnerBuyFee: app2_appOwnerBuyFee,
+      appOwnerSellFee: app2_appOwnerSellFee,
+      appOwnerMortgageFee: app2_appOwnerMortgageFee,
+      appOwnerFeeRecipient: app2_appOwnerFeeRecipient,
+      nftOwnerBuyFee: app2_nftOwnerBuyFee,
+      nftOwnerSellFee: app2_nftOwnerSellFee,
+      platformMortgageFee: app2_platformMortgageFee,
+      platformMortgageFeeRecipient: app2_platformMortgageFeeRecipient,
+    });
+
+    expect(await foundry.nextAppId()).eq(3);
+    expect(await foundryData.nextAppId()).eq(3);
+
+    let app3_name = "app3";
+    let app3_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 12];
+    let app3_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 13];
+
+    let app3_payToken = (await (
+      await ethers.getContractFactory("SimpleToken")
+    ).deploy(BigInt(10) ** BigInt(27))) as SimpleToken;
+
+    let app3_fees = {
+      appOwnerBuyFee: 200,
+      appOwnerSellFee: 300,
+      appOwnerMortgageFee: 400,
+      appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 14],
+      nftOwnerBuyFee: 500,
+      nftOwnerSellFee: 600,
+    }
+
+    let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+      ["uint256", "uint256"],
+      [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+    )
+
+    await foundry.createApp(
+      app3_name,
+      app3_owner,
+      await info.coreContractInfo.cpfCurveFactory.getAddress(),
+      curveParams,
+      app3_payToken,
+      app3_fees);
+    expect((await foundry.apps(3)).name).eq(app3_name);
+
+    expect(await foundry.nextAppId()).eq(4);
+    expect(await foundryData.nextAppId()).eq(4);
+
+    await expect(foundry.connect(user1).setPlatformMortgageFee(2, app2_platformMortgageFee + 1)).revertedWithCustomError(foundry, "OwnableUnauthorizedAccount");
+    await expect(foundry.connect(user1).setPlatformMortgageFee(3, info.coreContractInfo.defaultMortgageFee + 1)).revertedWithCustomError(foundry, "OwnableUnauthorizedAccount");
+
+    await expect(foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFee(2, app2_platformMortgageFee + 1)).revertedWith("AE");
+    await foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFee(3, info.coreContractInfo.defaultMortgageFee + 1)
+
+    let app3_fees_result = await foundry.appFees(3)
+    expect(app3_fees_result.appOwnerBuyFee).eq(app3_fees.appOwnerBuyFee)
+    expect(app3_fees_result.appOwnerSellFee).eq(app3_fees.appOwnerSellFee)
+    expect(app3_fees_result.appOwnerMortgageFee).eq(app3_fees.appOwnerMortgageFee)
+    expect(app3_fees_result.appOwnerFeeRecipient).eq(app3_fees.appOwnerFeeRecipient)
+    expect(app3_fees_result.nftOwnerBuyFee).eq(app3_fees.nftOwnerBuyFee)
+    expect(app3_fees_result.nftOwnerSellFee).eq(app3_fees.nftOwnerSellFee)
+    expect(app3_fees_result.platformMortgageFee).eq(info.coreContractInfo.defaultMortgageFee + 1)
+    expect(app3_fees_result.platformMortgageFeeRecipient).eq(info.coreContractInfo.defaultMortgageFeeWallet.address)
+
+
+    await foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFee(3, info.coreContractInfo.defaultMortgageFee + 2)
+
+    app3_fees_result = await foundry.appFees(3)
+    expect(app3_fees_result.appOwnerBuyFee).eq(app3_fees.appOwnerBuyFee)
+    expect(app3_fees_result.appOwnerSellFee).eq(app3_fees.appOwnerSellFee)
+    expect(app3_fees_result.appOwnerMortgageFee).eq(app3_fees.appOwnerMortgageFee)
+    expect(app3_fees_result.appOwnerFeeRecipient).eq(app3_fees.appOwnerFeeRecipient)
+    expect(app3_fees_result.nftOwnerBuyFee).eq(app3_fees.nftOwnerBuyFee)
+    expect(app3_fees_result.nftOwnerSellFee).eq(app3_fees.nftOwnerSellFee)
+    expect(app3_fees_result.platformMortgageFee).eq(info.coreContractInfo.defaultMortgageFee + 2)
+    expect(app3_fees_result.platformMortgageFeeRecipient).eq(info.coreContractInfo.defaultMortgageFeeWallet.address)
+
+  });
+
+  it("setPlatformMortgageFeeRecipient", async function () {
+    const info = (await loadFixture(deployAllContracts));
+    let foundry = info.coreContractInfo.foundry;
+    let foundryData = info.coreContractInfo.foundryData;
+
+    let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex];
+
+    await foundryData.connect(info.xMemeAllContractInfo.deployWallet).updateFoundryWhitelist(user1.address, true)
+    expect(await foundryData.foundryWhitelist(user1.address)).eq(true);
+
+    let app2_name = "app2";
+    let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+    let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3];
+    let app2_curve = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4];
+    let app2_feeNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5];
+    let app2_mortgageNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6];
+    let app2_market = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7];
+    let app2_payToken = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 8];
+
+    let app2_appOwnerBuyFee = 100;
+    let app2_appOwnerSellFee = 200;
+    let app2_appOwnerMortgageFee = 300;
+    let app2_appOwnerFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 10];;
+    let app2_nftOwnerBuyFee = 400;
+    let app2_nftOwnerSellFee = 500;
+    let app2_platformMortgageFee = 600;
+    let app2_platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 11];
+
+    await foundryData.connect(user1).createApp({
+      name: app2_name,
+      owner: app2_owner,
+      operator: ZeroAddress,
+      curve: app2_curve,
+      feeNFT: app2_feeNFT,
+      mortgageNFT: app2_mortgageNFT,
+      market: app2_market,
+      payToken: app2_payToken,
+      foundry: user1.address,
+    }, {
+      appOwnerBuyFee: app2_appOwnerBuyFee,
+      appOwnerSellFee: app2_appOwnerSellFee,
+      appOwnerMortgageFee: app2_appOwnerMortgageFee,
+      appOwnerFeeRecipient: app2_appOwnerFeeRecipient,
+      nftOwnerBuyFee: app2_nftOwnerBuyFee,
+      nftOwnerSellFee: app2_nftOwnerSellFee,
+      platformMortgageFee: app2_platformMortgageFee,
+      platformMortgageFeeRecipient: app2_platformMortgageFeeRecipient,
+    });
+
+    expect(await foundry.nextAppId()).eq(3);
+    expect(await foundryData.nextAppId()).eq(3);
+
+    let app3_name = "app3";
+    let app3_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 12];
+    let app3_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 13];
+
+    let app3_payToken = (await (
+      await ethers.getContractFactory("SimpleToken")
+    ).deploy(BigInt(10) ** BigInt(27))) as SimpleToken;
+
+    let app3_fees = {
+      appOwnerBuyFee: 200,
+      appOwnerSellFee: 300,
+      appOwnerMortgageFee: 400,
+      appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 14],
+      nftOwnerBuyFee: 500,
+      nftOwnerSellFee: 600,
+    }
+
+    let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+      ["uint256", "uint256"],
+      [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+    )
+
+    await foundry.createApp(
+      app3_name,
+      app3_owner,
+      await info.coreContractInfo.cpfCurveFactory.getAddress(),
+      curveParams,
+      app3_payToken,
+      app3_fees);
+    expect((await foundry.apps(3)).name).eq(app3_name);
+
+    expect(await foundry.nextAppId()).eq(4);
+    expect(await foundryData.nextAppId()).eq(4);
+
+    await expect(foundry.connect(user1).setPlatformMortgageFeeRecipient(2, user1)).revertedWithCustomError(foundry, "OwnableUnauthorizedAccount");
+    await expect(foundry.connect(user1).setPlatformMortgageFeeRecipient(3, user1)).revertedWithCustomError(foundry, "OwnableUnauthorizedAccount");
+
+    await expect(foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFeeRecipient(2, user1)).revertedWith("AE");
+    await foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFeeRecipient(3, user1)
+
+    let app3_fees_result = await foundry.appFees(3)
+    expect(app3_fees_result.appOwnerBuyFee).eq(app3_fees.appOwnerBuyFee)
+    expect(app3_fees_result.appOwnerSellFee).eq(app3_fees.appOwnerSellFee)
+    expect(app3_fees_result.appOwnerMortgageFee).eq(app3_fees.appOwnerMortgageFee)
+    expect(app3_fees_result.appOwnerFeeRecipient).eq(app3_fees.appOwnerFeeRecipient)
+    expect(app3_fees_result.nftOwnerBuyFee).eq(app3_fees.nftOwnerBuyFee)
+    expect(app3_fees_result.nftOwnerSellFee).eq(app3_fees.nftOwnerSellFee)
+    expect(app3_fees_result.platformMortgageFee).eq(info.coreContractInfo.defaultMortgageFee)
+    expect(app3_fees_result.platformMortgageFeeRecipient).eq(user1)
+
+
+    await foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFeeRecipient(3, info.coreContractInfo.defaultMortgageFeeWallet.address)
+
+    app3_fees_result = await foundry.appFees(3)
+    expect(app3_fees_result.appOwnerBuyFee).eq(app3_fees.appOwnerBuyFee)
+    expect(app3_fees_result.appOwnerSellFee).eq(app3_fees.appOwnerSellFee)
+    expect(app3_fees_result.appOwnerMortgageFee).eq(app3_fees.appOwnerMortgageFee)
+    expect(app3_fees_result.appOwnerFeeRecipient).eq(app3_fees.appOwnerFeeRecipient)
+    expect(app3_fees_result.nftOwnerBuyFee).eq(app3_fees.nftOwnerBuyFee)
+    expect(app3_fees_result.nftOwnerSellFee).eq(app3_fees.nftOwnerSellFee)
+    expect(app3_fees_result.platformMortgageFee).eq(info.coreContractInfo.defaultMortgageFee)
+    expect(app3_fees_result.platformMortgageFeeRecipient).eq(info.coreContractInfo.defaultMortgageFeeWallet.address)
+
+  });
+
+  it("createToken appid exist and operator and tokenExist and length error and totalPercent error", async function () {
+    const info = (await loadFixture(deployAllContracts));
+    let foundry = info.coreContractInfo.foundry;
+    let foundryData = info.coreContractInfo.foundryData;
+
+    let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex];
+
+    await foundryData.connect(info.xMemeAllContractInfo.deployWallet).updateFoundryWhitelist(user1.address, true)
+    expect(await foundryData.foundryWhitelist(user1.address)).eq(true);
+
+    let app2_name = "app2";
+    let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+    let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3];
+    let app2_curve = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4];
+    let app2_feeNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5];
+    let app2_mortgageNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6];
+    let app2_market = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7];
+    let app2_payToken = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 8];
+
+    let app2_appOwnerBuyFee = 100;
+    let app2_appOwnerSellFee = 200;
+    let app2_appOwnerMortgageFee = 300;
+    let app2_appOwnerFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 10];;
+    let app2_nftOwnerBuyFee = 400;
+    let app2_nftOwnerSellFee = 500;
+    let app2_platformMortgageFee = 600;
+    let app2_platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 11];
+
+    await foundryData.connect(user1).createApp({
+      name: app2_name,
+      owner: app2_owner,
+      operator: ZeroAddress,
+      curve: app2_curve,
+      feeNFT: app2_feeNFT,
+      mortgageNFT: app2_mortgageNFT,
+      market: app2_market,
+      payToken: app2_payToken,
+      foundry: user1.address,
+    }, {
+      appOwnerBuyFee: app2_appOwnerBuyFee,
+      appOwnerSellFee: app2_appOwnerSellFee,
+      appOwnerMortgageFee: app2_appOwnerMortgageFee,
+      appOwnerFeeRecipient: app2_appOwnerFeeRecipient,
+      nftOwnerBuyFee: app2_nftOwnerBuyFee,
+      nftOwnerSellFee: app2_nftOwnerSellFee,
+      platformMortgageFee: app2_platformMortgageFee,
+      platformMortgageFeeRecipient: app2_platformMortgageFeeRecipient,
+    });
+
+    expect(await foundry.nextAppId()).eq(3);
+    expect(await foundryData.nextAppId()).eq(3);
+
+    let app3_name = "app3";
+    let app3_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 12];
+    let app3_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 13];
+
+    let app3_payToken = (await (
+      await ethers.getContractFactory("SimpleToken")
+    ).deploy(BigInt(10) ** BigInt(27))) as SimpleToken;
+
+    let app3_fees = {
+      appOwnerBuyFee: 200,
+      appOwnerSellFee: 300,
+      appOwnerMortgageFee: 400,
+      appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 14],
+      nftOwnerBuyFee: 500,
+      nftOwnerSellFee: 600,
+    }
+
+    let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+      ["uint256", "uint256"],
+      [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+    )
+
+    await foundry.createApp(
+      app3_name,
+      app3_owner,
+      await info.coreContractInfo.cpfCurveFactory.getAddress(),
+      curveParams,
+      app3_payToken,
+      app3_fees);
+    expect((await foundry.apps(3)).name).eq(app3_name);
+
+    expect(await foundry.nextAppId()).eq(4);
+    expect(await foundryData.nextAppId()).eq(4);
+
+    await expect(foundry.createToken(4, "token1", "0x", [], [], [])).revertedWith("AE");
+    await expect(foundry.createToken(2, "token1", "0x", [], [], [])).revertedWith("AE");
+
+    await foundry.connect(app3_owner).setAppOperator(3, app3_operator)
 
     await expect(
-      info.foundry
-        .connect(app2OperatorWallet)
-        .createToken(
-          newAppid_2,
-          "t2",
-          "0x",
-          [5000, 95000],
-          [info.deployWallet.address, info.deployWallet.address],
-          ["0x", "0x"],
-        ),
-    ).revertedWith("AE");
-
-    await info.foundry.createApp(
-      "app2",
-      app2OwnerWallet.address,
-      app2OperatorWallet.address,
-      await info.curve.getAddress(),
-      ZERO_ADDRESS,
-      info.buyFee,
-      info.sellFee,
-    );
-
-    await info.foundry
-      .connect(app2OperatorWallet)
-      .createToken(
-        newAppid_2,
-        "t2",
-        "0x22",
-        [5000, 95000],
-        [info.deployWallet.address, info.deployWallet.address],
-        ["0x21", "0x22"],
-      );
-
-    await expect(
-      info.foundry.createToken(
-        newAppid_2,
-        "t1",
-        "0x",
-        [5000, 95000],
-        [info.deployWallet.address, info.deployWallet.address],
-        ["0x", "0x"],
-      ),
+      foundry.connect(user1).createToken(3, "token1", "0x", [], [], [])
     ).revertedWith("AOPE");
 
-    await expect(
-      info.foundry
-        .connect(app2OperatorWallet)
-        .createToken(
-          0,
-          "t1",
-          "0x",
-          [5000, 95000],
-          [info.deployWallet.address, info.deployWallet.address],
-          ["0x", "0x"],
-        ),
-    ).revertedWith("AE");
+    await foundry.connect(app3_operator).createToken(3, "token1", "0x", [], [], [])
 
-    await expect(
-      info.foundry
-        .connect(app2OperatorWallet)
-        .createToken(
-          newAppid_2 + 1,
-          "t1",
-          "0x",
-          [5000, 95000],
-          [info.deployWallet.address, info.deployWallet.address],
-          ["0x", "0x"],
-        ),
-    ).revertedWith("AE");
+    await expect(foundry.connect(app3_operator).createToken(3, "token1", "0x", [], [], [])).revertedWith("TE");
 
-    await expect(
-      info.foundry
-        .connect(app2OperatorWallet)
-        .createToken(
-          newAppid_2,
-          "t1",
-          "0x",
-          [5001, 95000],
-          [info.deployWallet.address, info.deployWallet.address],
-          ["0x", "0x"],
-        ),
-    ).revertedWith("TPE");
-
-    await expect(
-      info.foundry
-        .connect(app2OperatorWallet)
-        .createToken(newAppid_2, "t1", "0x", [5000, 95000], [ZERO_ADDRESS, info.deployWallet.address], ["0x", "0x"]),
-    ).revertedWith("ADDE");
-
-    await expect(
-      info.foundry
-        .connect(app2OperatorWallet)
-        .createToken(newAppid_2, "t1", "0x", [5000, 95000], [info.deployWallet.address, ZERO_ADDRESS], ["0x", "0x"]),
-    ).revertedWith("ADDE");
-
-    await expect(
-      info.foundry
-        .connect(app2OperatorWallet)
-        .createToken(
-          newAppid_2,
-          "t1",
-          "0x",
-          [5000, 95000],
-          [info.deployWallet.address, info.deployWallet.address],
-          ["0x"],
-        ),
-    ).revertedWith("LE2");
-
-    await expect(
-      info.foundry
-        .connect(app2OperatorWallet)
-        .createToken(newAppid_2, "t1", "0x", [5000, 95000], [info.deployWallet.address], ["0x", "0x"]),
-    ).revertedWith("LE1");
-
-    await expect(
-      info.foundry
-        .connect(app2OperatorWallet)
-        .createToken(
-          newAppid_2,
-          "t1",
-          "0x",
-          [5000],
-          [info.deployWallet.address, info.deployWallet.address],
-          ["0x", "0x"],
-        ),
-    ).revertedWith("LE1");
-
-    let tx = await info.foundry
-      .connect(app2OperatorWallet)
-      .createToken(
-        newAppid_2,
-        "t1",
-        "0x11",
-        [5000, 95000],
-        [info.wallets[1].address, info.wallets[2].address],
-        ["0x11", "0x12"],
-      );
-
-    await expect(tx)
-      .to.emit(info.foundry, "CreateToken")
-      .withArgs(
-        newAppid_2,
-        "t1",
-        "0x11",
-        [3, 4],
-        [5000, 95000],
-        [info.wallets[1].address, info.wallets[2].address],
-        ["0x11", "0x12"],
-        app2OperatorWallet.address,
-      );
-
-    await expect(
-      info.foundry
-        .connect(app2OperatorWallet)
-        .createToken(
-          newAppid_2,
-          "t1",
-          "0x",
-          [5000, 95000],
-          [info.deployWallet.address, info.deployWallet.address],
-          ["0x", "0x"],
-        ),
-    ).revertedWith("TE");
-
-    await info.foundry
-      .connect(app2OperatorWallet)
-      .createToken(
-        newAppid_2,
-        "t3",
-        "0x33",
-        [5000, 95000],
-        [info.wallets[3].address, info.wallets[4].address],
-        ["0x31", "0x32"],
-      );
-
-    expect(await info.foundry.tokenData(newAppid_2, "t1")).eq("0x11");
-    expect(await info.foundry.tokenData(newAppid_2, "t2")).eq("0x22");
-    expect(await info.foundry.tokenData(newAppid_2, "t3")).eq("0x33");
-
-
-    let publicNFT = (await ethers.getContractAt("PublicNFT", (await info.foundry.apps(newAppid_2)).publicNFT)) as PublicNFT;
-
-    const info1 = await publicNFT.tokenIdToInfo(1);
-    const info2 = await publicNFT.tokenIdToInfo(2);
-    const info3 = await publicNFT.tokenIdToInfo(3);
-    const info4 = await publicNFT.tokenIdToInfo(4);
-    const info5 = await publicNFT.tokenIdToInfo(5);
-    const info6 = await publicNFT.tokenIdToInfo(6);
-
-    expect(info1.tid).eq("t2");
-    expect(info2.tid).eq("t2");
-    expect(info1.percent).eq(5000);
-    expect(info2.percent).eq(95000);
-    expect(info1.data).eq("0x21");
-    expect(info2.data).eq("0x22");
-    expect(info1._owner).eq(info.deployWallet.address);
-    expect(info2._owner).eq(info.deployWallet.address);
-
-    expect(info3.tid).eq("t1");
-    expect(info4.tid).eq("t1");
-    expect(info3.percent).eq(5000);
-    expect(info4.percent).eq(95000);
-    expect(info3.data).eq("0x11");
-    expect(info4.data).eq("0x12");
-    expect(info3._owner).eq(info.wallets[1].address);
-    expect(info4._owner).eq(info.wallets[2].address);
-
-    expect(info5.tid).eq("t3");
-    expect(info6.tid).eq("t3");
-    expect(info5.percent).eq(5000);
-    expect(info6.percent).eq(95000);
-    expect(info5.data).eq("0x31");
-    expect(info6.data).eq("0x32");
-    expect(info5._owner).eq(info.wallets[3].address);
-    expect(info6._owner).eq(info.wallets[4].address);
-
+    await expect(foundry.connect(app3_operator).createToken(3, "token2", "0x", [100], [], [])).revertedWith("LE1");
+    await expect(foundry.connect(app3_operator).createToken(3, "token2", "0x", [100], [user1.address], [])).revertedWith("LE2");
+    await expect(foundry.connect(app3_operator).createToken(3, "token2", "0x", [100], [user1.address], ["0x"])).revertedWith("TPE");
   });
 
-  it("createApp loop", async function () {
-    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
+  it("createToken tData and nftData and nftOwner and nftPercent", async function () {
+    const info = (await loadFixture(deployAllContracts));
+    let foundry = info.coreContractInfo.foundry;
+    let foundryData = info.coreContractInfo.foundryData;
 
-    expect(await info.foundry.nextAppId()).eq(initNextAppId);
+    let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex];
 
-    let address2Bool: any = {};
-    let app1Info = await info.foundry.apps(1);
-    address2Bool[app1Info.publicNFT] = true;
-    address2Bool[app1Info.mortgageNFT] = true;
-    address2Bool[app1Info.market] = true;
+    await foundryData.connect(info.xMemeAllContractInfo.deployWallet).updateFoundryWhitelist(user1.address, true)
+    expect(await foundryData.foundryWhitelist(user1.address)).eq(true);
 
-    // deploy curve
-    let curve = (await (await ethers.getContractFactory("Curve")).deploy()) as Curve;
+    let app2_name = "app2";
+    let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+    let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3];
+    let app2_curve = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4];
+    let app2_feeNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5];
+    let app2_mortgageNFT = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6];
+    let app2_market = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7];
+    let app2_payToken = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 8];
 
-    let buyFee = info.buyFee + 11;
-    let sellFee = info.sellFee + 12;
-    // create app
-    let app2OwnerWallet = info.wallets[info.nextWalletIndex];
-    let app2OperatorWallet = info.wallets[info.nextWalletIndex + 1];
+    let app2_appOwnerBuyFee = 100;
+    let app2_appOwnerSellFee = 200;
+    let app2_appOwnerMortgageFee = 300;
+    let app2_appOwnerFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 10];;
+    let app2_nftOwnerBuyFee = 400;
+    let app2_nftOwnerSellFee = 500;
+    let app2_platformMortgageFee = 600;
+    let app2_platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 11];
 
-    for (let i = initNextAppId; i <= 100; i++) {
-      let appInfo = await info.foundry.apps(i);
-      expect(appInfo.name).eq("");
-      expect(appInfo.publicNFT).eq(ZERO_ADDRESS);
-      expect(appInfo.mortgageNFT).eq(ZERO_ADDRESS);
-      expect(appInfo.market).eq(ZERO_ADDRESS);
+    await foundryData.connect(user1).createApp({
+      name: app2_name,
+      owner: app2_owner,
+      operator: ZeroAddress,
+      curve: app2_curve,
+      feeNFT: app2_feeNFT,
+      mortgageNFT: app2_mortgageNFT,
+      market: app2_market,
+      payToken: app2_payToken,
+      foundry: user1.address,
+    }, {
+      appOwnerBuyFee: app2_appOwnerBuyFee,
+      appOwnerSellFee: app2_appOwnerSellFee,
+      appOwnerMortgageFee: app2_appOwnerMortgageFee,
+      appOwnerFeeRecipient: app2_appOwnerFeeRecipient,
+      nftOwnerBuyFee: app2_nftOwnerBuyFee,
+      nftOwnerSellFee: app2_nftOwnerSellFee,
+      platformMortgageFee: app2_platformMortgageFee,
+      platformMortgageFeeRecipient: app2_platformMortgageFeeRecipient,
+    });
 
-      let appName = `app${i}`;
-      expect(await info.foundry.nextAppId()).eq(i);
-      await info.foundry.createApp(
-        appName,
-        app2OwnerWallet.address,
-        app2OperatorWallet.address,
-        await curve.getAddress(),
-        ZERO_ADDRESS,
-        buyFee,
-        sellFee,
-      );
-      expect(await info.foundry.nextAppId()).eq(i + 1);
+    expect(await foundry.nextAppId()).eq(3);
+    expect(await foundryData.nextAppId()).eq(3);
 
-      appInfo = await info.foundry.apps(i);
-      expect(appInfo.name).eq(appName);
+    let app3_name = "app3";
+    let app3_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 12];
+    let app3_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 13];
 
-      expect(address2Bool[appInfo.publicNFT]).eq(undefined);
-      expect(address2Bool[appInfo.mortgageNFT]).eq(undefined);
-      expect(address2Bool[appInfo.market]).eq(undefined);
+    let app3_payToken = (await (
+      await ethers.getContractFactory("SimpleToken")
+    ).deploy(BigInt(10) ** BigInt(27))) as SimpleToken;
 
-      address2Bool[appInfo.publicNFT] = true;
-      address2Bool[appInfo.mortgageNFT] = true;
-      address2Bool[appInfo.market] = true;
+    let app3_fees = {
+      appOwnerBuyFee: 200,
+      appOwnerSellFee: 300,
+      appOwnerMortgageFee: 400,
+      appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 14],
+      nftOwnerBuyFee: 500,
+      nftOwnerSellFee: 600,
     }
-  });
 
-  it("createToken loop", async function () {
-    const info = (await loadFixture(deployAllContracts)).degenGateInfo;
+    let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+      ["uint256", "uint256"],
+      [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+    )
 
-    expect((await info.foundry.apps(info.appId)).operator).eq(await info.degenGate.getAddress());
+    await foundry.createApp(
+      app3_name,
+      app3_owner,
+      await info.coreContractInfo.cpfCurveFactory.getAddress(),
+      curveParams,
+      app3_payToken,
+      app3_fees);
+    expect((await foundry.apps(3)).name).eq(app3_name);
 
-    // create app
-    let app2OwnerWallet = info.wallets[info.nextWalletIndex + 1];
-    let app2OperatorWallet = info.wallets[info.nextWalletIndex + 2];
+    expect(await foundry.nextAppId()).eq(4);
+    expect(await foundryData.nextAppId()).eq(4);
 
-    await info.foundry.createApp(
-      "app2",
-      app2OwnerWallet.address,
-      app2OperatorWallet.address,
-      await info.curve.getAddress(),
-      ZERO_ADDRESS,
-      info.buyFee,
-      info.sellFee,
-    );
+    await expect(foundry.createToken(4, "token1", "0x", [], [], [])).revertedWith("AE");
+    await expect(foundry.createToken(2, "token1", "0x", [], [], [])).revertedWith("AE");
 
-    let appId_2 = initNextAppId;
-    let publicNFT = (await ethers.getContractAt("PublicNFT", (await info.foundry.apps(appId_2)).publicNFT)) as PublicNFT;
+    await foundry.connect(app3_owner).setAppOperator(3, app3_operator)
 
-    for (let i = 1; i <= 100; i++) {
-      let tid = `tid${i}`;
-      let tData = ethers.AbiCoder.defaultAbiCoder().encode(["string", "uint256"], [tid, i]);
-      let nft1Data = ethers.AbiCoder.defaultAbiCoder().encode(["string", "uint256", "uint256"], [tid, i, 1]);
-      let nft2Data = ethers.AbiCoder.defaultAbiCoder().encode(["string", "uint256", "uint256"], [tid, i, 2]);
+    await expect(
+      foundry.connect(user1).createToken(3, "token1", "0x", [], [], [])
+    ).revertedWith("AOPE");
 
-      expect(await info.foundry.tokenData(appId_2, tid)).eq("0x");
-      expect(await info.foundry.tokenExist(appId_2, tid)).eq(false);
+    expect(await foundry.tokenExist(3, "token1")).eq(false)
 
-      expect(await publicNFT.totalSupply()).eq(2 * i - 2);
+    let token1_info = await foundry.connect(app3_operator).createToken.staticCall(3, "token1", "0x", [], [], [])
+    await foundry.connect(app3_operator).createToken(3, "token1", "0x12", [], [], [])
 
-      await expect(publicNFT.ownerOf(2 * i - 1)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken");
-      await expect(publicNFT.ownerOf(2 * i)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken");
+    expect(await foundry.token(3, "token1")).eq(token1_info.tokenAddr)
+    expect(token1_info.tokenIds.length).eq(0)
+    expect(await foundry.tokenExist(3, "token1")).eq(true)
+    expect(await foundry.tokenData(3, "token1")).eq("0x12")
 
-      await expect(publicNFT.tokenIdToInfo(2 * i - 1)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken");
-      await expect(publicNFT.tokenIdToInfo(2 * i)).revertedWithCustomError(info.publicNFT, "ERC721NonexistentToken");
+    let app3 = await foundry.apps(3)
+    let feeNFT = (await ethers.getContractAt("FeeNFT", app3.feeNFT)) as FeeNFT;
+    let token1_nft_info = await feeNFT.tidToInfos("token1")
+    expect(token1_nft_info.tokenIds.length).eq(0)
+    expect(token1_nft_info.percents.length).eq(0)
+    expect(token1_nft_info.data.length).eq(0)
+    expect(token1_nft_info.owners.length).eq(0)
 
-      let tokenIds = await publicNFT.tidToTokenIds(tid);
-      expect(tokenIds.length).eq(0);
+    let token2_info = await foundry.connect(app3_operator).createToken.staticCall(3, "token2", "0x24", [5000, 95000], [user1.address, app3_owner], ["0x25", "0x26"])
+    await foundry.connect(app3_operator).createToken(3, "token2", "0x24", [5000, 95000], [user1.address, app3_owner], ["0x25", "0x26"])
 
-      let infos = await publicNFT.tidToInfos(tid);
-      expect(infos.tokenIds.length).eq(0);
-      expect(infos.percents.length).eq(0);
-      expect(infos.data.length).eq(0);
-      expect(infos.owners.length).eq(0);
+    expect(await foundry.token(3, "token2")).eq(token2_info.tokenAddr)
+    expect(token2_info.tokenIds.length).eq(2)
+    expect(token2_info.tokenIds[0]).eq(1)
+    expect(token2_info.tokenIds[1]).eq(2)
+    expect(await foundry.tokenExist(3, "token2")).eq(true)
+    expect(await foundry.tokenData(3, "token2")).eq("0x24")
 
-      let tx = await info.foundry
-        .connect(app2OperatorWallet)
-        .createToken(
-          appId_2,
-          tid,
-          tData,
-          [5000, 95000],
-          [info.wallets[1].address, info.wallets[2].address],
-          [nft1Data, nft2Data],
-        );
+    let token2_nft_info = await feeNFT.tidToInfos("token2")
+    expect(token2_nft_info.tokenIds.length).eq(2)
+    expect(token2_nft_info.percents.length).eq(2)
+    expect(token2_nft_info.data.length).eq(2)
+    expect(token2_nft_info.owners.length).eq(2)
 
-      await expect(tx)
-        .to.emit(info.foundry, "CreateToken")
-        .withArgs(
-          appId_2,
-          tid,
-          tData,
-          [2 * i - 1, 2 * i],
-          [5000, 95000],
-          [info.wallets[1].address, info.wallets[2].address],
-          [nft1Data, nft2Data],
-          app2OperatorWallet.address,
-        );
+    expect(token2_nft_info.tokenIds[0]).eq(1)
+    expect(token2_nft_info.percents[0]).eq(5000)
+    expect(token2_nft_info.data[0]).eq("0x25")
+    expect(token2_nft_info.owners[0]).eq(user1.address)
 
-      expect(await info.foundry.tokenData(appId_2, tid)).eq(tData);
-      expect(await info.foundry.tokenExist(appId_2, tid)).eq(true);
+    expect(token2_nft_info.tokenIds[1]).eq(2)
+    expect(token2_nft_info.percents[1]).eq(95000)
+    expect(token2_nft_info.data[1]).eq("0x26")
+    expect(token2_nft_info.owners[1]).eq(app3_owner)
 
-      expect(await publicNFT.ownerOf(2 * i - 1)).eq(info.wallets[1].address);
-      expect(await publicNFT.ownerOf(2 * i)).eq(info.wallets[2].address);
-
-      let info1 = await publicNFT.tokenIdToInfo(2 * i - 1);
-      let info2 = await publicNFT.tokenIdToInfo(2 * i);
-
-      expect(info1.tid).eq(tid);
-      expect(info2.tid).eq(tid);
-      expect(info1.percent).eq(5000);
-      expect(info2.percent).eq(95000);
-      expect(info1.data).eq(nft1Data);
-      expect(info2.data).eq(nft2Data);
-      expect(info1._owner).eq(info.wallets[1].address);
-      expect(info2._owner).eq(info.wallets[2].address);
-
-      expect(await publicNFT.totalSupply()).eq(2 * i);
-
-      tokenIds = await publicNFT.tidToTokenIds(tid);
-      expect(tokenIds.length).eq(2);
-
-      expect(tokenIds[0]).eq(2 * i - 1);
-      expect(tokenIds[1]).eq(2 * i);
-
-      infos = await publicNFT.tidToInfos(tid);
-      expect(infos.tokenIds.length).eq(2);
-      expect(infos.percents.length).eq(2);
-      expect(infos.data.length).eq(2);
-      expect(infos.owners.length).eq(2);
-
-      expect(infos.tokenIds[0]).eq(2 * i - 1);
-      expect(infos.tokenIds[1]).eq(2 * i);
-
-      expect(infos.percents[0]).eq(5000);
-      expect(infos.percents[1]).eq(95000);
-
-      expect(infos.data[0]).eq(nft1Data);
-      expect(infos.data[1]).eq(nft2Data);
-
-      expect(infos.owners[0]).eq(info.wallets[1].address);
-      expect(infos.owners[1]).eq(info.wallets[2].address);
-    }
   });
 });

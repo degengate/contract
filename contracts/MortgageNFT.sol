@@ -50,10 +50,6 @@ contract MortgageNFT is IMortgageNFT, Ownable, ERC721Enumerable {
     amount = res.amount;
   }
 
-  function isApprovedOrOwner(address addr, uint256 tokenId) external view returns (bool) {
-    return _isAuthorized(_ownerOf(tokenId), addr, tokenId);
-  }
-
   function mint(address to, string memory tid, uint256 amount) external override onlyMarket returns (uint256 tokenId) {
     tokenId = _nextTokenId;
     _nextTokenId += 1;

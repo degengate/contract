@@ -1,351 +1,696 @@
-import { deployAllContracts } from "./shared/deploy";
+import { deployAllContracts, MAX_UINT256 } from "./shared/deploy";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { ethers } from "hardhat";
+
 import { getTokenAmountWei } from "./shared/utils";
+import { ethers } from "hardhat";
+import { Market, MortgageNFT, SimpleToken, Token } from "../typechain-types";
+import { MaxUint256, ZeroAddress } from "ethers";
 
 describe("Market", function () {
-  describe("cash", function () {
-    it("cash revert", async function () {
-      const info = (await loadFixture(deployAllContracts)).appOperatorAllContractInfo;
+    describe("cash", function () {
+        it("cash revert", async function () {
+            const info = (await loadFixture(deployAllContracts)).xMemeAllContractInfo;
+            await info.xMeme.setSystemReady(true)
 
-      let nftOwner1 = info.wallets[info.nextWalletIndex + 1];
-      let nftOwner2 = info.wallets[info.nextWalletIndex + 2];
-      let user1 = info.wallets[info.nextWalletIndex + 3];
-      let user2 = info.wallets[info.nextWalletIndex + 4];
+            let user1 = info.wallets[info.nextWalletIndex + 1]
+            let user2 = info.wallets[info.nextWalletIndex + 2]
 
-      let params = {
-        tid: "t1",
-        tData: "0x11",
-        cnftOwner: nftOwner1.address,
-        onftOwner: nftOwner2.address,
-      };
-      await info.appOperator
-        .createToken(params.tid, params.tData, params.cnftOwner, params.onftOwner);
+            let tid_1 = "t1";
+            let buyAmount_1_user_1 = getTokenAmountWei(1000)
+            let buyAmount_1_user_2 = getTokenAmountWei(2000)
+            let buyAmount_1_user_1_2 = getTokenAmountWei(5000)
+            await info.xMeme.connect(user1).createTokenAndBuy(tid_1, buyAmount_1_user_1, { value: BigInt(10) ** BigInt(20) });
+            await info.market.connect(user2).buy(tid_1, buyAmount_1_user_2, { value: BigInt(10) ** BigInt(20) });
+            await info.market.connect(user1).buy(tid_1, buyAmount_1_user_1_2, { value: BigInt(10) ** BigInt(20) });
 
-      let max = BigInt(10) ** BigInt(18) * BigInt(1000000);
-      let approveValue = max * BigInt(100);
-      await info.simpleToken.transfer(user1.address, approveValue)
-      await info.simpleToken.transfer(user2.address, approveValue)
-      await info.simpleToken.connect(user1).approve(await info.market.getAddress(), approveValue)
-      await info.simpleToken.connect(user2).approve(await info.market.getAddress(), approveValue)
+            let tid_2 = "t2";
+            let buyAmount_2_user_1 = getTokenAmountWei(3000)
+            let buyAmount_2_user_2 = getTokenAmountWei(4000)
+            await info.xMeme.connect(user1).createTokenAndBuy(tid_2, buyAmount_2_user_1, { value: BigInt(10) ** BigInt(20) });
+            await info.market.connect(user2).buy(tid_2, buyAmount_2_user_2, { value: BigInt(10) ** BigInt(20) });
 
-      await info.market
-        .connect(user1)
-        .buy(params.tid, getTokenAmountWei(1000));
-      await info.market
-        .connect(user2)
-        .buy(params.tid, getTokenAmountWei(1000));
-      await info.market.connect(user1).mortgage(params.tid, getTokenAmountWei(1000));
-      await info.market.connect(user2).mortgage(params.tid, getTokenAmountWei(1000));
-      expect(await info.mortgageNFT.ownerOf(1)).eq(user1.address);
-      expect(await info.mortgageNFT.ownerOf(2)).eq(user2.address);
-      await info.market
-        .connect(user1)
-        .redeem(1, getTokenAmountWei(1000));
-      await expect(info.mortgageNFT.ownerOf(1)).revertedWithCustomError(info.mortgageNFT, "ERC721NonexistentToken");
-      // cash not tokenid
-      await expect(info.market.connect(user1).cash(5, 100)).revertedWithCustomError(info.mortgageNFT, "ERC721NonexistentToken");
-      // cash deleted tokenid
-      await expect(info.market.connect(user1).cash(1, 10)).revertedWithCustomError(info.mortgageNFT, "ERC721NonexistentToken");
-      // cash other user tokenid
-      await expect(info.market.connect(user1).cash(2, 10)).revertedWith("AOE");
+            let token_addr_tid1 = await info.market.token(tid_1)
+            let token_addr_tid2 = await info.market.token(tid_2)
+            let token_tid1 = (await ethers.getContractAt("Token", token_addr_tid1)) as Token
+            let token_tid2 = (await ethers.getContractAt("Token", token_addr_tid2)) as Token
 
-      // cash not enough
-      await expect(info.market.connect(user2).cash(2, getTokenAmountWei(3000))).revertedWith("TAE");
-      // cash 0
-      await expect(info.market.connect(user2).cash(2, 0)).revertedWith("TAE");
-      // cash no payToken get
-      await expect(info.market.connect(user2).cash(2, getTokenAmountWei(10))).revertedWith("CE");
+            await token_tid1.connect(user1).approve(await info.market.getAddress(), buyAmount_1_user_1)
+            let result1 = await info.market.connect(user1).mortgageNew.staticCall(tid_1, buyAmount_1_user_1);
+            await info.market.connect(user1).mortgageNew(tid_1, buyAmount_1_user_1);
+
+            await token_tid2.connect(user1).approve(await info.market.getAddress(), buyAmount_2_user_1)
+            let result2 = await info.market.connect(user1).mortgageNew.staticCall(tid_2, buyAmount_2_user_1);
+            await info.market.connect(user1).mortgageNew(tid_2, buyAmount_2_user_1);
+
+            await token_tid1.connect(user2).approve(await info.market.getAddress(), buyAmount_1_user_2);
+            let result3 = await info.market.connect(user2).mortgageNew.staticCall(tid_1, buyAmount_1_user_2);
+            await info.market.connect(user2).mortgageNew(tid_1, buyAmount_1_user_2);
+
+            await token_tid2.connect(user2).approve(await info.market.getAddress(), buyAmount_2_user_2);
+            let result4 = await info.market.connect(user2).mortgageNew.staticCall(tid_2, buyAmount_2_user_2);
+            await info.market.connect(user2).mortgageNew(tid_2, buyAmount_2_user_2);
+
+            // not owner
+            await expect(info.market.connect(user1).cash(result3.nftTokenId, 1)).to.be.revertedWith("AOE")
+
+            // no tokenid
+            await expect(info.market.connect(user1).merge(11, 1)).to.be.revertedWithCustomError(info.mortgageNFT, "ERC721NonexistentToken")
+
+            // cash 0
+            await expect(info.market.connect(user1).cash(result1.nftTokenId, 0)).to.be.revertedWith("TAE")
+
+            // cash > amount
+            await expect(info.market.connect(user1).cash(result1.nftTokenId, buyAmount_1_user_1 + BigInt(1))).to.be.revertedWith("TAE")
+
+            // cash not have profit
+            await expect(info.market.connect(user1).cash(result1.nftTokenId, buyAmount_1_user_1)).to.be.revertedWith("CE")
+        });
+
+        it("cash revert erc20", async function () {
+            const info = (await loadFixture(deployAllContracts));
+            const coreInfo = info.coreContractInfo;
+            const xMemeInfo = info.xMemeAllContractInfo;
+
+            let app2_appid = await info.coreContractInfo.foundry.nextAppId()
+            let app2_name = "app2";
+            let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 1];
+            let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+
+            let app2_payToken = (await (
+                await ethers.getContractFactory("SimpleToken")
+            ).deploy(BigInt(10) ** BigInt(27))) as SimpleToken;
+
+            let app2_fees = {
+                appOwnerBuyFee: 600,
+                appOwnerSellFee: 600,
+                appOwnerMortgageFee: 300,
+                appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3],
+                nftOwnerBuyFee: 1000,
+                nftOwnerSellFee: 1000,
+            }
+
+            let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+                ["uint256", "uint256"],
+                [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+            )
+
+            await info.coreContractInfo.foundry.createApp(
+                app2_name,
+                app2_owner,
+                await info.coreContractInfo.cpfCurveFactory.getAddress(),
+                curveParams,
+                app2_payToken,
+                app2_fees);
+            expect((await info.coreContractInfo.foundry.apps(app2_appid)).name).eq(app2_name);
+            await info.coreContractInfo.foundry.connect(app2_owner).setAppOperator(app2_appid, app2_operator)
+
+            let app2 = await info.coreContractInfo.foundry.apps(app2_appid)
+            let app2_market = (await ethers.getContractAt("Market", app2.market)) as Market;
+            let app2_mortgageNFT = (await ethers.getContractAt("MortgageNFT", app2.mortgageNFT)) as MortgageNFT;
+
+            let nft_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4]
+
+            let tid_1 = "t1";
+            let tid_2 = "t2";
+            await info.coreContractInfo.foundry.connect(app2_operator).createToken(app2_appid, tid_1, "0x12", [100000], [nft_owner.address], ["0x12"])
+            await info.coreContractInfo.foundry.connect(app2_operator).createToken(app2_appid, tid_2, "0x12", [100000], [nft_owner.address], ["0x12"])
+
+            let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5]
+            let user2 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6]
+
+            await app2_payToken.transfer(user1, getTokenAmountWei(5000))
+            await app2_payToken.transfer(user2, getTokenAmountWei(5000))
+            await app2_payToken.connect(user1).approve(await app2_market.getAddress(), getTokenAmountWei(5000))
+            await app2_payToken.connect(user2).approve(await app2_market.getAddress(), getTokenAmountWei(5000))
+
+            let buyAmount_1_user_1 = getTokenAmountWei(1000)
+            let buyAmount_1_user_2 = getTokenAmountWei(2000)
+            let buyAmount_1_user_1_2 = getTokenAmountWei(5000)
+            await app2_market.connect(user1).buy(tid_1, buyAmount_1_user_1);
+            await app2_market.connect(user2).buy(tid_1, buyAmount_1_user_2);
+            await app2_market.connect(user1).buy(tid_1, buyAmount_1_user_1_2);
+
+            let buyAmount_2_user_1 = getTokenAmountWei(3000)
+            let buyAmount_2_user_2 = getTokenAmountWei(4000)
+            await app2_market.connect(user1).buy(tid_2, buyAmount_2_user_1);
+            await app2_market.connect(user2).buy(tid_2, buyAmount_2_user_2);
+
+            let token_addr_tid1 = await app2_market.token(tid_1)
+            let token_addr_tid2 = await app2_market.token(tid_2)
+            let token_tid1 = (await ethers.getContractAt("Token", token_addr_tid1)) as Token
+            let token_tid2 = (await ethers.getContractAt("Token", token_addr_tid2)) as Token
+
+            await token_tid1.connect(user1).approve(await app2_market.getAddress(), buyAmount_1_user_1)
+            let result1 = await app2_market.connect(user1).mortgageNew.staticCall(tid_1, buyAmount_1_user_1);
+            await app2_market.connect(user1).mortgageNew(tid_1, buyAmount_1_user_1);
+
+            await token_tid2.connect(user1).approve(await app2_market.getAddress(), buyAmount_2_user_1)
+            let result2 = await app2_market.connect(user1).mortgageNew.staticCall(tid_2, buyAmount_2_user_1);
+            await app2_market.connect(user1).mortgageNew(tid_2, buyAmount_2_user_1);
+
+            await token_tid1.connect(user2).approve(await app2_market.getAddress(), buyAmount_1_user_2);
+            let result3 = await app2_market.connect(user2).mortgageNew.staticCall(tid_1, buyAmount_1_user_2);
+            await app2_market.connect(user2).mortgageNew(tid_1, buyAmount_1_user_2);
+
+            await token_tid2.connect(user2).approve(await app2_market.getAddress(), buyAmount_2_user_2);
+            let result4 = await app2_market.connect(user2).mortgageNew.staticCall(tid_2, buyAmount_2_user_2);
+            await app2_market.connect(user2).mortgageNew(tid_2, buyAmount_2_user_2);
+
+            // not owner
+            await expect(app2_market.connect(user1).cash(result3.nftTokenId, 1)).to.be.revertedWith("AOE")
+
+            // no tokenid
+            await expect(app2_market.connect(user1).merge(11, 1)).to.be.revertedWithCustomError(app2_mortgageNFT, "ERC721NonexistentToken")
+
+            // cash 0
+            await expect(app2_market.connect(user1).cash(result1.nftTokenId, 0)).to.be.revertedWith("TAE")
+
+            // cash > amount
+            await expect(app2_market.connect(user1).cash(result1.nftTokenId, buyAmount_1_user_1 + BigInt(1))).to.be.revertedWith("TAE")
+
+            // cash not have profit
+            await expect(app2_market.connect(user1).cash(result1.nftTokenId, buyAmount_1_user_1)).to.be.revertedWith("CE")
+        });
+
+        it("cash with eth", async function () {
+            const info = (await loadFixture(deployAllContracts));
+
+            let app2_appid = await info.coreContractInfo.foundry.nextAppId()
+            let app2_name = "app2";
+            let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 1];
+            let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+
+            let app2_payToken = ZeroAddress
+            let app2_fees = {
+                appOwnerBuyFee: 300,
+                appOwnerSellFee: 500,
+                appOwnerMortgageFee: 400,
+                appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3],
+                nftOwnerBuyFee: 600,
+                nftOwnerSellFee: 1000,
+            }
+
+            let nft_1_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4];
+            let nft_2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5];
+
+            let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6];
+            let user2 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7];
+
+            let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+                ["uint256", "uint256"],
+                [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+            )
+
+            await info.coreContractInfo.foundry.createApp(
+                app2_name,
+                app2_owner,
+                await info.coreContractInfo.cpfCurveFactory.getAddress(),
+                curveParams,
+                app2_payToken,
+                app2_fees);
+            expect((await info.coreContractInfo.foundry.apps(app2_appid)).name).eq(app2_name);
+            await info.coreContractInfo.foundry.connect(app2_owner).setAppOperator(app2_appid, app2_operator)
+
+            let platformMortgageFee = 200
+            let platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7]
+            await info.coreContractInfo.foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFee(app2_appid, platformMortgageFee)
+            await info.coreContractInfo.foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFeeRecipient(app2_appid, platformMortgageFeeRecipient)
+
+            let app2 = await info.coreContractInfo.foundry.apps(app2_appid)
+            let app2_market = (await ethers.getContractAt("Market", app2.market)) as Market;
+            let app2_mortgageNFT = (await ethers.getContractAt("MortgageNFT", app2.mortgageNFT)) as MortgageNFT;
+
+            let tid = "t1";
+            await info.coreContractInfo.foundry.connect(app2_operator).createToken(app2_appid, tid, "0x12", [10000, 90000], [nft_1_owner.address, nft_2_owner.address], ["0x12", "0x13"])
+
+            let tokenAddr = await info.coreContractInfo.foundry.token(app2_appid, tid);
+            let token = (await ethers.getContractAt("Token", tokenAddr)) as Token;
+
+            let multiplyNewAmount = BigInt(10) ** BigInt(18) * BigInt(10000)
+            let result = await app2_market.connect(user1).multiplyNew.staticCall(tid, multiplyNewAmount, { value: multiplyNewAmount })
+            await app2_market.connect(user1).multiplyNew(tid, multiplyNewAmount, { value: result.payTokenAmount })
+            expect(result.nftTokenId).eq(1)
+
+            // user2 multiply
+            let multiplyNewAmount_user2 = BigInt(10) ** BigInt(18) * BigInt(10000)
+            let result_user2 = await app2_market.connect(user2).multiplyNew.staticCall(tid, multiplyNewAmount_user2, { value: multiplyNewAmount_user2 })
+            await app2_market.connect(user2).multiplyNew(tid, multiplyNewAmount_user2, { value: result_user2.payTokenAmount })
+            expect(result_user2.nftTokenId).eq(2)
+
+
+            // cash
+            let user1_eth_balance_1 = await ethers.provider.getBalance(await user1.getAddress())
+            let nft_1_owner_eth_balance_1 = await ethers.provider.getBalance(nft_1_owner.address)
+            let nft_2_owner_eth_balance_1 = await ethers.provider.getBalance(nft_2_owner.address)
+            let app2_owner_fee_eth_balance_1 = await ethers.provider.getBalance(app2_fees.appOwnerFeeRecipient.address)
+            let app2_market_eth_balance_1 = await ethers.provider.getBalance(app2_market.getAddress())
+
+            let user1_token_balance_1 = await app2_market.balanceOf(tid, await user1.getAddress())
+            let app2_market_token_balance_1 = await app2_market.balanceOf(tid, await app2_market.getAddress())
+
+            let cashAmount = BigInt(10) ** BigInt(18) * BigInt(5000)
+            let result_cash = await app2_market.connect(user1).cash.staticCall(result.nftTokenId, cashAmount)
+            let res_cash = await app2_market.connect(user1).cash(result.nftTokenId, cashAmount)
+            let ress_cash = await res_cash.wait()
+            let gas_cash = ress_cash!.gasPrice * ress_cash!.gasUsed
+
+            let user1_eth_balance_2 = await ethers.provider.getBalance(await user1.getAddress())
+            let nft_1_owner_eth_balance_2 = await ethers.provider.getBalance(nft_1_owner.address)
+            let nft_2_owner_eth_balance_2 = await ethers.provider.getBalance(nft_2_owner.address)
+            let app2_owner_fee_eth_balance_2 = await ethers.provider.getBalance(app2_fees.appOwnerFeeRecipient.address)
+            let app2_market_eth_balance_2 = await ethers.provider.getBalance(app2_market.getAddress())
+
+            let user1_token_balance_2 = await app2_market.balanceOf(tid, await user1.getAddress())
+            let app2_market_token_balance_2 = await app2_market.balanceOf(tid, await app2_market.getAddress())
+
+            expect(result_cash).eq("2615634345713312")
+            expect(user1_eth_balance_2).eq(user1_eth_balance_1 + result_cash - gas_cash)
+
+            let nft_fee = (nft_1_owner_eth_balance_2 - nft_1_owner_eth_balance_1) + (nft_2_owner_eth_balance_2 - nft_2_owner_eth_balance_1)
+            let app_owner_fee = app2_owner_fee_eth_balance_2 - app2_owner_fee_eth_balance_1
+
+            let curve_amount_sell = await app2_market.getPayTokenAmount(multiplyNewAmount + multiplyNewAmount_user2 - cashAmount, cashAmount)
+            let curve_amount_mortgage = await app2_market.getPayTokenAmount(multiplyNewAmount - cashAmount, cashAmount)
+
+            expect(curve_amount_sell).gt(curve_amount_mortgage)
+            expect(result_cash).eq(curve_amount_sell - nft_fee - app_owner_fee - curve_amount_mortgage)
+
+            expect(curve_amount_sell / nft_fee).eq(100000 / app2_fees.nftOwnerSellFee)
+            expect(curve_amount_sell / app_owner_fee).eq(100000 / app2_fees.appOwnerSellFee)
+
+            expect((nft_2_owner_eth_balance_2 - nft_2_owner_eth_balance_1) / (nft_1_owner_eth_balance_2 - nft_1_owner_eth_balance_1)).eq(9)
+
+            expect(app2_market_eth_balance_2).eq(app2_market_eth_balance_1 - result_cash - nft_fee - app_owner_fee)
+
+            expect(await app2_market.totalSupply(tid)).eq(multiplyNewAmount + multiplyNewAmount_user2 - cashAmount)
+            expect(user1_token_balance_2).eq(user1_token_balance_1).eq(0)
+            expect(app2_market_token_balance_2).eq(app2_market_token_balance_1 - cashAmount)
+
+            expect(await app2_mortgageNFT.totalSupply()).eq(2)
+            expect(await app2_mortgageNFT.ownerOf(result.nftTokenId)).eq(user1.address)
+            expect((await app2_mortgageNFT.info(result.nftTokenId)).amount).eq(multiplyNewAmount - cashAmount)
+
+            await app2_market.connect(user1).cash(result.nftTokenId, multiplyNewAmount - cashAmount)
+
+            expect(await app2_mortgageNFT.totalSupply()).eq(1)
+            await expect(app2_mortgageNFT.ownerOf(result.nftTokenId)).revertedWithCustomError(app2_mortgageNFT, "ERC721NonexistentToken")
+            expect((await app2_mortgageNFT.info(result.nftTokenId)).amount).eq(0)
+        });
+
+        it("cash with eth | no sell fee", async function () {
+            const info = (await loadFixture(deployAllContracts));
+
+            let app2_appid = await info.coreContractInfo.foundry.nextAppId()
+            let app2_name = "app2";
+            let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 1];
+            let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+
+            let app2_payToken = ZeroAddress
+            let app2_fees = {
+                appOwnerBuyFee: 300,
+                appOwnerSellFee: 0,
+                appOwnerMortgageFee: 400,
+                appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3],
+                nftOwnerBuyFee: 600,
+                nftOwnerSellFee: 0,
+            }
+
+            let nft_1_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4];
+            let nft_2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5];
+
+            let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6];
+            let user2 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7];
+
+            let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+                ["uint256", "uint256"],
+                [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+            )
+
+            await info.coreContractInfo.foundry.createApp(
+                app2_name,
+                app2_owner,
+                await info.coreContractInfo.cpfCurveFactory.getAddress(),
+                curveParams,
+                app2_payToken,
+                app2_fees);
+            expect((await info.coreContractInfo.foundry.apps(app2_appid)).name).eq(app2_name);
+            await info.coreContractInfo.foundry.connect(app2_owner).setAppOperator(app2_appid, app2_operator)
+
+            let platformMortgageFee = 200
+            let platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7]
+            await info.coreContractInfo.foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFee(app2_appid, platformMortgageFee)
+            await info.coreContractInfo.foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFeeRecipient(app2_appid, platformMortgageFeeRecipient)
+
+            let app2 = await info.coreContractInfo.foundry.apps(app2_appid)
+            let app2_market = (await ethers.getContractAt("Market", app2.market)) as Market;
+            let app2_mortgageNFT = (await ethers.getContractAt("MortgageNFT", app2.mortgageNFT)) as MortgageNFT;
+
+            let tid = "t1";
+            await info.coreContractInfo.foundry.connect(app2_operator).createToken(app2_appid, tid, "0x12", [10000, 90000], [nft_1_owner.address, nft_2_owner.address], ["0x12", "0x13"])
+
+            let tokenAddr = await info.coreContractInfo.foundry.token(app2_appid, tid);
+            let token = (await ethers.getContractAt("Token", tokenAddr)) as Token;
+
+            let multiplyNewAmount = BigInt(10) ** BigInt(18) * BigInt(10000)
+            let result = await app2_market.connect(user1).multiplyNew.staticCall(tid, multiplyNewAmount, { value: multiplyNewAmount })
+            await app2_market.connect(user1).multiplyNew(tid, multiplyNewAmount, { value: result.payTokenAmount })
+            expect(result.nftTokenId).eq(1)
+
+            // user2 multiply
+            let multiplyNewAmount_user2 = BigInt(10) ** BigInt(18) * BigInt(10000)
+            let result_user2 = await app2_market.connect(user2).multiplyNew.staticCall(tid, multiplyNewAmount_user2, { value: multiplyNewAmount_user2 })
+            await app2_market.connect(user2).multiplyNew(tid, multiplyNewAmount_user2, { value: result_user2.payTokenAmount })
+            expect(result_user2.nftTokenId).eq(2)
+
+
+            // cash
+            let user1_eth_balance_1 = await ethers.provider.getBalance(await user1.getAddress())
+            let nft_1_owner_eth_balance_1 = await ethers.provider.getBalance(nft_1_owner.address)
+            let nft_2_owner_eth_balance_1 = await ethers.provider.getBalance(nft_2_owner.address)
+            let app2_owner_fee_eth_balance_1 = await ethers.provider.getBalance(app2_fees.appOwnerFeeRecipient.address)
+            let app2_market_eth_balance_1 = await ethers.provider.getBalance(app2_market.getAddress())
+
+            let user1_token_balance_1 = await app2_market.balanceOf(tid, await user1.getAddress())
+            let app2_market_token_balance_1 = await app2_market.balanceOf(tid, await app2_market.getAddress())
+
+            let cashAmount = BigInt(10) ** BigInt(18) * BigInt(5000)
+            let result_cash = await app2_market.connect(user1).cash.staticCall(result.nftTokenId, cashAmount)
+            let res_cash = await app2_market.connect(user1).cash(result.nftTokenId, cashAmount)
+            let ress_cash = await res_cash.wait()
+            let gas_cash = ress_cash!.gasPrice * ress_cash!.gasUsed
+
+            let user1_eth_balance_2 = await ethers.provider.getBalance(await user1.getAddress())
+            let nft_1_owner_eth_balance_2 = await ethers.provider.getBalance(nft_1_owner.address)
+            let nft_2_owner_eth_balance_2 = await ethers.provider.getBalance(nft_2_owner.address)
+            let app2_owner_fee_eth_balance_2 = await ethers.provider.getBalance(app2_fees.appOwnerFeeRecipient.address)
+            let app2_market_eth_balance_2 = await ethers.provider.getBalance(app2_market.getAddress())
+
+            let user1_token_balance_2 = await app2_market.balanceOf(tid, await user1.getAddress())
+            let app2_market_token_balance_2 = await app2_market.balanceOf(tid, await app2_market.getAddress())
+
+            expect(result_cash).eq("10385239649763865")
+            expect(user1_eth_balance_2).eq(user1_eth_balance_1 + result_cash - gas_cash)
+
+            let nft_fee = (nft_1_owner_eth_balance_2 - nft_1_owner_eth_balance_1) + (nft_2_owner_eth_balance_2 - nft_2_owner_eth_balance_1)
+            let app_owner_fee = app2_owner_fee_eth_balance_2 - app2_owner_fee_eth_balance_1
+
+            let curve_amount_sell = await app2_market.getPayTokenAmount(multiplyNewAmount + multiplyNewAmount_user2 - cashAmount, cashAmount)
+            let curve_amount_mortgage = await app2_market.getPayTokenAmount(multiplyNewAmount - cashAmount, cashAmount)
+
+            expect(nft_fee).eq(0)
+            expect(app_owner_fee).eq(0)
+
+            expect(curve_amount_sell).gt(curve_amount_mortgage)
+            expect(result_cash).eq(curve_amount_sell - curve_amount_mortgage)
+
+            expect(app2_market_eth_balance_2).eq(app2_market_eth_balance_1 - result_cash - nft_fee - app_owner_fee)
+
+            expect(await app2_market.totalSupply(tid)).eq(multiplyNewAmount + multiplyNewAmount_user2 - cashAmount)
+            expect(user1_token_balance_2).eq(user1_token_balance_1).eq(0)
+            expect(app2_market_token_balance_2).eq(app2_market_token_balance_1 - cashAmount)
+
+            expect(await app2_mortgageNFT.totalSupply()).eq(2)
+            expect(await app2_mortgageNFT.ownerOf(result.nftTokenId)).eq(user1.address)
+            expect((await app2_mortgageNFT.info(result.nftTokenId)).amount).eq(multiplyNewAmount - cashAmount)
+
+            await app2_market.connect(user1).cash(result.nftTokenId, multiplyNewAmount - cashAmount)
+
+            expect(await app2_mortgageNFT.totalSupply()).eq(1)
+            await expect(app2_mortgageNFT.ownerOf(result.nftTokenId)).revertedWithCustomError(app2_mortgageNFT, "ERC721NonexistentToken")
+            expect((await app2_mortgageNFT.info(result.nftTokenId)).amount).eq(0)
+        });
+
+        it("cash with erc20", async function () {
+            const info = (await loadFixture(deployAllContracts));
+
+            let app2_appid = await info.coreContractInfo.foundry.nextAppId()
+            let app2_name = "app2";
+            let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 1];
+            let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+
+            let app2_payToken = (await (
+                await ethers.getContractFactory("SimpleToken")
+            ).deploy(BigInt(10) ** BigInt(27))) as SimpleToken;
+
+            let app2_fees = {
+                appOwnerBuyFee: 300,
+                appOwnerSellFee: 500,
+                appOwnerMortgageFee: 400,
+                appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3],
+                nftOwnerBuyFee: 600,
+                nftOwnerSellFee: 1000,
+            }
+
+            let nft_1_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4];
+            let nft_2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5];
+
+            let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6];
+            let user2 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7];
+
+            let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+                ["uint256", "uint256"],
+                [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+            )
+
+            await info.coreContractInfo.foundry.createApp(
+                app2_name,
+                app2_owner,
+                await info.coreContractInfo.cpfCurveFactory.getAddress(),
+                curveParams,
+                app2_payToken,
+                app2_fees);
+            expect((await info.coreContractInfo.foundry.apps(app2_appid)).name).eq(app2_name);
+            await info.coreContractInfo.foundry.connect(app2_owner).setAppOperator(app2_appid, app2_operator)
+
+            let platformMortgageFee = 200
+            let platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7]
+            await info.coreContractInfo.foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFee(app2_appid, platformMortgageFee)
+            await info.coreContractInfo.foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFeeRecipient(app2_appid, platformMortgageFeeRecipient)
+
+            let app2 = await info.coreContractInfo.foundry.apps(app2_appid)
+            let app2_market = (await ethers.getContractAt("Market", app2.market)) as Market;
+            let app2_mortgageNFT = (await ethers.getContractAt("MortgageNFT", app2.mortgageNFT)) as MortgageNFT;
+
+            let tid = "t1";
+            await info.coreContractInfo.foundry.connect(app2_operator).createToken(app2_appid, tid, "0x12", [10000, 90000], [nft_1_owner.address, nft_2_owner.address], ["0x12", "0x13"])
+
+            let tokenAddr = await info.coreContractInfo.foundry.token(app2_appid, tid);
+            let token = (await ethers.getContractAt("Token", tokenAddr)) as Token;
+
+            let multiplyNewAmount = BigInt(10) ** BigInt(18) * BigInt(10000)
+            await app2_payToken.transfer(await user1.getAddress(), multiplyNewAmount)
+            await app2_payToken.connect(user1).approve(app2_market.getAddress(), multiplyNewAmount)
+            let result = await app2_market.connect(user1).multiplyNew.staticCall(tid, multiplyNewAmount)
+            await app2_market.connect(user1).multiplyNew(tid, multiplyNewAmount)
+            expect(result.nftTokenId).eq(1)
+
+            // user2 multiply
+            let multiplyNewAmount_user2 = BigInt(10) ** BigInt(18) * BigInt(10000)
+            await app2_payToken.transfer(await user2.getAddress(), multiplyNewAmount_user2)
+            await app2_payToken.connect(user2).approve(app2_market.getAddress(), multiplyNewAmount_user2)
+            let result_user2 = await app2_market.connect(user2).multiplyNew.staticCall(tid, multiplyNewAmount_user2, { value: multiplyNewAmount_user2 })
+            await app2_market.connect(user2).multiplyNew(tid, multiplyNewAmount_user2, { value: result_user2.payTokenAmount })
+            expect(result_user2.nftTokenId).eq(2)
+
+            // cash
+            let user1_pay_token_balance_1 = await app2_payToken.balanceOf(await user1.getAddress())
+            let nft_1_owner_pay_token_balance_1 = await app2_payToken.balanceOf(nft_1_owner.address)
+            let nft_2_owner_pay_token_balance_1 = await app2_payToken.balanceOf(nft_2_owner.address)
+            let app2_owner_fee_pay_token_balance_1 = await app2_payToken.balanceOf(app2_fees.appOwnerFeeRecipient.address)
+            let app2_market_pay_token_balance_1 = await app2_payToken.balanceOf(app2_market.getAddress())
+
+            let user1_token_balance_1 = await app2_market.balanceOf(tid, await user1.getAddress())
+            let app2_market_token_balance_1 = await app2_market.balanceOf(tid, await app2_market.getAddress())
+
+            let user1_eth_balance_1 = await ethers.provider.getBalance(await user1.getAddress())
+
+            let cashAmount = BigInt(10) ** BigInt(18) * BigInt(5000)
+            let result_cash = await app2_market.connect(user1).cash.staticCall(result.nftTokenId, cashAmount)
+            let res_cash = await app2_market.connect(user1).cash(result.nftTokenId, cashAmount)
+            let ress_cash = await res_cash.wait()
+            let gas_cash = ress_cash!.gasPrice * ress_cash!.gasUsed
+
+            let user1_pay_token_balance_2 = await app2_payToken.balanceOf(await user1.getAddress())
+            let nft_1_owner_pay_token_balance_2 = await app2_payToken.balanceOf(nft_1_owner.address)
+            let nft_2_owner_pay_token_balance_2 = await app2_payToken.balanceOf(nft_2_owner.address)
+            let app2_owner_fee_pay_token_balance_2 = await app2_payToken.balanceOf(app2_fees.appOwnerFeeRecipient.address)
+            let app2_market_pay_token_balance_2 = await app2_payToken.balanceOf(app2_market.getAddress())
+
+            let user1_token_balance_2 = await app2_market.balanceOf(tid, await user1.getAddress())
+            let app2_market_token_balance_2 = await app2_market.balanceOf(tid, await app2_market.getAddress())
+
+            let user1_eth_balance_2 = await ethers.provider.getBalance(await user1.getAddress())
+
+            expect(user1_eth_balance_2).eq(user1_eth_balance_1 - gas_cash)
+
+            expect(result_cash).eq("2615634345713312")
+            expect(user1_pay_token_balance_2).eq(user1_pay_token_balance_1 + result_cash)
+
+            let nft_fee = (nft_1_owner_pay_token_balance_2 - nft_1_owner_pay_token_balance_1) + (nft_2_owner_pay_token_balance_2 - nft_2_owner_pay_token_balance_1)
+            let app_owner_fee = app2_owner_fee_pay_token_balance_2 - app2_owner_fee_pay_token_balance_1
+
+            let curve_amount_sell = await app2_market.getPayTokenAmount(multiplyNewAmount + multiplyNewAmount_user2 - cashAmount, cashAmount)
+            let curve_amount_mortgage = await app2_market.getPayTokenAmount(multiplyNewAmount - cashAmount, cashAmount)
+
+            expect(curve_amount_sell).gt(curve_amount_mortgage)
+            expect(result_cash).eq(curve_amount_sell - nft_fee - app_owner_fee - curve_amount_mortgage)
+
+            expect(curve_amount_sell / nft_fee).eq(100000 / app2_fees.nftOwnerSellFee)
+            expect(curve_amount_sell / app_owner_fee).eq(100000 / app2_fees.appOwnerSellFee)
+
+            expect((nft_2_owner_pay_token_balance_2 - nft_2_owner_pay_token_balance_1) / (nft_1_owner_pay_token_balance_2 - nft_1_owner_pay_token_balance_1)).eq(9)
+
+            expect(app2_market_pay_token_balance_2).eq(app2_market_pay_token_balance_1 - result_cash - nft_fee - app_owner_fee)
+
+            expect(await app2_market.totalSupply(tid)).eq(multiplyNewAmount + multiplyNewAmount_user2 - cashAmount)
+            expect(user1_token_balance_2).eq(user1_token_balance_1).eq(0)
+            expect(app2_market_token_balance_2).eq(app2_market_token_balance_1 - cashAmount)
+
+            expect(await app2_mortgageNFT.totalSupply()).eq(2)
+            expect(await app2_mortgageNFT.ownerOf(result.nftTokenId)).eq(user1.address)
+            expect((await app2_mortgageNFT.info(result.nftTokenId)).amount).eq(multiplyNewAmount - cashAmount)
+
+            await app2_market.connect(user1).cash(result.nftTokenId, multiplyNewAmount - cashAmount)
+
+            expect(await app2_mortgageNFT.totalSupply()).eq(1)
+            await expect(app2_mortgageNFT.ownerOf(result.nftTokenId)).revertedWithCustomError(app2_mortgageNFT, "ERC721NonexistentToken")
+            expect((await app2_mortgageNFT.info(result.nftTokenId)).amount).eq(0)
+        });
+
+        it("cash with erc20 | no sell fee", async function () {
+            const info = (await loadFixture(deployAllContracts));
+
+            let app2_appid = await info.coreContractInfo.foundry.nextAppId()
+            let app2_name = "app2";
+            let app2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 1];
+            let app2_operator = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 2];
+
+            let app2_payToken = (await (
+                await ethers.getContractFactory("SimpleToken")
+            ).deploy(BigInt(10) ** BigInt(27))) as SimpleToken;
+
+            let app2_fees = {
+                appOwnerBuyFee: 300,
+                appOwnerSellFee: 0,
+                appOwnerMortgageFee: 400,
+                appOwnerFeeRecipient: info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 3],
+                nftOwnerBuyFee: 600,
+                nftOwnerSellFee: 0,
+            }
+
+            let nft_1_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 4];
+            let nft_2_owner = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 5];
+
+            let user1 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 6];
+            let user2 = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7];
+
+            let curveParams = ethers.AbiCoder.defaultAbiCoder().encode(
+                ["uint256", "uint256"],
+                [BigInt(10) ** BigInt(20), BigInt(10) ** BigInt(24)]
+            )
+
+            await info.coreContractInfo.foundry.createApp(
+                app2_name,
+                app2_owner,
+                await info.coreContractInfo.cpfCurveFactory.getAddress(),
+                curveParams,
+                app2_payToken,
+                app2_fees);
+            expect((await info.coreContractInfo.foundry.apps(app2_appid)).name).eq(app2_name);
+            await info.coreContractInfo.foundry.connect(app2_owner).setAppOperator(app2_appid, app2_operator)
+
+            let platformMortgageFee = 200
+            let platformMortgageFeeRecipient = info.xMemeAllContractInfo.wallets[info.xMemeAllContractInfo.nextWalletIndex + 7]
+            await info.coreContractInfo.foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFee(app2_appid, platformMortgageFee)
+            await info.coreContractInfo.foundry.connect(info.coreContractInfo.deployWallet).setPlatformMortgageFeeRecipient(app2_appid, platformMortgageFeeRecipient)
+
+            let app2 = await info.coreContractInfo.foundry.apps(app2_appid)
+            let app2_market = (await ethers.getContractAt("Market", app2.market)) as Market;
+            let app2_mortgageNFT = (await ethers.getContractAt("MortgageNFT", app2.mortgageNFT)) as MortgageNFT;
+
+            let tid = "t1";
+            await info.coreContractInfo.foundry.connect(app2_operator).createToken(app2_appid, tid, "0x12", [10000, 90000], [nft_1_owner.address, nft_2_owner.address], ["0x12", "0x13"])
+
+            let tokenAddr = await info.coreContractInfo.foundry.token(app2_appid, tid);
+            let token = (await ethers.getContractAt("Token", tokenAddr)) as Token;
+
+            let multiplyNewAmount = BigInt(10) ** BigInt(18) * BigInt(10000)
+            await app2_payToken.transfer(await user1.getAddress(), multiplyNewAmount)
+            await app2_payToken.connect(user1).approve(app2_market.getAddress(), multiplyNewAmount)
+            let result = await app2_market.connect(user1).multiplyNew.staticCall(tid, multiplyNewAmount)
+            await app2_market.connect(user1).multiplyNew(tid, multiplyNewAmount)
+            expect(result.nftTokenId).eq(1)
+
+            // user2 multiply
+            let multiplyNewAmount_user2 = BigInt(10) ** BigInt(18) * BigInt(10000)
+            await app2_payToken.transfer(await user2.getAddress(), multiplyNewAmount_user2)
+            await app2_payToken.connect(user2).approve(app2_market.getAddress(), multiplyNewAmount_user2)
+            let result_user2 = await app2_market.connect(user2).multiplyNew.staticCall(tid, multiplyNewAmount_user2, { value: multiplyNewAmount_user2 })
+            await app2_market.connect(user2).multiplyNew(tid, multiplyNewAmount_user2, { value: result_user2.payTokenAmount })
+            expect(result_user2.nftTokenId).eq(2)
+
+            // cash
+            let user1_pay_token_balance_1 = await app2_payToken.balanceOf(await user1.getAddress())
+            let nft_1_owner_pay_token_balance_1 = await app2_payToken.balanceOf(nft_1_owner.address)
+            let nft_2_owner_pay_token_balance_1 = await app2_payToken.balanceOf(nft_2_owner.address)
+            let app2_owner_fee_pay_token_balance_1 = await app2_payToken.balanceOf(app2_fees.appOwnerFeeRecipient.address)
+            let app2_market_pay_token_balance_1 = await app2_payToken.balanceOf(app2_market.getAddress())
+
+            let user1_token_balance_1 = await app2_market.balanceOf(tid, await user1.getAddress())
+            let app2_market_token_balance_1 = await app2_market.balanceOf(tid, await app2_market.getAddress())
+
+            let user1_eth_balance_1 = await ethers.provider.getBalance(await user1.getAddress())
+
+            let cashAmount = BigInt(10) ** BigInt(18) * BigInt(5000)
+            let result_cash = await app2_market.connect(user1).cash.staticCall(result.nftTokenId, cashAmount)
+            let res_cash = await app2_market.connect(user1).cash(result.nftTokenId, cashAmount)
+            let ress_cash = await res_cash.wait()
+            let gas_cash = ress_cash!.gasPrice * ress_cash!.gasUsed
+
+            let user1_pay_token_balance_2 = await app2_payToken.balanceOf(await user1.getAddress())
+            let nft_1_owner_pay_token_balance_2 = await app2_payToken.balanceOf(nft_1_owner.address)
+            let nft_2_owner_pay_token_balance_2 = await app2_payToken.balanceOf(nft_2_owner.address)
+            let app2_owner_fee_pay_token_balance_2 = await app2_payToken.balanceOf(app2_fees.appOwnerFeeRecipient.address)
+            let app2_market_pay_token_balance_2 = await app2_payToken.balanceOf(app2_market.getAddress())
+
+            let user1_token_balance_2 = await app2_market.balanceOf(tid, await user1.getAddress())
+            let app2_market_token_balance_2 = await app2_market.balanceOf(tid, await app2_market.getAddress())
+
+            let user1_eth_balance_2 = await ethers.provider.getBalance(await user1.getAddress())
+
+            expect(user1_eth_balance_2).eq(user1_eth_balance_1 - gas_cash)
+
+            expect(result_cash).eq("10385239649763865")
+            expect(user1_pay_token_balance_2).eq(user1_pay_token_balance_1 + result_cash)
+
+            let nft_fee = (nft_1_owner_pay_token_balance_2 - nft_1_owner_pay_token_balance_1) + (nft_2_owner_pay_token_balance_2 - nft_2_owner_pay_token_balance_1)
+            let app_owner_fee = app2_owner_fee_pay_token_balance_2 - app2_owner_fee_pay_token_balance_1
+
+            let curve_amount_sell = await app2_market.getPayTokenAmount(multiplyNewAmount + multiplyNewAmount_user2 - cashAmount, cashAmount)
+            let curve_amount_mortgage = await app2_market.getPayTokenAmount(multiplyNewAmount - cashAmount, cashAmount)
+
+            expect(nft_fee).eq(0)
+            expect(app_owner_fee).eq(0)
+
+            expect(curve_amount_sell).gt(curve_amount_mortgage)
+            expect(result_cash).eq(curve_amount_sell - curve_amount_mortgage)
+
+            expect(app2_market_pay_token_balance_2).eq(app2_market_pay_token_balance_1 - result_cash - nft_fee - app_owner_fee)
+
+            expect(await app2_market.totalSupply(tid)).eq(multiplyNewAmount + multiplyNewAmount_user2 - cashAmount)
+            expect(user1_token_balance_2).eq(user1_token_balance_1).eq(0)
+            expect(app2_market_token_balance_2).eq(app2_market_token_balance_1 - cashAmount)
+
+            expect(await app2_mortgageNFT.totalSupply()).eq(2)
+            expect(await app2_mortgageNFT.ownerOf(result.nftTokenId)).eq(user1.address)
+            expect((await app2_mortgageNFT.info(result.nftTokenId)).amount).eq(multiplyNewAmount - cashAmount)
+
+            await app2_market.connect(user1).cash(result.nftTokenId, multiplyNewAmount - cashAmount)
+
+            expect(await app2_mortgageNFT.totalSupply()).eq(1)
+            await expect(app2_mortgageNFT.ownerOf(result.nftTokenId)).revertedWithCustomError(app2_mortgageNFT, "ERC721NonexistentToken")
+            expect((await app2_mortgageNFT.info(result.nftTokenId)).amount).eq(0)
+        });
     });
-
-    it("cash", async function () {
-      const info = (await loadFixture(deployAllContracts)).appOperatorAllContractInfo;
-
-      let nftOwnerT1_1 = info.wallets[info.nextWalletIndex + 1];
-      let nftOwnerT1_2 = info.wallets[info.nextWalletIndex + 2];
-      let nftOwnerT2_1 = info.wallets[info.nextWalletIndex + 3];
-      let nftOwnerT2_2 = info.wallets[info.nextWalletIndex + 4];
-      let user1 = info.wallets[info.nextWalletIndex + 5];
-      let user2 = info.wallets[info.nextWalletIndex + 6];
-
-      // create t1 t2 token
-      let paramsT1 = {
-        tid: "t1",
-        tData: "0x11",
-        cnftOwner: nftOwnerT1_1.address,
-        onftOwner: nftOwnerT1_2.address,
-      };
-      await info.appOperator
-        .createToken(paramsT1.tid, paramsT1.tData, paramsT1.cnftOwner, paramsT1.onftOwner);
-      let paramsT2 = {
-        tid: "t2",
-        tData: "0x22",
-        cnftOwner: nftOwnerT2_1.address,
-        onftOwner: nftOwnerT2_2.address,
-      };
-      await info.appOperator
-        .createToken(paramsT2.tid, paramsT2.tData, paramsT2.cnftOwner, paramsT2.onftOwner);
-
-
-      let max = BigInt(10) ** BigInt(18) * BigInt(1000000);
-      let approveValue = max * BigInt(100);
-      await info.simpleToken.transfer(user1.address, approveValue)
-      await info.simpleToken.transfer(user2.address, approveValue)
-      await info.simpleToken.connect(user1).approve(await info.market.getAddress(), approveValue)
-      await info.simpleToken.connect(user2).approve(await info.market.getAddress(), approveValue)
-
-      // user1 buy and mortgage 10000 t1 token=1
-      await info.market
-        .connect(user1)
-        .buy(paramsT1.tid, getTokenAmountWei(10000));
-      await info.market.connect(user1).mortgage(paramsT1.tid, getTokenAmountWei(10000));
-
-      await expect(info.market.connect(user1).cash(1, getTokenAmountWei(1000))).revertedWith("CE");
-
-      // user1 buy and mortgage 20000 t1 token=2
-      await info.market
-        .connect(user1)
-        .buy(paramsT1.tid, getTokenAmountWei(20000));
-      await info.market.connect(user1).mortgage(paramsT1.tid, getTokenAmountWei(20000));
-      // user1 buy and mortgage 30000 t2 token=3
-      await info.market
-        .connect(user1)
-        .buy(paramsT2.tid, getTokenAmountWei(30000));
-      await info.market.connect(user1).mortgage(paramsT2.tid, getTokenAmountWei(30000));
-      // user1 buy and mortgage 40000 t2 token=4
-      await info.market
-        .connect(user1)
-        .buy(paramsT2.tid, getTokenAmountWei(40000));
-      await info.market.connect(user1).mortgage(paramsT2.tid, getTokenAmountWei(40000));
-      // user2 buy and mortgage 15000 t1 token=5
-      await info.market
-        .connect(user2)
-        .buy(paramsT1.tid, getTokenAmountWei(15000));
-      await info.market.connect(user2).mortgage(paramsT1.tid, getTokenAmountWei(15000));
-      // user2 buy and mortgage 25000 t1 token=6
-      await info.market
-        .connect(user2)
-        .buy(paramsT1.tid, getTokenAmountWei(25000));
-      await info.market.connect(user2).mortgage(paramsT1.tid, getTokenAmountWei(25000));
-      // user2 buy and mortgage 35000 t2 token=7
-      await info.market
-        .connect(user2)
-        .buy(paramsT2.tid, getTokenAmountWei(35000));
-      await info.market.connect(user2).mortgage(paramsT2.tid, getTokenAmountWei(35000));
-      // user2 buy and mortgage 45000 t2 token=8
-      await info.market
-        .connect(user2)
-        .buy(paramsT2.tid, getTokenAmountWei(45000));
-      await info.market.connect(user2).mortgage(paramsT2.tid, getTokenAmountWei(45000));
-      //
-
-      /**
-       * cash (redeem and sell)
-       * cash part success ok
-       * nft amount change - ok
-       * market token change - ok
-       * total supoort - ok
-       * user token no change ok
-       * user get payToken ok
-       * mortgage no payToken ok
-       * cnft add payToken ok
-       * onft add payToken ok
-       * curve_sell - cnft_fee - onft_fee - curve_redeem = user get payToken ok
-       */
-      let user1_tid1_0 = await info.market.balanceOf(paramsT1.tid, user1.address);
-      let user1_tid2_0 = await info.market.balanceOf(paramsT2.tid, user1.address);
-      let user2_tid1_0 = await info.market.balanceOf(paramsT1.tid, user2.address);
-      let user2_tid2_0 = await info.market.balanceOf(paramsT2.tid, user2.address);
-
-      let user1_payToken_0 = await info.simpleToken.balanceOf(user1.address);
-      let user2_payToken_0 = await info.simpleToken.balanceOf(user2.address);
-      let mortgage_payToken_0 = await info.simpleToken.balanceOf(info.mortgageFeeWallet.address);
-      let nftOwnerT1_1_payToken_0 = await info.simpleToken.balanceOf(nftOwnerT1_1.address);
-      let nftOwnerT1_2_payToken_0 = await info.simpleToken.balanceOf(nftOwnerT1_2.address);
-      let nftOwnerT2_1_payToken_0 = await info.simpleToken.balanceOf(nftOwnerT2_1.address);
-      let nftOwnerT2_2_payToken_0 = await info.simpleToken.balanceOf(nftOwnerT2_2.address);
-      let market_payToken_0 = await info.simpleToken.balanceOf(await info.market.getAddress());
-
-      let curve_sell_0 = await info.market.getSellPayTokenAmount(paramsT1.tid, getTokenAmountWei(1000));
-      expect(curve_sell_0).eq(
-        await info.market.getPayTokenAmount(getTokenAmountWei(70000) - getTokenAmountWei(1000), getTokenAmountWei(1000)),
-      );
-      let curve_redeem_0 = await info.market.getPayTokenAmount(
-        getTokenAmountWei(10000) - getTokenAmountWei(1000),
-        getTokenAmountWei(1000),
-      );
-
-      expect((await info.mortgageNFT.info(1)).amount).eq(getTokenAmountWei(10000));
-      expect(await info.market.balanceOf(paramsT1.tid, await info.market.getAddress())).eq(
-        getTokenAmountWei(70000),
-      );
-      expect(await info.market.totalSupply(paramsT1.tid)).eq(getTokenAmountWei(70000));
-      expect(await info.market.balanceOf(paramsT2.tid, await info.market.getAddress())).eq(
-        getTokenAmountWei(150000),
-      );
-      expect(await info.market.totalSupply(paramsT2.tid)).eq(getTokenAmountWei(150000));
-
-      let userGetPayToken_0 = await info.market.connect(user1).cash.staticCall(1, getTokenAmountWei(1000));
-      await info.market.connect(user1).cash(1, getTokenAmountWei(1000));
-
-      expect((await info.mortgageNFT.info(1)).amount).eq(getTokenAmountWei(10000) - getTokenAmountWei(1000));
-      expect(await info.market.balanceOf(paramsT1.tid, await info.market.getAddress())).eq(
-        getTokenAmountWei(70000) - getTokenAmountWei(1000),
-      );
-      expect(await info.market.totalSupply(paramsT1.tid)).eq(getTokenAmountWei(70000) - getTokenAmountWei(1000));
-      expect(await info.market.balanceOf(paramsT2.tid, await info.market.getAddress())).eq(
-        getTokenAmountWei(150000),
-      );
-      expect(await info.market.totalSupply(paramsT2.tid)).eq(getTokenAmountWei(150000));
-
-      let user1_tid1_1 = await info.market.balanceOf(paramsT1.tid, user1.address);
-      let user1_tid2_1 = await info.market.balanceOf(paramsT2.tid, user1.address);
-      let user2_tid1_1 = await info.market.balanceOf(paramsT1.tid, user2.address);
-      let user2_tid2_1 = await info.market.balanceOf(paramsT2.tid, user2.address);
-
-      let user1_payToken_1 = await info.simpleToken.balanceOf(user1.address);
-      let user2_payToken_1 = await info.simpleToken.balanceOf(user2.address);
-      let mortgage_payToken_1 = await info.simpleToken.balanceOf(info.mortgageFeeWallet.address);
-      let nftOwnerT1_1_payToken_1 = await info.simpleToken.balanceOf(nftOwnerT1_1.address);
-      let nftOwnerT1_2_payToken_1 = await info.simpleToken.balanceOf(nftOwnerT1_2.address);
-      let nftOwnerT2_1_payToken_1 = await info.simpleToken.balanceOf(nftOwnerT2_1.address);
-      let nftOwnerT2_2_payToken_1 = await info.simpleToken.balanceOf(nftOwnerT2_2.address);
-      let market_payToken_1 = await info.simpleToken.balanceOf(await info.market.getAddress());
-
-      let nftOwnerT1_2_add = nftOwnerT1_2_payToken_1 - nftOwnerT1_2_payToken_0;
-      let nftOwnerT1_1_add = nftOwnerT1_1_payToken_1 - nftOwnerT1_1_payToken_0;
-
-      expect(user1_tid1_1).eq(user1_tid1_0);
-      expect(user1_tid2_1).eq(user1_tid2_0);
-      expect(user2_tid1_1).eq(user2_tid1_0);
-      expect(user2_tid2_1).eq(user2_tid2_0);
-
-      expect(mortgage_payToken_1).eq(mortgage_payToken_0);
-
-      expect(nftOwnerT2_1_payToken_1).eq(nftOwnerT2_1_payToken_0);
-      expect(nftOwnerT2_2_payToken_1).eq(nftOwnerT2_2_payToken_0);
-
-      expect(nftOwnerT1_2_add / nftOwnerT1_1_add).eq(19);
-      expect(curve_sell_0 / (nftOwnerT1_2_add + nftOwnerT1_1_add)).eq(100);
-
-      expect(user1_payToken_1 - user1_payToken_0).gt(0);
-      expect(user1_payToken_1 - user1_payToken_0).eq(userGetPayToken_0);
-
-      expect(curve_sell_0 - nftOwnerT1_2_add - nftOwnerT1_1_add - curve_redeem_0).eq(user1_payToken_1 - user1_payToken_0);
-
-      expect(market_payToken_0 - market_payToken_1)
-        .eq(user1_payToken_1 - user1_payToken_0 + nftOwnerT1_2_add + nftOwnerT1_1_add)
-        .eq(curve_sell_0 - curve_redeem_0);
-
-      expect(user2_payToken_1).eq(user2_payToken_0);
-
-      // user1 cash 9000 t1 token1
-      let curve_sell_1 = await info.market.getSellPayTokenAmount(paramsT1.tid, getTokenAmountWei(9000));
-      expect(curve_sell_1).eq(
-        await info.market.getPayTokenAmount(
-          getTokenAmountWei(70000) - getTokenAmountWei(1000) - getTokenAmountWei(9000),
-          getTokenAmountWei(9000),
-        ),
-      );
-      let curve_redeem_1 = await info.market.getPayTokenAmount(0, getTokenAmountWei(9000));
-
-      let user1_payToken_2_before = await info.simpleToken.balanceOf(user1.address);
-      let user2_payToken_2_before = await info.simpleToken.balanceOf(user2.address);
-
-      await info.market.connect(user1).cash(1, getTokenAmountWei(9000));
-
-      await expect(info.mortgageNFT.ownerOf(1)).revertedWithCustomError(info.mortgageNFT, "ERC721NonexistentToken");
-      expect((await info.mortgageNFT.info(1)).amount).eq(
-        getTokenAmountWei(10000) - getTokenAmountWei(1000) - getTokenAmountWei(9000),
-      );
-      expect(await info.market.balanceOf(paramsT1.tid, await info.market.getAddress())).eq(
-        getTokenAmountWei(70000) - getTokenAmountWei(1000) - getTokenAmountWei(9000),
-      );
-      expect(await info.market.totalSupply(paramsT1.tid)).eq(
-        getTokenAmountWei(70000) - getTokenAmountWei(1000) - getTokenAmountWei(9000),
-      );
-      expect(await info.market.balanceOf(paramsT2.tid, await info.market.getAddress())).eq(
-        getTokenAmountWei(150000),
-      );
-      expect(await info.market.totalSupply(paramsT2.tid)).eq(getTokenAmountWei(150000));
-
-      let user1_tid1_2 = await info.market.balanceOf(paramsT1.tid, user1.address);
-      let user1_tid2_2 = await info.market.balanceOf(paramsT2.tid, user1.address);
-      let user2_tid1_2 = await info.market.balanceOf(paramsT1.tid, user2.address);
-      let user2_tid2_2 = await info.market.balanceOf(paramsT2.tid, user2.address);
-
-      let user1_payToken_2 = await info.simpleToken.balanceOf(user1.address);
-      let user2_payToken_2 = await info.simpleToken.balanceOf(user2.address);
-      let mortgage_payToken_2 = await info.simpleToken.balanceOf(info.mortgageFeeWallet.address);
-      let nftOwnerT1_1_payToken_2 = await info.simpleToken.balanceOf(nftOwnerT1_1.address);
-      let nftOwnerT1_2_payToken_2 = await info.simpleToken.balanceOf(nftOwnerT1_2.address);
-      let nftOwnerT2_1_payToken_2 = await info.simpleToken.balanceOf(nftOwnerT2_1.address);
-      let nftOwnerT2_2_payToken_2 = await info.simpleToken.balanceOf(nftOwnerT2_2.address);
-      let market_payToken_2 = await info.simpleToken.balanceOf(await info.market.getAddress());
-
-      let nftOwnerT1_2_add_1 = nftOwnerT1_2_payToken_2 - nftOwnerT1_2_payToken_1;
-      let nftOwnerT1_1_add_1 = nftOwnerT1_1_payToken_2 - nftOwnerT1_1_payToken_1;
-
-      expect(user1_tid1_2).eq(user1_tid1_1);
-      expect(user1_tid2_2).eq(user1_tid2_1);
-      expect(user2_tid1_2).eq(user2_tid1_1);
-      expect(user2_tid2_2).eq(user2_tid2_1);
-
-      expect(mortgage_payToken_2).eq(mortgage_payToken_1);
-
-      expect(nftOwnerT2_1_payToken_2).eq(nftOwnerT2_1_payToken_1);
-      expect(nftOwnerT2_2_payToken_2).eq(nftOwnerT2_2_payToken_1);
-
-      expect(nftOwnerT1_2_add_1 / nftOwnerT1_1_add_1).eq(19);
-      expect(curve_sell_1 / (nftOwnerT1_2_add_1 + nftOwnerT1_1_add_1)).eq(100);
-
-      expect(user1_payToken_2 - user1_payToken_2_before).gt(0);
-      expect(curve_sell_1 - nftOwnerT1_2_add_1 - nftOwnerT1_1_add_1 - curve_redeem_1).eq(
-        user1_payToken_2 - user1_payToken_2_before,
-      );
-
-      expect(market_payToken_1 - market_payToken_2)
-        .eq(user1_payToken_2 - user1_payToken_2_before + nftOwnerT1_2_add_1 + nftOwnerT1_1_add_1)
-        .eq(curve_sell_1 - curve_redeem_1);
-
-      expect(user2_payToken_2).eq(user2_payToken_2_before);
-
-      // end
-      expect(await info.market.totalSupply(paramsT1.tid)).eq(getTokenAmountWei(60000));
-      expect(await info.market.totalSupply(paramsT2.tid)).eq(getTokenAmountWei(150000));
-
-      expect((await info.mortgageNFT.info(1)).tid).eq("");
-      expect((await info.mortgageNFT.info(2)).tid).eq(paramsT1.tid);
-      expect((await info.mortgageNFT.info(3)).tid).eq(paramsT2.tid);
-      expect((await info.mortgageNFT.info(4)).tid).eq(paramsT2.tid);
-      expect((await info.mortgageNFT.info(5)).tid).eq(paramsT1.tid);
-      expect((await info.mortgageNFT.info(6)).tid).eq(paramsT1.tid);
-      expect((await info.mortgageNFT.info(7)).tid).eq(paramsT2.tid);
-      expect((await info.mortgageNFT.info(8)).tid).eq(paramsT2.tid);
-
-      expect((await info.mortgageNFT.info(1)).amount).eq(0);
-      expect((await info.mortgageNFT.info(2)).amount).eq(getTokenAmountWei(20000));
-      expect((await info.mortgageNFT.info(3)).amount).eq(getTokenAmountWei(30000));
-      expect((await info.mortgageNFT.info(4)).amount).eq(getTokenAmountWei(40000));
-      expect((await info.mortgageNFT.info(5)).amount).eq(getTokenAmountWei(15000));
-      expect((await info.mortgageNFT.info(6)).amount).eq(getTokenAmountWei(25000));
-      expect((await info.mortgageNFT.info(7)).amount).eq(getTokenAmountWei(35000));
-      expect((await info.mortgageNFT.info(8)).amount).eq(getTokenAmountWei(45000));
-
-      let payToken_add =
-        (await info.market.getPayTokenAmount(0, getTokenAmountWei(60000))) +
-        (await info.market.getPayTokenAmount(0, getTokenAmountWei(150000)));
-      let payToken_remove =
-        (await info.market.getPayTokenAmount(0, getTokenAmountWei(20000))) +
-        (await info.market.getPayTokenAmount(0, getTokenAmountWei(30000))) +
-        (await info.market.getPayTokenAmount(0, getTokenAmountWei(40000))) +
-        (await info.market.getPayTokenAmount(0, getTokenAmountWei(15000))) +
-        (await info.market.getPayTokenAmount(0, getTokenAmountWei(25000))) +
-        (await info.market.getPayTokenAmount(0, getTokenAmountWei(35000))) +
-        (await info.market.getPayTokenAmount(0, getTokenAmountWei(45000)));
-
-      expect(payToken_add - payToken_remove).eq(await info.simpleToken.balanceOf(await info.market.getAddress()));
-    });
-  });
 });

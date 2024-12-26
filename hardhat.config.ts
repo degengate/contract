@@ -43,6 +43,11 @@ const config: HardhatUserConfig = {
     compilers: [DEFAULT_COMPILER_SETTINGS],
   },
   networks: {
+    hardhat: {
+      accounts: {
+        count: 50,
+      },
+    },
     "base-sepolia": {
       url: `${process.env.BASE_SEPOLIA_RPC_URL}`,
       // ledgerAccounts: process.env.LEDGER_DEPLOY_ADDRESS !== undefined ? [process.env.LEDGER_DEPLOY_ADDRESS] : [],
