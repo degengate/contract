@@ -18,6 +18,12 @@ interface IMarket {
     address platformMortgageFeeRecipient;
   }
 
+  struct NftFeeInfo {
+    uint256[] nftFeeTokenIds;
+    address[] nftFeeTos;
+    uint256[] nftFeeAmounts;
+  }
+
   event Initialize(address feeNFT, address mortgageNFT);
 
   event Buy(
@@ -25,9 +31,7 @@ interface IMarket {
     uint256 tokenAmount,
     uint256 payTokenAmount,
     address sender,
-    uint256[] nftFeeTokenIds,
-    address[] nftFeeOwners,
-    uint256[] nftFeeAmounts,
+    NftFeeInfo nftFeeInfo,
     uint256 appOwnerFeeAmount
   );
 
@@ -36,9 +40,7 @@ interface IMarket {
     uint256 tokenAmount,
     uint256 payTokenAmount,
     address sender,
-    uint256[] nftFeeTokenIds,
-    address[] nftFeeOwners,
-    uint256[] nftFeeAmounts,
+    NftFeeInfo nftFeeInfo,
     uint256 appOwnerFeeAmount
   );
 
@@ -60,9 +62,7 @@ interface IMarket {
     uint256 multiplyAmount,
     uint256 payTokenAmount,
     address sender,
-    uint256[] nftFeeTokenIds,
-    address[] nftFeeOwners,
-    uint256[] nftFeeAmounts,
+    NftFeeInfo nftFeeInfo,
     uint256 appOwnerFeeAmount,
     uint256 platformMortgageFeeAmount,
     uint256 appOwnerMortgageFeeAmount
@@ -74,10 +74,19 @@ interface IMarket {
     uint256 tokenAmount,
     uint256 payTokenAmount,
     address sender,
-    uint256[] nftFeeTokenIds,
-    address[] nftFeeOwners,
-    uint256[] nftFeeAmounts,
+    NftFeeInfo nftFeeInfo,
     uint256 appOwnerFeeAmount
+  );
+
+  event ForceCash(
+    uint256 tokenId,
+    string tid,
+    uint256 tokenAmount,
+    uint256 payTokenAmount,
+    address sender,
+    NftFeeInfo nftFeeInfo,
+    uint256 appOwnerFeeAmount,
+    bool userProfit
   );
 
   event Merge(
@@ -162,6 +171,11 @@ interface IMarket {
   function multiplyAdd(uint256 nftTokenId, uint256 multiplyAmount) external payable returns (uint256 payTokenAmount);
 
   function cash(uint256 nftTokenId, uint256 tokenAmount) external returns (uint256 payTokenAmount);
+
+  function forceCash(
+    uint256 nftTokenId,
+    uint256 tokenAmount
+  ) external payable returns (bool userProfit, uint256 payTokenAmount);
 
   function merge(uint256 nftTokenId, uint256 otherNFTTokenId) external returns (uint256 payTokenAmount);
 
