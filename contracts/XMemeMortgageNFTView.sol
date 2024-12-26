@@ -4,7 +4,7 @@ pragma solidity >=0.8.20;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./utils/Base64.sol";
+import "base64-sol/base64.sol";
 
 import "./interfaces/INFTView.sol";
 import "./interfaces/IMortgageNFT.sol";
