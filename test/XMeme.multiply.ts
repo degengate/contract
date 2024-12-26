@@ -7,16 +7,39 @@ import { Token } from "../typechain-types";
 import { ethers } from "hardhat";
 
 describe("XMeme.multiply", function () {
+    it("createTokenAndMultiply revert", async function () {
+        const baseInfo = (await loadFixture(deployAllContracts));
+        const coreInfo = baseInfo.coreContractInfo;
+        const info = baseInfo.xMemeAllContractInfo;
+
+        await expect(
+            info.xMeme.connect(info.userWallet).createTokenAndMultiply("1", 1, { value: BigInt(10) ** BigInt(20) })
+        ).revertedWith("SRE");
+
+        await info.xMeme.setSystemReady(true)
+
+        // multiply 0
+        const tid = "1"
+        await expect(info.xMeme.connect(info.userWallet).createTokenAndMultiply(tid, 0, { value: BigInt(10) ** BigInt(20) })).to.be.revertedWith("TAE");
+
+        // multiply 100w
+        await expect(info.xMeme.connect(info.userWallet).createTokenAndMultiply(tid, BigInt(10) ** BigInt(24), { value: BigInt(10) ** BigInt(20) })).to.be.revertedWithPanic(0x12)
+
+        // value < need
+        let result = await info.xMeme.connect(info.userWallet).createTokenAndMultiply.staticCall(tid, BigInt(10) ** BigInt(18), { value: BigInt(10) ** BigInt(20) })
+        await expect(info.xMeme.connect(info.userWallet).createTokenAndMultiply(tid, BigInt(10) ** BigInt(18), { value: result.payEthAmount - BigInt(1) })).to.be.revertedWith("VE");
+
+        // have tid
+        await info.xMeme.connect(info.userWallet).createTokenAndMultiply(tid, BigInt(10) ** BigInt(18), { value: result.payEthAmount })
+        await expect(info.xMeme.connect(info.userWallet).createTokenAndMultiply(tid, BigInt(10) ** BigInt(18), { value: result.payEthAmount * BigInt(2) })).to.be.revertedWith("TE");
+    });
+
     it("createTokenAndMultiply and multiply", async function () {
         const baseInfo = (await loadFixture(deployAllContracts));
         const coreInfo = baseInfo.coreContractInfo;
         const info = baseInfo.xMemeAllContractInfo;
 
         let newONFTOwner = info.wallets[info.nextWalletIndex + 1]
-
-        await expect(
-            info.xMeme.connect(info.userWallet).createTokenAndMultiply("1", 1, { value: BigInt(10) ** BigInt(20) })
-        ).revertedWith("SRE");
 
         await info.xMeme.setSystemReady(true)
 
@@ -27,10 +50,13 @@ describe("XMeme.multiply", function () {
         let app_owner_fee_1_eth = await ethers.provider.getBalance(info.appOwnerFeeWallet.address);
         let xmeme_1_eth = await ethers.provider.getBalance(await info.xMeme.getAddress());
         let platformMortgageFee_1_eth = await ethers.provider.getBalance(await info.platformMortgageFeeWallet.getAddress());
+        let market_1_eth = await ethers.provider.getBalance(await info.market.getAddress());
+        let fundRecipient_1_eth = await ethers.provider.getBalance(await info.fundRecipientWallet.getAddress());
 
         let result = await info.xMeme.connect(info.userWallet).createTokenAndMultiply.staticCall(tid, multiplyAmount, { value: BigInt(10) ** BigInt(20) });
         let payEthAmount = result.payEthAmount;
-        let res = await info.xMeme.connect(info.userWallet).createTokenAndMultiply(tid, multiplyAmount, { value: BigInt(10) ** BigInt(20) });
+        await info.xMeme.connect(info.userWallet).createTokenAndMultiply.staticCall(tid, multiplyAmount, { value: payEthAmount });
+        let res = await info.xMeme.connect(info.userWallet).createTokenAndMultiply(tid, multiplyAmount, { value: payEthAmount * BigInt(2) });
         let resw = await res.wait();
         let gas_1 = resw!.gasPrice! * resw!.gasUsed!
 
@@ -38,11 +64,14 @@ describe("XMeme.multiply", function () {
         let token: Token = (await ethers.getContractAt("Token", tokenAddr)) as Token;
 
         let user_2_eth = await ethers.provider.getBalance(info.userWallet.address);
-        let user_2_token = await token.balanceOf(info.userWallet.address);
-        let market_2_token = await token.balanceOf(await info.market.getAddress());
         let app_owner_fee_2_eth = await ethers.provider.getBalance(info.appOwnerFeeWallet.address);
         let xmeme_2_eth = await ethers.provider.getBalance(await info.xMeme.getAddress());
         let platformMortgageFee_2_eth = await ethers.provider.getBalance(await info.platformMortgageFeeWallet.getAddress());
+        let market_2_eth = await ethers.provider.getBalance(await info.market.getAddress());
+        let fundRecipient_2_eth = await ethers.provider.getBalance(await info.fundRecipientWallet.getAddress());
+
+        let user_2_token = await token.balanceOf(info.userWallet.address);
+        let market_2_token = await token.balanceOf(await info.market.getAddress());
 
         // 0.6 + 0.3
         expect(app_owner_fee_2_eth - app_owner_fee_1_eth).eq("45002250112504")
@@ -58,11 +87,16 @@ describe("XMeme.multiply", function () {
             info.firstBuyFee
         )
 
-        expect(user_1_eth - gas_1 - payEthAmount).eq(user_2_eth)
+        expect(fundRecipient_2_eth).eq(fundRecipient_1_eth + info.firstBuyFee)
+
+        expect(user_2_eth).eq(user_1_eth - gas_1 - payEthAmount)
 
         expect(market_2_token).eq(multiplyAmount)
         expect(user_2_token).eq(0)
 
+        expect(market_2_eth).eq(market_1_eth).eq(0)
+
+        expect(await info.mortgageNFT.ownerOf(result.mortgageNFTtokenId)).eq(info.userWallet.address)
         let info1 = await info.mortgageNFT.info(result.mortgageNFTtokenId);
         expect(info1.tid).eq(tid)
         expect(info1.amount).eq(multiplyAmount)
