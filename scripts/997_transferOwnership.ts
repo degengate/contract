@@ -3,90 +3,57 @@ import { expect } from "chai";
 
 import {
   appid,
+  foundryDataAddress,
   foundryAddress,
-  degenGateOwnerWalletAddress,
-  degenGateNFTClaimOwnerWalletAddress,
-  degenGateAppOwnerWalletAddress,
-  foundryOwnerWalletAddress,
-  degenGatePublicNFTOwnerWalletAddress,
-  degenGateMortgageNFTOwnerWalletAddress,
-  degenGateAddress,
-  degenGateNFTClaimAddress,
-  degenGatePublicNFTAddress,
-  degenGateMortgageNFTAddress,
+  xMemeAddress,
+  feeNFTAddress,
+  mortgageNFTAddress,
+  mw_address,
 } from "./params.json";
-import config from "./config.json";
-
-let first_add = 17;
 
 async function main() {
+  const foundryData = await ethers.getContractAt("FoundryData", foundryDataAddress);
   const foundry = await ethers.getContractAt("Foundry", foundryAddress);
-  const degenGate = await ethers.getContractAt("DegenGate", degenGateAddress);
-  const degenGateNFTClaim = await ethers.getContractAt("DegenGateNFTClaim", degenGateNFTClaimAddress);
-  const publicNFT = await ethers.getContractAt("PublicNFT", degenGatePublicNFTAddress);
-  const mortgageNFT = await ethers.getContractAt("MortgageNFT", degenGateMortgageNFTAddress);
+  const xMeme = await ethers.getContractAt("XMeme", xMemeAddress);
+  const feeNFT = await ethers.getContractAt("FeeNFT", feeNFTAddress);
+  const mortgageNFT = await ethers.getContractAt("MortgageNFT", mortgageNFTAddress);
+
+  // foundryData
+  const fd = await foundryData.transferOwnership(mw_address);
+  const result1 = await fd.wait();
+  console.log(`foundryData transferOwnership to ${mw_address} at ${result1?.hash}`);
 
   // foundry
-  const a = await foundry.transferOwnership(foundryOwnerWalletAddress, {
-    maxFeePerGas: config.maxFeePerGas,
-    maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-    nonce: config.nonce0 + first_add,
-  });
-  const result = await a.wait();
-  console.log(`foundry transferOwnership to ${foundryOwnerWalletAddress} at ${result?.hash}`);
+  const a = await foundry.transferOwnership(mw_address);
+  const result2 = await a.wait();
+  console.log(`foundry transferOwnership to ${mw_address} at ${result2?.hash}`);
 
-  // degenGate
-  const b = await degenGate.transferOwnership(degenGateOwnerWalletAddress, {
-    maxFeePerGas: config.maxFeePerGas,
-    maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-    nonce: config.nonce0 + first_add + 1,
-  });
-  const result2 = await b.wait();
-  console.log(`degenGate transferOwnership to ${degenGateOwnerWalletAddress} at ${result2?.hash}`);
-
-  // degenGateNFTClaim
-  const c = await degenGateNFTClaim.transferOwnership(degenGateNFTClaimOwnerWalletAddress, {
-    maxFeePerGas: config.maxFeePerGas,
-    maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-    nonce: config.nonce0 + first_add + 2,
-  });
-  const result3 = await c.wait();
-  console.log(`degenGateNFTClaim transferOwnership to ${degenGateNFTClaimOwnerWalletAddress} at ${result3?.hash}`);
+  // xMeme
+  const b = await xMeme.transferOwnership(mw_address);
+  const result3 = await b.wait();
+  console.log(`xMeme transferOwnership to ${mw_address} at ${result3?.hash}`);
 
   // degenGate app owner
-  const d = await foundry.setAppOwner(appid, degenGateAppOwnerWalletAddress, {
-    maxFeePerGas: config.maxFeePerGas,
-    maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-    nonce: config.nonce0 + first_add + 3,
-  });
+  const d = await foundry.setAppOwner(appid, mw_address);
   const result4 = await d.wait();
-  console.log(`foundry setAppOwner to ${degenGateAppOwnerWalletAddress} at ${result4?.hash}`);
+  console.log(`foundry setAppOwner to ${mw_address} at ${result4?.hash}`);
 
-  // public nft owner
-  const e = await publicNFT.transferOwnership(degenGatePublicNFTOwnerWalletAddress, {
-    maxFeePerGas: config.maxFeePerGas,
-    maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-    nonce: config.nonce0 + first_add + 4,
-  });
+  // fee nft owner
+  const e = await feeNFT.transferOwnership(mw_address);
   const result5 = await e.wait();
-  console.log(`publicNFT transferOwnership to ${degenGatePublicNFTOwnerWalletAddress} at ${result5?.hash}`);
+  console.log(`publicNFT transferOwnership to ${mw_address} at ${result5?.hash}`);
 
   // mortgage nft owner
-  const f = await mortgageNFT.transferOwnership(degenGateMortgageNFTOwnerWalletAddress, {
-    maxFeePerGas: config.maxFeePerGas,
-    maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-    nonce: config.nonce0 + first_add + 5,
-  });
+  const f = await mortgageNFT.transferOwnership(mw_address);
   const result6 = await f.wait();
-  console.log(`mortgageNFT transferOwnership to ${degenGateMortgageNFTOwnerWalletAddress} at ${result6?.hash}`);
+  console.log(`mortgageNFT transferOwnership to ${mw_address} at ${result6?.hash}`);
 
   // check
-  expect(await foundry.owner()).eq(foundryOwnerWalletAddress);
-  expect(await degenGate.owner()).eq(degenGateOwnerWalletAddress);
-  expect(await degenGateNFTClaim.owner()).eq(degenGateNFTClaimOwnerWalletAddress);
+  expect(await foundry.owner()).eq(mw_address);
+  expect(await xMeme.owner()).eq(mw_address);
 
-  expect(await publicNFT.owner()).eq(degenGatePublicNFTOwnerWalletAddress);
-  expect(await mortgageNFT.owner()).eq(degenGateMortgageNFTOwnerWalletAddress);
+  expect(await feeNFT.owner()).eq(mw_address);
+  expect(await mortgageNFT.owner()).eq(mw_address);
 }
 
 main().catch((error) => {

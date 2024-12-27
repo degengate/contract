@@ -40,7 +40,9 @@ async function main() {
     mortgageNFTAddress: "",
     marketAddress: "",
     curveAddress: "",
-    xMemeAddress: ""
+    xMemeAddress: "",
+    feeNFTViewAddress: "",
+    mortgageNFTViewAddress: "",
   };
 
   console.log("=== params.json start ===");

@@ -2,21 +2,20 @@
 pragma solidity >=0.8.20;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "base64-sol/base64.sol";
 
 import "./interfaces/INFTView.sol";
 import "./interfaces/IFeeNFT.sol";
 
-contract XMemeFeeNFTView is INFTView, Ownable {
+contract XMemeFeeNFTView is INFTView {
   struct Info {
     string tid;
   }
 
   address public immutable feeNFT;
 
-  constructor(address _feeNFT) Ownable(msg.sender) {
+  constructor(address _feeNFT) {
     feeNFT = _feeNFT;
   }
 

@@ -496,8 +496,8 @@ describe("Market", function () {
             let multiplyNewAmount_user2 = BigInt(10) ** BigInt(18) * BigInt(10000)
             await app2_payToken.transfer(await user2.getAddress(), multiplyNewAmount_user2)
             await app2_payToken.connect(user2).approve(app2_market.getAddress(), multiplyNewAmount_user2)
-            let result_user2 = await app2_market.connect(user2).multiplyNew.staticCall(tid, multiplyNewAmount_user2, { value: multiplyNewAmount_user2 })
-            await app2_market.connect(user2).multiplyNew(tid, multiplyNewAmount_user2, { value: result_user2.payTokenAmount })
+            let result_user2 = await app2_market.connect(user2).multiplyNew.staticCall(tid, multiplyNewAmount_user2)
+            await app2_market.connect(user2).multiplyNew(tid, multiplyNewAmount_user2)
             expect(result_user2.nftTokenId).eq(2)
 
             // forceCash
@@ -634,8 +634,8 @@ describe("Market", function () {
             let multiplyNewAmount_user2 = BigInt(10) ** BigInt(18) * BigInt(10000)
             await app2_payToken.transfer(await user2.getAddress(), multiplyNewAmount_user2)
             await app2_payToken.connect(user2).approve(app2_market.getAddress(), multiplyNewAmount_user2)
-            let result_user2 = await app2_market.connect(user2).multiplyNew.staticCall(tid, multiplyNewAmount_user2, { value: multiplyNewAmount_user2 })
-            await app2_market.connect(user2).multiplyNew(tid, multiplyNewAmount_user2, { value: result_user2.payTokenAmount })
+            let result_user2 = await app2_market.connect(user2).multiplyNew.staticCall(tid, multiplyNewAmount_user2)
+            await app2_market.connect(user2).multiplyNew(tid, multiplyNewAmount_user2)
             expect(result_user2.nftTokenId).eq(2)
 
             // forceCash

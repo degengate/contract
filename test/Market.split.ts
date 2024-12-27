@@ -468,7 +468,7 @@ describe("Market", function () {
             let buyAmount = BigInt(10) ** BigInt(18) * BigInt(30000)
             await app2_payToken.transfer(user1.address, buyAmount * BigInt(10))
             await app2_payToken.connect(user1).approve(await app2_market.getAddress(), buyAmount * BigInt(10))
-            await app2_market.connect(user1).buy(tid, buyAmount, { value: BigInt(10) ** BigInt(18) * BigInt(1000) })
+            await app2_market.connect(user1).buy(tid, buyAmount)
 
             let mortgageAmount_1 = BigInt(10) ** BigInt(18) * BigInt(11000)
             await token.connect(user1).approve(app2_market.getAddress(), mortgageAmount_1)
@@ -485,7 +485,7 @@ describe("Market", function () {
             // split
             let splitAmount = mortgageAmount_1 - BigInt(10) ** BigInt(19)
             await app2_payToken.connect(user1).approve(await app2_market.getAddress(), MaxUint256)
-            let result_split = await app2_market.connect(user1).split.staticCall(result1.nftTokenId, splitAmount, { value: BigInt(10) ** BigInt(18) * BigInt(1000) })
+            let result_split = await app2_market.connect(user1).split.staticCall(result1.nftTokenId, splitAmount)
             await app2_payToken.connect(user1).approve(await app2_market.getAddress(), result_split.payTokenAmount)
 
             let user1_pay_token_balance_1 = await app2_payToken.balanceOf(await user1.getAddress())
@@ -600,7 +600,7 @@ describe("Market", function () {
             let buyAmount = BigInt(10) ** BigInt(18) * BigInt(30000)
             await app2_payToken.transfer(user1.address, buyAmount * BigInt(10))
             await app2_payToken.connect(user1).approve(await app2_market.getAddress(), buyAmount * BigInt(10))
-            await app2_market.connect(user1).buy(tid, buyAmount, { value: BigInt(10) ** BigInt(18) * BigInt(1000) })
+            await app2_market.connect(user1).buy(tid, buyAmount)
 
             let mortgageAmount_1 = BigInt(10) ** BigInt(18) * BigInt(11000)
             await token.connect(user1).approve(app2_market.getAddress(), mortgageAmount_1)
@@ -617,7 +617,7 @@ describe("Market", function () {
             // split
             let splitAmount = mortgageAmount_1 - BigInt(10) ** BigInt(19)
             await app2_payToken.connect(user1).approve(await app2_market.getAddress(), MaxUint256)
-            let result_split = await app2_market.connect(user1).split.staticCall(result1.nftTokenId, splitAmount, { value: BigInt(10) ** BigInt(18) * BigInt(1000) })
+            let result_split = await app2_market.connect(user1).split.staticCall(result1.nftTokenId, splitAmount)
             await app2_payToken.connect(user1).approve(await app2_market.getAddress(), result_split.payTokenAmount * BigInt(2))
 
             let user1_pay_token_balance_1 = await app2_payToken.balanceOf(await user1.getAddress())

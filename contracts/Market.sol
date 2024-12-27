@@ -121,6 +121,7 @@ contract Market is IMarket, ReentrancyGuard {
     (payTokenAmount, nftFeeInfo, appOwnerFeeTo, appOwnerFeeAmount) = _buyWithoutPay(msg.sender, tid, tokenAmount);
 
     if (_payTokenIsERC20()) {
+      require(msg.value == 0, "VE");
       _transferFromERC20PayTokenFromSender(payTokenAmount);
       _batchTransferERC20PayTokenToNFTOwners(nftFeeInfo.nftFeeTos, nftFeeInfo.nftFeeAmounts);
       _transferERC20PayToken(appOwnerFeeTo, appOwnerFeeAmount);
@@ -208,6 +209,7 @@ contract Market is IMarket, ReentrancyGuard {
     SafeERC20.safeTransfer(IERC20(token(tid)), msg.sender, tokenAmount);
 
     if (_payTokenIsERC20()) {
+      require(msg.value == 0, "VE");
       _transferFromERC20PayTokenFromSender(payTokenAmount);
     } else {
       require(msg.value >= payTokenAmount, "VE");
@@ -302,6 +304,7 @@ contract Market is IMarket, ReentrancyGuard {
       }
     } else {
       if (_payTokenIsERC20()) {
+        require(msg.value == 0, "VE");
         _transferFromERC20PayTokenFromSender(payTokenAmount);
       } else {
         require(msg.value >= payTokenAmount, "VE");
@@ -380,6 +383,7 @@ contract Market is IMarket, ReentrancyGuard {
     payTokenAmount = getPayTokenAmount(oldAmount - splitAmount, splitAmount) - getPayTokenAmount(0, splitAmount);
 
     if (_payTokenIsERC20()) {
+      require(msg.value == 0, "VE");
       _transferFromERC20PayTokenFromSender(payTokenAmount);
     } else {
       require(msg.value >= payTokenAmount, "VE");
@@ -550,6 +554,7 @@ contract Market is IMarket, ReentrancyGuard {
     }
 
     if (_payTokenIsERC20()) {
+      require(msg.value == 0, "VE");
       _transferFromERC20PayTokenFromSender(payTokenAmount);
       _transferERC20PayToken(_appFee.platformMortgageFeeRecipient, platformMortgageFeeAmount);
       _transferERC20PayToken(_appFee.appOwnerFeeRecipient, appOwnerMortgageFeeAmount);
