@@ -14,7 +14,7 @@ contract MortgageNFTFactory is IMortgageNFTFactory {
   function create(uint256 appId, string memory name, address owner) external override returns (address addr) {
     require(msg.sender == foundry, "onlyFoundry");
 
-    addr = address(new MortgageNFT(foundry, appId, owner, string(abi.encodePacked(name, " Position"))));
+    addr = address(new MortgageNFT(foundry, appId, owner, string(abi.encodePacked(name, " Option"))));
 
     emit Create(appId, name, addr);
   }

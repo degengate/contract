@@ -50,12 +50,12 @@ describe("FeeNFT", function () {
 
     await info.xMeme.connect(info.userWallet).createTokenAndMultiply(tid, multiplyAmount, { value: BigInt(10) ** BigInt(20) });
 
-    expect(await info.feeNFT.name()).eq("XMeme Tax");
-    expect(await info.feeNFT.symbol()).eq("XMeme Tax");
+    expect(await info.feeNFT.name()).eq("X-meme Tax");
+    expect(await info.feeNFT.symbol()).eq("X-meme Tax");
 
     const tokenInfo = parseTokenURI(await info.feeNFT.tokenURI(1));
 
-    expect(tokenInfo.name).eq("XMeme Tax 1");
+    expect(tokenInfo.name).eq("X-meme Tax 1");
     expect(tokenInfo.description).eq(
       "If you need to customize the display content, please use the setFeeNFTView function in the contract to set a custom display contract.",
     );

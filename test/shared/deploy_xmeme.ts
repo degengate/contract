@@ -91,7 +91,7 @@ export async function deployXMemeAllContract(coreContractInfo: CoreContractInfo)
     let firstBuyFee = BigInt(10) ** BigInt(16);
 
     let appId = await coreContractInfo.foundry.nextAppId();
-    let appName = "XMeme";
+    let appName = "X-meme";
     let feeNFT: FeeNFT;
     let mortgageNFT: MortgageNFT;
     let market: Market;

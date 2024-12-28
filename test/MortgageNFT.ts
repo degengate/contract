@@ -46,12 +46,12 @@ describe("MortgageNFT", function () {
 
     await xMemeInfo.xMeme.connect(xMemeInfo.userWallet).createTokenAndMultiply(tid, multiplyAmount, { value: BigInt(10) ** BigInt(20) });
 
-    expect(await xMemeInfo.mortgageNFT.name()).eq("XMeme Position");
-    expect(await xMemeInfo.mortgageNFT.symbol()).eq("XMeme Position");
+    expect(await xMemeInfo.mortgageNFT.name()).eq("X-meme Option");
+    expect(await xMemeInfo.mortgageNFT.symbol()).eq("X-meme Option");
 
     const tokenInfo = parseTokenURI(await xMemeInfo.mortgageNFT.tokenURI(1));
 
-    expect(tokenInfo.name).eq("XMeme Position 1");
+    expect(tokenInfo.name).eq("X-meme Option 1");
     expect(tokenInfo.description).eq(
       "If you need to customize the display content, please use the setMortgageNFTView function in the contract to set a custom display contract.",
     );

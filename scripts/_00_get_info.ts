@@ -18,7 +18,7 @@ async function main() {
   }
 
   const output = {
-    appName: "XMeme",
+    appName: "X-meme",
     appid: 1,
     appOwnerMortgageFee: 300,
     platformMortgageFee: 100,
