@@ -1,24 +1,23 @@
-# Degengate Contract
+# X-meme Contract
 
-This is degengate contract repo.
+This is X-meme contract repo.
 
 ## Deploy Address
 
 ### Base
 | contract | address | 
 | ---: | ---: | 
-| DegenGate | [0x877681450778B6082DdAb28D66D9e6887F96e31f](https://basescan.org/address/0x877681450778B6082DdAb28D66D9e6887F96e31f) |
-| DegenGateNFTClaim | [0x8b8BE7a97ef4ce818aEc4Df89a0dCd2b771A3d29](https://basescan.org/address/0x8b8BE7a97ef4ce818aEc4Df89a0dCd2b771A3d29) |
-| DegenGateVault | [0x83c63A8685Da17eB34FE8D7522CB917779D6a26f](https://basescan.org/address/0x83c63A8685Da17eB34FE8D7522CB917779D6a26f) |
-| Point | [0x01ffE5A380A3e14C433040529Ab892634d7c6bc9](https://basescan.org/address/0x01ffE5A380A3e14C433040529Ab892634d7c6bc9) |
-| Market | [0x1db7426A402233422D59e9CaD21e3E20BB2f952D](https://basescan.org/address/0x1db7426A402233422D59e9CaD21e3E20BB2f952D) |
-| PublicNFT | [0x6197F8057D1dC8D0Dc2A73026bba635c66a17C0A](https://basescan.org/address/0x6197F8057D1dC8D0Dc2A73026bba635c66a17C0A) |
-| MortgageNFT | [0x8F8204BFb8bA6F9CAEa403cC64F669D4a3bC7411](https://basescan.org/address/0x8F8204BFb8bA6F9CAEa403cC64F669D4a3bC7411) |
-| PublicNFTView | [0xc520bd425C8e06947b82F7E82706a2173c972236](https://basescan.org/address/0xc520bd425C8e06947b82F7E82706a2173c972236) |
-| PublicNFTViewBG | [0x6b2D783Ca273ccbaF061C42c193F02970A259Ea2](https://basescan.org/address/0x6b2D783Ca273ccbaF061C42c193F02970A259Ea2) |
-| MortgageNFTView | [0xb482fE8759A101d790e7aDdbf3546A71f98248a9](https://basescan.org/address/0xb482fE8759A101d790e7aDdbf3546A71f98248a9) |
-| Curve | [0xC7bf9d0795a255E2C6DA90EBDe9004957fe0Eab2](https://basescan.org/address/0xC7bf9d0795a255E2C6DA90EBDe9004957fe0Eab2) |
-| Foundry | [0xC9d45752c87240Bf68811B39814Fc441dD98e21D](https://basescan.org/address/0xC9d45752c87240Bf68811B39814Fc441dD98e21D) |
-| PublicNFTFactory | [0xdf82A7B008C8699a94A0AAbaBB391eB5d3365DEa](https://basescan.org/address/0xdf82A7B008C8699a94A0AAbaBB391eB5d3365DEa) |
-| MortgageNFTFactory | [0x54b321f2A412bB0b54B3827Be9442e6296B73E26](https://basescan.org/address/0x54b321f2A412bB0b54B3827Be9442e6296B73E26) |
-| MarketFactory | [0xbAB46cd3099d9c5Ae3D4a1C90bA40D32850e98D9](https://basescan.org/address/0xbAB46cd3099d9c5Ae3D4a1C90bA40D32850e98D9) |
+| xMeme | [0x35A5feFA7c59291f1b6d84Bfd7d72f3fe86C0C4D](https://basescan.org/address/0x35A5feFA7c59291f1b6d84Bfd7d72f3fe86C0C4D) |
+| market | [0x68455230249e9cd42Cc24F46A5E6c4F91e72C540](https://basescan.org/address/0x68455230249e9cd42Cc24F46A5E6c4F91e72C540) |
+| curve | [0x168206bdd4f1eD18BfDac1e213465b9e6a734d39](https://basescan.org/address/0x168206bdd4f1eD18BfDac1e213465b9e6a734d39) |
+| feeNFT | [0x76D933d44A66BfF6d2d9b9B2b72CaafBB905360a](https://basescan.org/address/0x76D933d44A66BfF6d2d9b9B2b72CaafBB905360a) |
+| mortgageNFT | [0x7772C52CeA47179fC770fD93503A5D73835d4c89](https://basescan.org/address/0x7772C52CeA47179fC770fD93503A5D73835d4c89) |
+| feeNFTView | [0x0a11172A69F8E40bB41964C12F9927d4aB5eaa1f](https://basescan.org/address/0x0a11172A69F8E40bB41964C12F9927d4aB5eaa1f) |
+| mortgageNFTView | [0x079DEa17a7eFac683a2E0b7F2EaC238c0f503bB4](https://basescan.org/address/0x079DEa17a7eFac683a2E0b7F2EaC238c0f503bB4) |
+| foundryData | [0xb0349D2E189B9FD302eaB6E9fDb4D728F13D5F51](https://basescan.org/address/0xb0349D2E189B9FD302eaB6E9fDb4D728F13D5F51) |
+| foundry | [0xEE8A0d5AA4c79075c7C65C7ff12be8E8470251bf](https://basescan.org/address/0xEE8A0d5AA4c79075c7C65C7ff12be8E8470251bf) |
+| feeNFTFactory | [0x80910090AE56ED400113E6e823cB9Eaf30f40214](https://basescan.org/address/0x80910090AE56ED400113E6e823cB9Eaf30f40214) |
+| mortgageNFTFactory | [0xe3fc9dfAb13987A596f247ed2C69a984F8FEe9dc](https://basescan.org/address/0xe3fc9dfAb13987A596f247ed2C69a984F8FEe9dc) |
+| marketFactory | [0x2aA82323bFAB03E257759DfC20B623F5859475A6](https://basescan.org/address/0x2aA82323bFAB03E257759DfC20B623F5859475A6) |
+| tokenFactory | [0xF807f8F92A135a71f6522a67885Fa58dbFB9affa](https://basescan.org/address/0xF807f8F92A135a71f6522a67885Fa58dbFB9affa) |
+| cPFCurveFactory | [0x5ED3D901990b7fcC5f2fF21C9e9BD085Dd65f462](https://basescan.org/address/0x5ED3D901990b7fcC5f2fF21C9e9BD085Dd65f462) |
